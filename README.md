@@ -13,3 +13,7 @@
 ## Erd
 
 ![voda v1 erd](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/erd.puml)
+
+## Sequence Diagram
+
+![room api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/rooms.puml)

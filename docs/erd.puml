@@ -24,6 +24,7 @@ Table(accounts, "accounts\n계정") {
     pk(id) INTEGER
     not_null(unique(email)) VARCHAR[255]
     not_null(name) VARCHAR[]    계정 닉네임
+    not_null(profile_url) VARCHAR[255]    프로필 이미지 url
     not_null(turn_alarm_flag) TINYINT[1]        디바이스 턴 알람 설정
     not_null(activity_alarm_flag) TINYINT[1]    디바이스 액티비티 알람 설정
     ...jwt, oauth 필드들
@@ -33,15 +34,14 @@ Table(accounts, "accounts\n계정") {
 
 Table(rooms, "rooms\n다이어리방") {
     pk(id) INTEGER
-    fk(master_id) INTEGER   다이어리방 마스터 ID(방장)
+    fk(master_id) INTEGER   다이어리방 마스터 I[방장]
     not_null(name) VARCHAR[]    방 이름
-    not_null(period) UNSIGNED TINYINT   작성 기한(1~7d)
+    not_null(period) UNSIGNED TINYINT   작성 기한[1~7d]
     not_null(code) VARCHAR[]    참여코드
     not_null(hint) VARCHAR[]    참여질문
     not_null(theme) VARCHAR[]   다이어리 배경 테마
-    not_null(turn_alarm_flag) TINYINT        디바이스 턴 알람 설정
-    not_null(activity_alarm_flag) TINYINT    디바이스 액티비티 알람 설정
     not_null(orders) JSON   다이어리 작성순서 []account_id
+    not_null(turn_account_id) INTEGER   현재 작성 순서인 멤버 account_id
     not_null(created_at) DATETIME
     not_null(updated_at) DATETIME
 }
@@ -66,7 +66,6 @@ Table(room_members, "room_members\n다이어리방 참여 멤버") {
 Table(audio, "audio\n다이어리 음성녹음") {
     pk(uuid)    UUID  음성녹음 UUID, static 서버에도 동일 UUID로 저장
     not_null(name)  VARCHAR[]      오디오 파일명
-    
     pitch   FLOAT[4]    ios용, 오디오 피치
 }
 
