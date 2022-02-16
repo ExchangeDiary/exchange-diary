@@ -1,0 +1,105 @@
+' https://gist.github.com/QuantumGhost/0955a45383a0b6c0bc24f9654b3cb561
+@startuml
+!define Table(name,desc) class name as "desc" << (T) >>
+!define pk(x) <color:red><b>x</b></color>
+!define fk(x) <color:blue><b>x</b></color>
+' 초록색: 유니크키
+!define unique(x) <color:green>x</color>
+' 밑줄: not null
+!define not_null(x) <u>x</u>
+
+hide methods
+hide stereotypes
+
+note as N1
+    들어가기 앞서 표기법을 정리합니다.
+    1. <color:red><b>PK</b></color>
+    2. <color:blue><b>FK</b></color>
+    3. <color:green>Unique Key</color>
+    4. <u>not null</u>
+end note
+
+' entities
+Table(accounts, "accounts\n계정") {
+    pk(id) INTEGER
+    not_null(unique(email)) VARCHAR[255]
+    not_null(name) VARCHAR[]    계정 닉네임
+    not_null(turn_alarm_flag) TINYINT[1]        디바이스 턴 알람 설정
+    not_null(activity_alarm_flag) TINYINT[1]    디바이스 액티비티 알람 설정
+    ...jwt, oauth 필드들
+    not_null(created_at) DATETIME
+    not_null(updated_at) DATETIME
+}
+
+Table(rooms, "rooms\n다이어리방") {
+    pk(id) INTEGER
+    fk(master_id) INTEGER   다이어리방 마스터 ID(방장)
+    not_null(name) VARCHAR[]    방 이름
+    not_null(period) UNSIGNED TINYINT   작성 기한(1~7d)
+    not_null(code) VARCHAR[]    참여코드
+    not_null(hint) VARCHAR[]    참여질문
+    not_null(theme) VARCHAR[]   다이어리 배경 테마
+    not_null(turn_alarm_flag) TINYINT        디바이스 턴 알람 설정
+    not_null(activity_alarm_flag) TINYINT    디바이스 액티비티 알람 설정
+    not_null(orders) JSON   다이어리 작성순서 []account_id
+    not_null(created_at) DATETIME
+    not_null(updated_at) DATETIME
+}
+
+Table(diaries, "diaries\n다이어리") {
+    pk(id) INTEGER
+    fk(created_by) INTEGER  작성 계정ID
+    fk(room_id) INTEGER     다이어리방 ID
+    not_null(place) UNSIGNED TINYINT    다이어리 작성 장소
+    fk(audio_UUID) UUID 오디오 UUID
+    not_null(created_at) DATETIME
+    not_null(updated_at) DATETIME
+}
+
+Table(room_members, "room_members\n다이어리방 참여 멤버") {
+    pk(id) INTEGER
+    fk(account_id) INTEGER  참여한 멤버계정ID
+    fk(room_id) INTEGER     다이어리방 ID
+    not_null(created_at) DATETIME   다이어리방 참여시점, 마스터 선출용
+}
+
+Table(audio, "audio\n다이어리 음성녹음") {
+    pk(uuid)    UUID  음성녹음 UUID, static 서버에도 동일 UUID로 저장
+    not_null(name)  VARCHAR[]      오디오 파일명
+    
+    pitch   FLOAT[4]    ios용, 오디오 피치
+}
+
+Table(photos, "photos\n다이어리 사진") {
+    pk(uuid) UUID   스토리지 서버에 저장된 photo uuid
+    fk(diary_id)    다이어리 ID
+}
+
+Table(auth, "auth\nOauth관련") {
+}
+
+
+Table(alarm, "alarm\n알림") {
+    pk(id) INTEGER
+}
+
+Table(notices, "notices\n공지사항") {
+    pk(id) INTEGER
+    not_null(title) VARCHAR[]    공지사항 제목
+    not_null(body) VARCHAR[]   공지사항 본문
+    not_null(created_at) DATETIME
+    not_null(updated_at) DATETIME
+}
+
+
+' one-to-one relationship
+diaries "1" -- "1" audio
+
+' one to may relationship
+accounts "1" --> "0..N" rooms : "A user(master) may have\n many DiaryRooms"
+accounts "1" --> "0..N" diaries : "A user may have\n many Diary stories"
+accounts "1" --> "0..N" room_members : "A user may can be\n many diary_room's member"
+rooms "1" --> "0..N" diaries : "A room may can have\n many diaries"
+rooms "1" --> "0..N" room_members : "A room may can have\n many accounts(members)"
+diaries "1" --> "0..N" photos : "A diary may can have\n many photos."
+@enduml

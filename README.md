@@ -7,6 +7,9 @@
 </div>
 
 - [V1 API](./docs/api.md)
-- [ERD](https://lucid.app/lucidchart/a4191542-ece6-416c-879b-028973e51a7e/edit?invitationId=inv_ab6c32ee-9ef4-40be-b426-d2929fff1463)
 - [Fixed Policy](./docs/fixed_policy.md)
 - [Features](./docs/features.md)
+
+## Erd
+
+![voda v1 erd](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/erd.puml)
