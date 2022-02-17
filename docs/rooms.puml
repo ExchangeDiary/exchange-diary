@@ -17,19 +17,34 @@ client -> api : jwt
 return ok {"Authorization": "56E7E522C3..."}
 |||
 == POST /v1/rooms   교환일기방 생성 ==
-client -> api++: **POST /v1/rooms**\
-\n{\n\t"name": 방이름,\n\t"code": 질문답변,\n\t"hint": 참여질문,\n\t"theme": "1"|"2"|"3",\n}
+client -> api++: **POST /v1/rooms**
+note right of client #Lavender
+{
+    "name": 방이름,
+    "code": 질문답변,
+    "hint": 참여질문,
+    "theme": "1"|"2"|"3",
+}
+endnote
+
 api -> api: json validation
 api -> api: orders 필드 추가\
 \n{\n\t...\n\t"orders": [현재_로그인_account_id],\n}
 api -> db++: insert a room
 return room
-return **200 OK**\
-\n{\n\t"roomId": 1\n}\n
+return **200 OK**
+note right of client #Lavender
+{
+    "roomId": 1
+}
+endnote
 
 ||20||
 
-== GET /v1/rooms/<:room_id>   교환일기방 상세화면 ==
+== GET /v1/rooms/<:room_id>   교환일기방 상세화면 접근==
+' TODO: 서버에서 접근 권한 확인 401(1. 로그인 안된경우 / 2. 멤버가 아닌경우) error일 경우 redirect hint page
+' 멤버가 아닌경우, hint 전달
+
 client -> api++: **GET /v1/rooms/<:room_id>?page=<:page>**
 note right
 ?page=는 diary(일기들)의 페이지네이션을 뜻한다.
@@ -41,14 +56,50 @@ api -> db++: **교환일기 작성 순서에 따라 계정정보 획득**\
 \n(room.orders순서로 account in-query)\
 \nSELECT id, profile_url FROM accounts WHERE in <room.orders>
 return []member
+api -> api: 현재 계정이 멤버인지 확인
+alt#Gold #Pink Failure
+    api -> client: **401 Unauthorized**
+end
+
 api -> db++: Get Diaries(Order by Created_by)\
 \nSELECT * FROM diaries WHERE room_id=<room_id> ORDER BY id desc LIMIT 10 OFFSET 10*<page>
 note right
 page size = 10
 endnote
 return []diary
-return **200 OK**\
-\n{\n\t"orders": [\n\t{\n\t\t"accountId": "<int>",\n\t\t"profileUrl": "<url>" // https://voda-api.com/profiles/leoo.png\n\t},\n\t{\n\t\t"accountId": "<int>",\n\t\t"profileUrl": "<url>"\n\t}\n\t],\n\t"turnAccountId": "<int>", // 현재 턴 accountID (이걸 기준으로 orders에서 파랑색 동그라미)\n\t"turnAccountName": "<str>", // 현재 턴 accountName i.g "고영희", ("고영희님이 이야기를 쓰고있어요!"일때 사용)\n\t"name": "<str>", // 다이어리 이름 i.g. 고영희 미만 다꾸러\n\t"theme": "<str>", // 다이어리 배경 테마명 i.g. #고영희_자랑하는 일기\n\t"diaries": {\n\t"data": [\n\t\t{\n\t\t"place": "<str>", // 장소 i.g. "방구석에서"\n\t\t"accountName": "<str>", // 생성한 accountName\n\t\t"profileUrl": "<url>", // 사용자 프로필 이미지 url\n\t\t"createdAt": "<datetime>" //생성 일자\n\t\t},\n\t\t{},\n\t\t{}\n\t],\n\t"totalCount": "<int>" // 총 다이어리 숫자 (페이지 요청용)\n\t}\n}\n
+return **200 OK**
+note right of client #Lavender
+{
+    "orders": [
+        {
+            "accountId": "<int>",
+            "profileUrl": "<url>" // https://voda-api.com/profiles/leoo.png
+        },
+        {
+            "accountId": "<int>",
+            "profileUrl": "<url>"
+        }
+    ],
+    "turnAccountId": "<int>", // 현재 턴 accountID (이걸 기준으로 orders에서 파랑색 동그라미)
+    "turnAccountName": "<str>", // 현재 턴 accountName i.g "고영희", ("고영희님이 이야기를 쓰고있어요!"일때 사용)
+    "name": "<str>", // 다이어리 이름 i.g. 고영희 미만 다꾸러
+    "theme": "<str>", // 다이어리 배경 테마명 i.g. #고영희_자랑하는 일기
+    "diaries": {
+    "data": [
+        {
+        "place": "<str>", // 장소 i.g. "방구석에서"
+        "accountName": "<str>", // 생성한 accountName
+        "profileUrl": "<url>", // 사용자 프로필 이미지 url
+        "createdAt": "<datetime>" //생성 일자
+        },
+        {},
+        {}
+    ],
+    "totalCount": "<int>" // 총 다이어리 숫자 (페이지 요청용)
+    }
+}
+endnote
+
 
 ||20||
 
@@ -61,10 +112,55 @@ api -> db++: 멤버로 참여하는 다이어리방이거나, 마스터로 참�
 \n given: (room_ids []room_id, account_id: int)\
 \nSELECT * FROM diaries WHERE room_id in <room_ids> OR master_id=<account_id>  ORDER BY id desc
 return []room
-return **200 OK**\
-\n{\n\t// 최신 생성순으로 정렬되어 return\n\t"rooms": [\n\t{\n\t\t"id": "<int>", //다이어리룸 id\n\t\t"name": "<str>", // 다이어리룸 이름\n\t\t"totalMemberCount": <int>, // +2, +4\n\t\t"createdAt": <datetime>, // 최근 다이어리 알려주기용\n\t\t"members": [\n\t\t{\n\t\t\t"accountId": "<int>",\n\t\t\t"profileUrl": "<url>",\n\t\t},\n\t\t{}\n\t\t]\n\t},\n\t{}\n\t]\n}
+return **200 OK**
+note right of client #Lavender
+{
+    // 최신 생성순으로 정렬되어 return
+    "rooms": [
+        {
+            "id": "<int>", //다이어리룸 id
+            "name": "<str>", // 다이어리룸 이름
+            "totalMemberCount": <int>, // +2, +4
+            "createdAt": <datetime>, // 최근 다이어리 알려주기용
+            "members": [
+            {
+                "accountId": "<int>",
+                "profileUrl": "<url>",
+            },
+            {}
+            ]
+        },
+        {},
+        {},
+        ...
+    ]
+}
+endnote
+
 ||20||
 
+== POST /v1/rooms/<:room_id>/verify  교환일기방 참여코드 체크 ==
+user -> client: 다이어리방 참여코드 입력
+client -> api++: **POST /v1/rooms/<:room_id>/verify**
+
+note right of client #Lavender
+{
+    "code": <사용자가 작성한 코드>
+}
+endnote
+api -> api: json validation
+api -> db++: Get a room code
+return code
+api -> api: verify(사용자작성코드, code)
+alt#Gold #LightBlue Successful case
+    api -> client: **200 OK**
+else #Pink Failure
+    api -> client: **401 Unauthorized**
+end
+
+
+
+||20||
 == DELETE /v1/rooms/<:room_id>  가입된 나가기 ==
 ' TODO
 
