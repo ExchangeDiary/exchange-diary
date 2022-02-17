@@ -14,8 +14,14 @@
 
 ![voda v1 erd](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/erd.puml)
 
-## Sequence Diagram
+## Room flow
+
+> 다이어리방 관련된 플로우
 
 ![room api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/rooms.puml)
+
+## Diary flow
+
+> 다이어리 관련된 플로우
 
 ![diary api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/diaries.puml)

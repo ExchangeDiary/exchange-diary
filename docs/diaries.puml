@@ -62,7 +62,7 @@ api 서버에 최종 다이어리 생성 시 uuid들을 전달해줘야 함.
 **지금 과정은 sync과정으로 가정함**
 endnote
 client -> static++: 오디오 / 사진 파일들 저장 요청
-return **200 ok**
+return **200 Ok**
 note right of client #Lavender
 {
     "audio": 오디오_UUID,
@@ -81,9 +81,12 @@ note left of api #Lavender
     "place": 장소,
     "title": 다이어리 제목,
     "content": 다이어리 글 내용,
-    "theme": 다이어리 템플릿명
-    "audioUUID": 오디오_UUID,
-    **"audioPitch": 오디오 피치값**,
+    "theme": 다이어리 템플릿명,
+    "audio": {
+        "uuid": 오디오_UUID,
+        "pitch": 오디오 피치값,
+        "name": 오디오_파일명
+    },
     "photos": [
         "사진1_UUID",
         "사진2_UUID",
@@ -95,6 +98,7 @@ note left of api
 "theme"(ENUM<str>])의 경우 사전에 클라와 네이밍을 맞춰야함
 endnote
 api -> api: json validation
+api -> api: member validate
 api -> api: jwt에 들어있는 유저가 turnAccount인지 서버 검증
 api -> db++: Insert a audio
 return audio_uuid
@@ -123,7 +127,7 @@ turn_account_id의 다음 index에 있는 account_id를 선택한다.
 다음 turn_account_id로 선정한다.**
 endnote
 
-return **200 OK**
+return **200 Ok**
 note right of client #Lavender
 {
     "diaryId": 2
@@ -131,6 +135,57 @@ note right of client #Lavender
 endnote
 return
 == GET /v1/rooms/<:room_id>/diaries/<:diary_id> 다이어리 상세 확인==
+user -> client++ : 홈에서 특정 다이어리 클릭
+client -> api++: GET /v1/rooms/<:room_id>/diaries/<:diary_id>
+api -> api: json validate
+api -> api: member validate
+api -> db++: Get a diary by id
+return diary
+api -> db++: Get photo uuids by diary id
+return []photo_uuid
+api -> db++: Get created account info
+return profileUrl, name
+return **200 OK**
+note right of client #Lavender
+// 사진 && 오디오 값 있을 경우
+{
+    "profile": {
+        "name": 글쓴이 이름,
+        "profileUrl": 글쓴이 프로필 url,
+        "createdBy": 글쓴이 accountID,
+    },
+    "diary": {
+        "createdAt": 생성 일자
+        "place":  장소
+        "title":  제목
+        "content": 본문
+        "theme":  테마명
+        "audio": {
+            "uuid": 오디오_UUID,
+            "name": 오디오명,
+            "pitch": 오디오 피치값
+        },
+        "photos": [
+            "사진1_UUID",
+            "사진2_UUID",
+            "사진3_UUID",
+        ]
+    }
+}
+endnote
+note right of client
+사진, 음성 값 없을 경우에는 아래와 같이 전달한다.
+
+{
+    ...
+    "audio": {},
+    "photos": [],
+    ...
+}
+endnote
+client -> static++: GET 사진들 / 음성 파일 
+return 음성파일 / 사진파일들
+return 교환일기 상세 페이지
 
 ||20||
 @enduml
