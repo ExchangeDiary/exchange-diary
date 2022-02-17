@@ -17,3 +17,5 @@
 ## Sequence Diagram
 
 ![room api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/rooms.puml)
+
+![diary api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/diaries.puml)

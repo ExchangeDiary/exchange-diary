@@ -50,7 +50,10 @@ Table(diaries, "diaries\n다이어리") {
     pk(id) INTEGER
     fk(created_by) INTEGER  작성 계정ID
     fk(room_id) INTEGER     다이어리방 ID
-    not_null(place) UNSIGNED TINYINT    다이어리 작성 장소
+    not_null(place) VARCHAR[]    다이어리 장소
+    not_null(title) VARCHAR[]    다이어리 제목
+    not_null(content) VARCHAR[]  다이어리 글 내용
+    not_null(theme) VARCHAR[]    다이어리 템플릿명
     fk(audio_UUID) UUID 오디오 UUID
     not_null(created_at) DATETIME
     not_null(updated_at) DATETIME
@@ -70,8 +73,8 @@ Table(audio, "audio\n다이어리 음성녹음") {
 }
 
 Table(photos, "photos\n다이어리 사진") {
-    pk(uuid) UUID   스토리지 서버에 저장된 photo uuid
-    fk(diary_id)    다이어리 ID
+    pk(uuid)    UUID   스토리지 서버에 저장된 photo uuid
+    fk(diary_id) INTEGER    다이어리 ID
 }
 
 Table(auth, "auth\nOauth관련") {
@@ -85,7 +88,7 @@ Table(alarm, "alarm\n알림") {
 Table(notices, "notices\n공지사항") {
     pk(id) INTEGER
     not_null(title) VARCHAR[]    공지사항 제목
-    not_null(body) VARCHAR[]   공지사항 본문
+    not_null(content) VARCHAR[]   공지사항 본문
     not_null(created_at) DATETIME
     not_null(updated_at) DATETIME
 }

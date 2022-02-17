@@ -15,6 +15,10 @@ title <font size=30>/v1/rooms</font>
 user -> client  : 로그인
 client -> api : jwt
 return ok {"Authorization": "56E7E522C3..."}
+
+note right of user
+현재 과정 모두 진행된 상태에서 아래 시퀀스들이 진행됩니다.
+endnote
 |||
 == POST /v1/rooms   교환일기방 생성 ==
 client -> api++: **POST /v1/rooms**

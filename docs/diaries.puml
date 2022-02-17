@@ -1,0 +1,136 @@
+@startuml
+
+' client
+Actor user
+Participant client #Gold
+
+' api
+Participant "server" as api #LightSalmon
+Participant "이미지/오디오 서버" as static #RosyBrown
+Participant "APNS/GCM" as tms #IndianRed
+database "db" as db #LightSalmon
+
+' title
+title <font size=30>/v1/roombs/<:room_id>/diaries</font>
+
+' prerequisites
+user -> client++ : 로그인
+client -> api++ : jwt
+return ok {"Authorization": "56E7E522C3..."}
+return
+user -> client++ : 홈화면 접근
+client -> api++ : **GET /v1/rooms**  가입된 다이어리 리스트 요청
+return **200 OK**
+return 
+user -> client++ : 특정 교환일기방 클릭
+client -> api++ : **GET /v1/rooms/<:room_id>**
+return **200 OK**
+return
+|||
+
+note right of user
+현재 과정 모두 진행된 상태에서 아래 시퀀스들이 진행됩니다.
+endnote
+
+== POST /v1/rooms/<:room_id>/diaries/ 다이어리 작성==
+' 1. 클라 현재 턴 유저 여부 확인 (클라에서 turnAccountId)
+' 2. 서버 동일 로직
+user -> client++ : "OOO님의 이야기를 나눠주세요" 버튼 클릭
+client -> client: turnAccountId와 현재 계정 Id비교
+alt#Gold #LightBlue Successful case
+    client -> user: 글쓰기 폼 
+else #Pink Failure
+    return 비활성화 글쓰기 폼
+end
+user -> client++: 글작성
+note right of client
+사진/오디오를 제외한 필드들은 
+일반적인 폼 작성 프로세스 진행
+endnote
+alt#Gold #LightBlue 사진 추가하기 클릭
+    client -> client: 사진 클라 캐싱
+else #Pink 음성파일 추가하기 클릭
+    client -> user: 음성 녹음화면
+    user -> client: 녹음 완료 클릭
+end
+client -> client: "최종 완료"(글쓰기 완료)클릭
+note right of client
+만약 오디오 / 사진 처리를 비동기적으로
+처리한다면, 클라에서 각 파일들 uuid를 만들고
+api 서버에 최종 다이어리 생성 시 uuid들을 전달해줘야 함.
+
+**지금 과정은 sync과정으로 가정함**
+endnote
+client -> static++: 오디오 / 사진 파일들 저장 요청
+return **200 ok**
+note right of client #Lavender
+{
+    "audio": 오디오_UUID,
+    "photos": [
+        "사진1_UUID",
+        "사진2_UUID",
+        "사진3_UUID",
+    ]
+}
+endnote
+client -> api++:  다이어리 저장 요청\
+\n**POST /v1/rooms/<:room_id>/diaries/**
+
+note left of api #Lavender
+{
+    "place": 장소,
+    "title": 다이어리 제목,
+    "content": 다이어리 글 내용,
+    "theme": 다이어리 템플릿명
+    "audioUUID": 오디오_UUID,
+    **"audioPitch": 오디오 피치값**,
+    "photos": [
+        "사진1_UUID",
+        "사진2_UUID",
+        "사진3_UUID",
+    ],
+}
+endnote
+note left of api
+"theme"(ENUM<str>])의 경우 사전에 클라와 네이밍을 맞춰야함
+endnote
+api -> api: json validation
+api -> api: jwt에 들어있는 유저가 turnAccount인지 서버 검증
+api -> db++: Insert a audio
+return audio_uuid
+api -> db++: Insert a diary
+return diary
+api -> db++: Bulk Insert Photos
+return []photoUUID
+api ->> tms: (async) 새로운 글 작성 알람 event broadcast
+note right of api
+여기에는 작성자를 제외한 member들의 device 주소들이 필요하며
+이 account의 activity_alarm_flag가 false이면 제외
+추가로 이벤트 타입 필요하다.
+endnote
+api -> db: 턴 변경하기 진행\
+\nroom의 turn_account_id 변경
+
+note right of api
+작성 즉시 다음턴으로 진행되는게 문맥에 맞을듯 하다.
+endnote
+note right of api #Pink
+**(주의)** 다음 turn_account_id는 rooms.orders(Array)에서
+turn_account_id의 다음 index에 있는 account_id를 선택한다.
+
+즉 유튜브 뮤직/멜론이 플레이리스트에서 현재 듣고있는 곡의 위치를 바꾸더라도,
+바뀐위치에서 바로 아래곡을 실행하듯 **turn_account_id 또한 배열의 오른쪽 account_id를 
+다음 turn_account_id로 선정한다.**
+endnote
+
+return **200 OK**
+note right of client #Lavender
+{
+    "diaryId": 2
+}
+endnote
+return
+== GET /v1/rooms/<:room_id>/diaries/<:diary_id> 다이어리 상세 확인==
+
+||20||
+@enduml
