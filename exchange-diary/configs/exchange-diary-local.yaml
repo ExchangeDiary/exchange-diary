@@ -1,0 +1,10 @@
+db-config:
+  host: "test"
+  name: "test"
+  port: 10090
+
+kakao-client:
+  api-key: "test"
+
+google-client:
+  api-key: "test"
