@@ -7,20 +7,21 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ExchangeDiary_Server/exchange-diary/config"
+	"github.com/ExchangeDiary/ExchangeDiary_Server/exchange-diary/configs"
 
 	"go.uber.org/zap"
 )
 
 func main() {
 	// Initialize configuration
+	defaultConfig := "dev"
+
 	var configName string
-	flag.StringVar(&configName, "config-name", "exchange-diary-local", "name of configuration file with no extension")
-	_, err := config.Load("./configs", configName)
+	flag.StringVar(&configName, "phase", defaultConfig, "name of configuration file with no extension")
+	_, err := configs.Load("./configs", configName)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load config file: %s", err.Error()))
 	}
-
 	// logger
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
