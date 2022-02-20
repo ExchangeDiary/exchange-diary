@@ -1,6 +1,7 @@
-package infra
+package config
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 )
 
@@ -25,7 +26,7 @@ type GoogleClient struct {
 }
 
 const (
-	typeExtention = "yaml"
+	typeExtension = "yaml"
 )
 
 func Load(path string, name string) (Config, error) {
@@ -33,7 +34,7 @@ func Load(path string, name string) (Config, error) {
 	fmt.Println("hello")
 
 	viper.SetConfigName(name)
-	viper.SetConfigType(typeExtention)
+	viper.SetConfigType(typeExtension)
 	viper.AddConfigPath(path)
 
 	err := viper.ReadInConfig()
