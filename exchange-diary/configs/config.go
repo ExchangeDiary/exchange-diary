@@ -6,23 +6,24 @@ import (
 )
 
 type Config struct {
-	db           DBConfig
-	kakaoClient  KakaoClient
-	googleClient GoogleClient
+	DBConfig    DBConfig    `mapstructure:"db-config"`
+	KakaoClient KakaoClient `mapstructure:"kakao-client"`
 }
 
 type DBConfig struct {
-	host string
-	name string
-	port int
+	Host string `mapstructure:"host"`
+	Name string `mapstructure:"name"`
+	Port int    `mapstructure:"port"`
+}
+
+type OAuthConfig struct {
+	ClientId     string `mapstructure:"client-id"`
+	ClientSecret string `mapstructure:"client-secret"`
+	RedirectUrl  string `mapstructure:"redirect-url"`
 }
 
 type KakaoClient struct {
-	apiKey string
-}
-
-type GoogleClient struct {
-	apiKey string
+	Oauth OAuthConfig `mapstructure:"oauth"`
 }
 
 const (
@@ -31,13 +32,14 @@ const (
 
 func Load(path string, name string) (Config, error) {
 	config := Config{}
-	fmt.Println("hello")
+	fmt.Println("Load config file - profile:", name)
 
+	viper.AddConfigPath(path)
 	viper.SetConfigName(name)
 	viper.SetConfigType(typeExtension)
-	viper.AddConfigPath(path)
 
 	err := viper.ReadInConfig()
+
 	if err != nil {
 		return config, err
 	}

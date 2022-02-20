@@ -18,6 +18,8 @@ func main() {
 
 	var configName string
 	flag.StringVar(&configName, "phase", defaultConfig, "name of configuration file with no extension")
+	flag.Parse()
+
 	_, err := config.Load("./configs", configName)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load config file: %s", err.Error()))
