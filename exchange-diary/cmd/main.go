@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ExchangeDiary/ExchangeDiary_Server/exchange-diary/configs"
+	"github.com/ExchangeDiary_Server/exchange-diary/configs"
 
 	"go.uber.org/zap"
 )
@@ -18,7 +18,7 @@ func main() {
 
 	var configName string
 	flag.StringVar(&configName, "phase", defaultConfig, "name of configuration file with no extension")
-	_, err := configs.Load("./configs", configName)
+	_, err := config.Load("./configs", configName)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load config file: %s", err.Error()))
 	}
