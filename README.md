@@ -10,6 +10,33 @@
 - <strike>[Features](./docs/features.md)</strike>
 - [Fixed Policy](./docs/fixed_policy.md)
 
+## Structure
+
+> Domain Driven Design (Hexagonal architecture)
+
+![](https://github.com/Sairyss/domain-driven-hexagon/blob/master/assets/images/DomainDrivenHexagon.png)
+
+```bash
+├── application         // same as interface layer in hexagonal architecture
+│   ├── cmd             // command line interface
+│   ├── controller      // http controller
+│   ├── middleware      // middleware that handles requests
+│   └── route           // http route, which delegate impl to controller
+├── domain   // domain layer in hexagonal architecture, never have any external dependencies
+│   ├── entity  // entity in domain layer
+│   ├── repository  // interface of persistence layer
+│   └── service     // domain service layer
+└── infrastructure  // handle external dependencies
+    ├── configs     // every configs include gin framework
+    └── persistence // impl of persistence layer
+```
+
+- application: application layer
+  - 원래는 `interface`라고 명칭을 가져가야 하지만, 코드의 interface와 명칭이 중복되어, application 영역으로 명시함.
+  - `hexagonal`에서 application service layer + interface layer의 코드가 들어있음
+- domain: domain layer
+- infrastructure: infra layer
+
 ## Branching strategy with phase
 
 > 아직 proposal
