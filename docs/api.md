@@ -1,4 +1,4 @@
-# `API` (v1)
+# <strike>`API` (v1) deprecated</strike>
 
 - 클라 통신에 필요한 api 스펙들을 정리합니다.
 - API 서버의 base_url은 **"https://voda-api.com"** 라고 가정합니다.

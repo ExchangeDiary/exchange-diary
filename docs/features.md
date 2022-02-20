@@ -1,4 +1,4 @@
-# Features
+# <strike>Features(deprecated)</strike>
 
 > 도메인별 필요한 기능들을 리스트업합니다.
 
