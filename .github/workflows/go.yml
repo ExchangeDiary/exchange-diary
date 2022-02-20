@@ -19,4 +19,6 @@ jobs:
         go-version: 1.15
 
     - name: Build
-      run: go build -v -o ./bin/exchange-diary ./cmd/main.go
+      run: |
+        cd /home/runner/work/ExchangeDiary_Server/ExchangeDiary_Server
+        go build -v -o ./bin/exchange-diary ./cmd/main.go
