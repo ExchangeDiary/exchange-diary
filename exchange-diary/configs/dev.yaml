@@ -4,7 +4,7 @@ db-config:
   port: 10090
 
 kakao-client:
-  api-key: "test"
-
-google-client:
-  api-key: "test"
+  oauth:
+    client-id: "c663ce96b79395b5dcc6d7f774e1af67"
+    client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
+    redirect-url: "http://localhost:8080/auth/kakao"
