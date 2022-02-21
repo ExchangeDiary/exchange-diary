@@ -9,7 +9,7 @@ import (
 
 type RoomModel struct {
 	BaseModel
-	entity.Room // 이렇게 하더라도 ID는 중복되지 않는다.
+	entity.Room
 }
 
 func (_ *RoomModel) TableName() string {
