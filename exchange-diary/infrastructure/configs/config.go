@@ -13,8 +13,10 @@ type Config struct {
 
 type DBConfig struct {
 	Host string `mapstructure:"host"`
-	Name string `mapstructure:"name"`
 	Port int    `mapstructure:"port"`
+	User string `mapstructure:"user"`
+	Name string `mapstructure:"name"`
+	Password string `mapstructure:"password"`
 }
 
 type OAuthConfig struct {
@@ -47,4 +49,14 @@ func Load(path string, name string) (Config, error) {
 
 	err = viper.Unmarshal(&config)
 	return config, err
+}
+
+func DatabaseConfig() *DBConfig {
+	return &DBConfig{
+		Host:     viper.GetString("db-config.host"),
+		Port:     viper.GetInt("db-config.port"),
+		User:     viper.GetString("db-config.user"),
+		Name:   viper.GetString("db-config.name"),
+		Password: viper.GetString("db-config.password"),
+	}	
 }

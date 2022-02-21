@@ -9,8 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ExchangeDiary_Server/exchange-diary/application/controller"
 	"github.com/ExchangeDiary_Server/exchange-diary/application/route"
+	"github.com/ExchangeDiary_Server/exchange-diary/domain/service"
+	"github.com/ExchangeDiary_Server/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary_Server/exchange-diary/infrastructure/configs"
+	"github.com/ExchangeDiary_Server/exchange-diary/infrastructure/persistence"
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -19,6 +23,22 @@ import (
 )
 
 func main() {
+	logger := setLogger()
+	server := bootstrap(logger)
+	server.Run(":8080") // TODO: viper
+	shutdown(logger)
+}
+
+func setLogger() *zap.Logger{
+	logger, err := zap.NewProduction()
+	if err != nil {
+		log.Fatalf("can't initialize zap logger: %v", err)
+	}
+	defer logger.Sync()
+	return logger
+}
+
+func bootstrap(logger *zap.Logger) *gin.Engine {
 	// Initialize configuration
 	defaultConfig := "dev"
 	configPath := "./infrastructure/configs" // TODO: Dockerfile path
@@ -32,28 +52,29 @@ func main() {
 		panic(fmt.Sprintf("Failed to load config file: %s", err.Error()))
 	}
 	
-	run()
-}
+	// init db
+	db := infrastructure.ConnectDatabase()
+	infrastructure.Migrate(db)
 
-func run() {
+	// set DI
+	roomRepository := persistence.NewRoomRepository(db)
+	roomService := service.NewRoomService(roomRepository)
+	roomController := controller.NewRoomController(roomService)
+
+	// init server
 	server := gin.New()
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("can't initialize zap logger: %v", err)
-	}
-	defer logger.Sync()
 	
 	// zap middlewares
 	server.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 	server.Use(ginzap.RecoveryWithZap(logger, true)) // log all panic
-
-	// TODO: need DI
-
-	// routes
-	route.RoomRoutes(server)
-
-	server.Run(":8080") // TODO: viper
 	
+	// init routes
+	route.RoomRoutes(server, roomController)
+	return server
+}
+
+
+func shutdown(logger *zap.Logger) {
 	// Wait for termination signals.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
