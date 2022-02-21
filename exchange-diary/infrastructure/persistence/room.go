@@ -28,7 +28,6 @@ func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 	return &RoomRepository{db: db}
 }
 
-
 func (roomRepository *RoomRepository) Create(room *entity.Room) (*entity.Room, error) {
 	roomModel := RoomModel{}
 	copier.Copy(&roomModel, &room)

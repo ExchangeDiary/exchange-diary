@@ -29,7 +29,7 @@ func main() {
 	shutdown(logger)
 }
 
-func setLogger() *zap.Logger{
+func setLogger() *zap.Logger {
 	logger, err := zap.NewProduction()
 	if err != nil {
 		log.Fatalf("can't initialize zap logger: %v", err)
@@ -46,12 +46,12 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	var configName string
 	flag.StringVar(&configName, "phase", defaultConfig, "name of configuration file with no extension")
 	flag.Parse()
-	
+
 	_, err := configs.Load(configPath, configName)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load config file: %s", err.Error()))
 	}
-	
+
 	// init db
 	db := infrastructure.ConnectDatabase()
 	infrastructure.Migrate(db)
@@ -63,16 +63,15 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 
 	// init server
 	server := gin.New()
-	
+
 	// zap middlewares
 	server.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 	server.Use(ginzap.RecoveryWithZap(logger, true)) // log all panic
-	
+
 	// init routes
 	route.RoomRoutes(server, roomController)
 	return server
 }
-
 
 func shutdown(logger *zap.Logger) {
 	// Wait for termination signals.

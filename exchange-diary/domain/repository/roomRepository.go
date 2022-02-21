@@ -1,4 +1,5 @@
 package repository
+
 import (
 	"github.com/ExchangeDiary_Server/exchange-diary/domain/entity"
 )

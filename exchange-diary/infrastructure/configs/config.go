@@ -12,10 +12,10 @@ type Config struct {
 }
 
 type DBConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
-	User string `mapstructure:"user"`
-	Name string `mapstructure:"name"`
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	User     string `mapstructure:"user"`
+	Name     string `mapstructure:"name"`
 	Password string `mapstructure:"password"`
 }
 
@@ -56,7 +56,7 @@ func DatabaseConfig() *DBConfig {
 		Host:     viper.GetString("db-config.host"),
 		Port:     viper.GetInt("db-config.port"),
 		User:     viper.GetString("db-config.user"),
-		Name:   viper.GetString("db-config.name"),
+		Name:     viper.GetString("db-config.name"),
 		Password: viper.GetString("db-config.password"),
-	}	
+	}
 }

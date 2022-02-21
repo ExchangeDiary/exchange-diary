@@ -7,7 +7,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-
 type RoomController interface {
 	Get() gin.HandlerFunc
 	GetAll() gin.HandlerFunc
@@ -16,30 +15,28 @@ type RoomController interface {
 	Delete() gin.HandlerFunc
 }
 
-
 type roomController struct {
 	roomService service.RoomService
 }
 
 func NewRoomController(roomService service.RoomService) RoomController {
-	return &roomController{ roomService: roomService}
+	return &roomController{roomService: roomService}
 }
 
 type requestRoom struct {
-	Name string `json:"name"`
-	Code string `json:"code"`
-	Hint string `json:"hint"`
+	Name  string `json:"name"`
+	Code  string `json:"code"`
+	Hint  string `json:"hint"`
 	Theme string `json:"theme"`
 }
 
 type responseRoom struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	Code string `json:"code"`
-	Hint string `json:"hint"`
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Code  string `json:"code"`
+	Hint  string `json:"hint"`
 	Theme string `json:"theme"`
 }
-
 
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -50,7 +47,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 		response := []responseRoom{}
 		for _, room := range *rooms {
 			response = append(response, responseRoom{
-				ID: room.ID,
+				ID:   room.ID,
 				Name: room.Name,
 			})
 		}
@@ -61,7 +58,6 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {}
 }
-
 
 func (rc *roomController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -76,10 +72,10 @@ func (rc *roomController) Post() gin.HandlerFunc {
 			return
 		}
 		res := responseRoom{
-			ID: room.ID,
-			Name: room.Name,
-			Code: room.Code,
-			Hint: room.Hint,
+			ID:    room.ID,
+			Name:  room.Name,
+			Code:  room.Code,
+			Hint:  room.Hint,
 			Theme: room.Theme,
 		}
 		c.JSON(http.StatusCreated, res)

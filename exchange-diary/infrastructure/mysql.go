@@ -41,7 +41,6 @@ func ConnectDatabase() *gorm.DB {
 	return db
 }
 
-
 func Migrate(db *gorm.DB) {
 	db.AutoMigrate(&persistence.RoomModel{})
 	// db.AutoMigrate()
