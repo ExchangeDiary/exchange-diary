@@ -8,7 +8,8 @@ import (
 )
 
 type RoomModel struct {
-	BaseModel
+	ID int `gorm:"primary_key"`
+	BaseDateModel
 	entity.Room
 }
 
@@ -40,7 +41,13 @@ func (rr *RoomRepository) Create(room *entity.Room) (*entity.Room, error) {
 }
 
 func (rr *RoomRepository) GetByID(id int) (*entity.Room, error) {
-	return &entity.Room{}, nil
+	roomModel := RoomModel{ID: id}
+	if err := rr.db.First(&roomModel).Error; err != nil {
+		return nil, err
+	}
+	room := new(entity.Room)
+	copier.Copy(&room, &roomModel)
+	return room, nil
 }
 
 func (rr *RoomRepository) GetAll(limit, offset int) (*entity.Rooms, error) {

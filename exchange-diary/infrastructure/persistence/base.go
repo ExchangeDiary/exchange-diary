@@ -6,12 +6,12 @@ import (
 	"gorm.io/gorm"
 )
 
-type BaseModel struct {
+type BaseDateModel struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
 
-func (base *BaseModel) BeforeCreate(tx *gorm.DB) error {
+func (base *BaseDateModel) BeforeCreate(tx *gorm.DB) error {
 	currentDateTime, err := currentDateTime()
 	if err != nil {
 		return err

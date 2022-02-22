@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/ExchangeDiary_Server/exchange-diary/application"
 	"github.com/ExchangeDiary_Server/exchange-diary/domain/service"
@@ -45,6 +46,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 		rooms, err := rc.roomService.GetAll(limit, offset)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		response := []responseRoom{}
 		for _, room := range *rooms {
@@ -61,7 +63,26 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 }
 
 func (rc *roomController) Get() gin.HandlerFunc {
-	return func(c *gin.Context) {}
+	return func(c *gin.Context) {
+	roomId, err := strconv.Atoi(c.Param("room_id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	room, err := rc.roomService.Get(roomId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err.Error())
+		return
+	}
+	res := responseRoom{
+		ID:    room.ID,
+		Name:  room.Name,
+		Code:  room.Code,
+		Hint:  room.Hint,
+		Theme: room.Theme,
+	}
+	c.JSON(http.StatusCreated, res)
+	}
 }
 
 func (rc *roomController) Post() gin.HandlerFunc {

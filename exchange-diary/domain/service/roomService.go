@@ -35,8 +35,13 @@ func (rs *roomService) Create(name, code, hint, theme string) (*entity.Room, err
 }
 
 func (rs *roomService) Get(id int) (*entity.Room, error) {
-	return &entity.Room{}, nil
+	room, err := rs.roomRepository.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return room, nil
 }
+
 func (rs *roomService) GetAllJoinedRooms(accountId, limit, offset int) (*entity.Rooms, error) {
 	return &entity.Rooms{}, nil
 }
