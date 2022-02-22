@@ -3,6 +3,7 @@ package controller
 import (
 	"net/http"
 
+	"github.com/ExchangeDiary_Server/exchange-diary/application"
 	"github.com/ExchangeDiary_Server/exchange-diary/domain/service"
 	"github.com/gin-gonic/gin"
 )
@@ -40,7 +41,8 @@ type responseRoom struct {
 
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		rooms, err := rc.roomService.GetAll()
+		limit, offset := application.GetLimitAndOffset(c)
+		rooms, err := rc.roomService.GetAll(limit, offset)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
@@ -49,6 +51,9 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 			response = append(response, responseRoom{
 				ID:   room.ID,
 				Name: room.Name,
+				Code: room.Code,
+				Hint: room.Hint,
+				Theme: room.Theme,
 			})
 		}
 		c.JSON(http.StatusOK, response)

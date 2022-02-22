@@ -28,10 +28,10 @@ func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 	return &RoomRepository{db: db}
 }
 
-func (roomRepository *RoomRepository) Create(room *entity.Room) (*entity.Room, error) {
+func (rr *RoomRepository) Create(room *entity.Room) (*entity.Room, error) {
 	roomModel := RoomModel{}
 	copier.Copy(&roomModel, &room)
-	if err := roomRepository.db.Create(&roomModel).Error; err != nil {
+	if err := rr.db.Create(&roomModel).Error; err != nil {
 		return nil, err
 	}
 	newRoom := new(entity.Room)
@@ -39,19 +39,23 @@ func (roomRepository *RoomRepository) Create(room *entity.Room) (*entity.Room, e
 	return newRoom, nil
 }
 
-func (roomRepository *RoomRepository) GetByID(id int) (*entity.Room, error) {
+func (rr *RoomRepository) GetByID(id int) (*entity.Room, error) {
 	return &entity.Room{}, nil
 }
 
-func (roomRepository *RoomRepository) GetAll() (*entity.Rooms, error) {
+func (rr *RoomRepository) GetAll(limit, offset int) (*entity.Rooms, error) {
+	roomModels := RoomModels{}
+	rr.db.Limit(limit).Offset(offset).Find(&roomModels)
+	rooms := new(entity.Rooms)
+	copier.Copy(&rooms, &roomModels)
+	return rooms, nil
+}
+
+func (rr *RoomRepository) GetAllByAccountId(accountId, limit, offset int) (*entity.Rooms, error) {
 	return &entity.Rooms{}, nil
 }
 
-func (roomRepository *RoomRepository) GetAllByAccountId(accountId int) (*entity.Rooms, error) {
-	return &entity.Rooms{}, nil
-}
-
-func (roomRepository *RoomRepository) Update(room *entity.Room) (*entity.Room, error) {
+func (rr *RoomRepository) Update(room *entity.Room) (*entity.Room, error) {
 	return &entity.Room{}, nil
 }
 

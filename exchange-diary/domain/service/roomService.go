@@ -8,8 +8,8 @@ import (
 type RoomService interface {
 	Create(name, code, hint, theme string) (*entity.Room, error)
 	Get(id int) (*entity.Room, error)
-	GetAllJoinedRooms(accountId int) (*entity.Rooms, error)
-	GetAll() (*entity.Rooms, error)
+	GetAllJoinedRooms(accountId, limit, offset int) (*entity.Rooms, error)
+	GetAll(limit, offset int) (*entity.Rooms, error)
 	Update(id int, lastname, firstname string) (*entity.Room, error)
 	Delete(id int) error
 }
@@ -37,11 +37,15 @@ func (rs *roomService) Create(name, code, hint, theme string) (*entity.Room, err
 func (rs *roomService) Get(id int) (*entity.Room, error) {
 	return &entity.Room{}, nil
 }
-func (rs *roomService) GetAllJoinedRooms(accountId int) (*entity.Rooms, error) {
+func (rs *roomService) GetAllJoinedRooms(accountId, limit, offset int) (*entity.Rooms, error) {
 	return &entity.Rooms{}, nil
 }
-func (rs *roomService) GetAll() (*entity.Rooms, error) {
-	return &entity.Rooms{}, nil
+func (rs *roomService) GetAll(limit, offset int) (*entity.Rooms, error) {
+	rooms, err := rs.roomRepository.GetAll(limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	return rooms, nil
 }
 func (rs *roomService) Update(id int, lastname, firstname string) (*entity.Room, error) {
 	return &entity.Room{}, nil
