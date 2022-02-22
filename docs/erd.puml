@@ -69,12 +69,13 @@ Table(room_members, "room_members\n다이어리방 참여 멤버") {
 Table(audio, "audio\n다이어리 음성녹음") {
     pk(uuid)    UUID  음성녹음 UUID, static 서버에도 동일 UUID로 저장
     not_null(name)  VARCHAR[]      오디오 파일명
-    pitch   FLOAT[4]    ios용, 오디오 피치
+    pitch   VARCHAR[]    오디오 피치값 (aos / ios가 서로 다르기 때문에 string)
 }
 
 Table(photos, "photos\n다이어리 사진") {
     pk(uuid)    UUID   스토리지 서버에 저장된 photo uuid
     fk(diary_id) INTEGER    다이어리 ID
+    ext VARCHAR[]    이미지 ext
 }
 
 Table(auth, "auth\nOauth관련") {

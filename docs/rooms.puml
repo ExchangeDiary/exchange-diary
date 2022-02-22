@@ -46,13 +46,12 @@ endnote
 ||20||
 
 == GET /v1/rooms/<:room_id>   교환일기방 상세화면 접근==
-' TODO: 서버에서 접근 권한 확인 401(1. 로그인 안된경우 / 2. 멤버가 아닌경우) error일 경우 redirect hint page
-' 멤버가 아닌경우, hint 전달
+' TODO: 서버에서 접근 권한 확인 401(1. 로그인 안된경우 / 2. 멤버가 아닌경우)
 
-client -> api++: **GET /v1/rooms/<:room_id>?page=<:page>**
-note right
-?page=는 diary(일기들)의 페이지네이션을 뜻한다.
-endnote
+user -> client++: (1) 교환일기방 리스트 중 하나 클릭\
+\n(2) 외부에서 공유 링크 클릭
+client -> api++: 교환일기방 상세정보 요청\
+\n**GET /v1/rooms/<:room_id>**
 api -> db++: Get a Room\
 \n**WHERE id = <room_id>**
 return room
@@ -60,22 +59,16 @@ api -> db++: **교환일기 작성 순서에 따라 계정정보 획득**\
 \n(room.orders순서로 account in-query)\
 \nSELECT id, profile_url FROM accounts WHERE in <room.orders>
 return []member
-api -> api: 현재 계정이 멤버인지 확인
+api -> api: 현재 계정이 마스터, 멤버인지 확인
 alt#Gold #Pink Failure
     api -> client: **401 Unauthorized**
     client -> user: 교환일기방 참여코드 입력 페이지 렌더링
 end
-
-api -> db++: Get Diaries(Order by Created_by)\
-\nSELECT * FROM diaries WHERE room_id=<room_id> ORDER BY id desc LIMIT 10 OFFSET 10*<page>
-note right
-page size = 10
-endnote
-return []diary
-return **200 OK**
+return 교환일기방 상세 정보\
+\n**200 OK**
 note right of client #Lavender
-{
-    "orders": [
+{   // 방에 참여한 멤버 ( 작성순서대로 전달됨 )
+    "members": [
         {
             "accountId": "<int>",
             "profileUrl": "<url>" // https://voda-api.com/profiles/leoo.png
@@ -89,8 +82,24 @@ note right of client #Lavender
     "turnAccountName": "<str>", // 현재 턴 accountName i.g "고영희", ("고영희님이 이야기를 쓰고있어요!"일때 사용)
     "name": "<str>", // 다이어리 이름 i.g. 고영희 미만 다꾸러
     "theme": "<str>", // 다이어리 배경 테마명 i.g. #고영희_자랑하는 일기
-    "diaries": {
-        "data": [
+}
+endnote
+
+client -> api++: 교환일기방에 작성된 일기들 요청\
+\n**GET /v1/rooms/<:room_id>/diaries?offset=<:offset>&limit=10**
+note right
+max limit size = 1000
+endnote
+api -> api: 현재 계정이 마스터, 멤버인지 확인
+api -> db++: Get Diaries(Order by Created_by)\
+\nSELECT * FROM diaries WHERE room_id=<room_id> ORDER BY id desc LIMIT <:limit> OFFSET <:offset>
+return []diary
+return **200 OK**
+note right of client #Lavender
+{
+    "data": {
+        // 생성 순서 내림차순
+        "diaries": [
             {
             "place": "<str>", // 장소 i.g. "방구석에서"
             "accountName": "<str>", // 생성한 accountName
@@ -100,10 +109,11 @@ note right of client #Lavender
             {},
             {}
         ],
-        "totalCount": "<int>" // 총 다이어리 숫자 (페이지 요청용)
+        "totalDiaryCount": <int> // 총 다이어리 숫자 (페이지 요청용)
     }
 }
 endnote
+return 교환일기방 상세화면 렌더링
 
 
 ||20||

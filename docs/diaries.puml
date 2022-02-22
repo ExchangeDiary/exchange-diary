@@ -61,18 +61,16 @@ api 서버에 최종 다이어리 생성 시 uuid들을 전달해줘야 함.
 
 **지금 과정은 sync과정으로 가정함**
 endnote
-client -> static++: 오디오 / 사진 파일들 저장 요청
-return **200 Ok**
-note right of client #Lavender
-{
-    "audio": 오디오_UUID,
-    "photos": [
-        "사진1_UUID",
-        "사진2_UUID",
-        "사진3_UUID",
-    ]
-}
+client -> client: 오디오, 이미지 uuid 생성
+note right
+다음 형식으로 static 서버에 저장 요청
+uuid.mp4 
+uuid.png
 endnote
+client -> static++: 오디오 업로드 multipart/form-data
+return 
+client -> static++: 이미지 업로드 multipart/form-data
+return
 client -> api++:  다이어리 저장 요청\
 \n**POST /v1/rooms/<:room_id>/diaries/**
 
@@ -84,14 +82,10 @@ note left of api #Lavender
     "theme": 다이어리 템플릿명,
     "audio": {
         "uuid": 오디오_UUID,
-        "pitch": 오디오 피치값,
-        "name": 오디오_파일명
+        "pitch": 오디오 피치값 <str>, 
+        "title": 오디오_파일명 //audioTitle
     },
-    "photos": [
-        "사진1_UUID",
-        "사진2_UUID",
-        "사진3_UUID",
-    ],
+    "image": "사진uuid.확장자"
 }
 endnote
 note left of api
@@ -162,29 +156,26 @@ note right of client #Lavender
         "theme":  테마명
         "audio": {
             "uuid": 오디오_UUID,
-            "name": 오디오명,
-            "pitch": 오디오 피치값
+            "url" : 오디오 컨텐츠 url 
+            "title": 오디오명, // audioTitle
+            "pitch": 오디오 피치값 // <str>
         },
-        "photos": [
-            "사진1_UUID",
-            "사진2_UUID",
-            "사진3_UUID",
-        ]
+        "image": "사진_url",
     }
 }
 endnote
 note right of client
-사진, 음성 값 없을 경우에는 아래와 같이 전달한다.
+음성 값 없을 경우에는 아래와 같이 전달한다.
 
 {
     ...
     "audio": {},
-    "photos": [],
+    "image": null,
     ...
 }
 endnote
-client -> static++: GET 사진들 / 음성 파일 
-return 음성파일 / 사진파일들
+client -> static++: GET 사진 / 음성 파일 
+return 음성파일 / 사진파일
 return 교환일기 상세 페이지
 
 ||20||
