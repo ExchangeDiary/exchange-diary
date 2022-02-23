@@ -56,5 +56,14 @@ func (rs *roomService) Update(id int, lastname, firstname string) (*entity.Room,
 	return &entity.Room{}, nil
 }
 func (rs *roomService) Delete(id int) error {
+	room, err := rs.Get(id)
+	if err != nil {
+		return err
+	}
+
+	err = rs.roomRepository.Delete(room)
+	if err != nil {
+		return err
+	}
 	return nil
 }

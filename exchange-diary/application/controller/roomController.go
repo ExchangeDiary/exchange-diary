@@ -13,8 +13,9 @@ type RoomController interface {
 	Get() gin.HandlerFunc
 	GetAll() gin.HandlerFunc
 	Post() gin.HandlerFunc
-	Put() gin.HandlerFunc
+	Patch() gin.HandlerFunc
 	Delete() gin.HandlerFunc
+	Leave() gin.HandlerFunc
 }
 
 type roomController struct {
@@ -25,11 +26,17 @@ func NewRoomController(roomService service.RoomService) RoomController {
 	return &roomController{roomService: roomService}
 }
 
-type requestRoom struct {
+type postRequestRoom struct {
 	Name  string `json:"name"`
-	Code  string `json:"code"`
-	Hint  string `json:"hint"`
 	Theme string `json:"theme"`
+	patchRequestRoom
+}
+
+type patchRequestRoom struct {
+	Code   string `json:"code"`
+	Hint   string `json:"hint"`
+	Period int    `json:period`
+	Orders int    `json:orders`
 }
 
 type responseRoom struct {
@@ -40,6 +47,7 @@ type responseRoom struct {
 	Theme string `json:"theme"`
 }
 
+// 참여중인 교환일기방 리스트
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		limit, offset := application.GetLimitAndOffset(c)
@@ -51,10 +59,10 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 		response := []responseRoom{}
 		for _, room := range *rooms {
 			response = append(response, responseRoom{
-				ID:   room.ID,
-				Name: room.Name,
-				Code: room.Code,
-				Hint: room.Hint,
+				ID:    room.ID,
+				Name:  room.Name,
+				Code:  room.Code,
+				Hint:  room.Hint,
 				Theme: room.Theme,
 			})
 		}
@@ -62,32 +70,34 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 	}
 }
 
+// 교환일기방 상세
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
-	roomId, err := strconv.Atoi(c.Param("room_id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	room, err := rc.roomService.Get(roomId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, err.Error())
-		return
-	}
-	res := responseRoom{
-		ID:    room.ID,
-		Name:  room.Name,
-		Code:  room.Code,
-		Hint:  room.Hint,
-		Theme: room.Theme,
-	}
-	c.JSON(http.StatusCreated, res)
+		roomId, err := strconv.Atoi(c.Param("room_id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		room, err := rc.roomService.Get(roomId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		res := responseRoom{
+			ID:    room.ID,
+			Name:  room.Name,
+			Code:  room.Code,
+			Hint:  room.Hint,
+			Theme: room.Theme,
+		}
+		c.JSON(http.StatusCreated, res)
 	}
 }
 
+// 교환일기방 생성
 func (rc *roomController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var req requestRoom
+		var req postRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -108,10 +118,36 @@ func (rc *roomController) Post() gin.HandlerFunc {
 	}
 }
 
-func (rc *roomController) Put() gin.HandlerFunc {
+// 교환일기방 업데이트 (master only)
+// 1. 작성주기(period)
+// 2. 코드/힌트 (code, hint)
+// 3. 작성순서(orders)
+func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {}
 }
 
+// 교환일기방 삭제
 func (rc *roomController) Delete() gin.HandlerFunc {
-	return func(c *gin.Context) {}
+	return func(c *gin.Context) {
+		roomId, err := strconv.Atoi(c.Param("room_id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err = rc.roomService.Delete(roomId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		c.Status(http.StatusNoContent)
+	}
+}
+
+// 교환일기방 나가기
+// 1.마스터일 경우
+// 2.멤버일 경우
+func (rc *roomController) Leave() gin.HandlerFunc {
+	return func(c *gin.Context) {
+
+	}
 }

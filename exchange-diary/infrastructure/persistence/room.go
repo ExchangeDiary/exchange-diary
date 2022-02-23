@@ -66,6 +66,11 @@ func (rr *RoomRepository) Update(room *entity.Room) (*entity.Room, error) {
 	return &entity.Room{}, nil
 }
 
-func (roomRepository *RoomRepository) Delete(room *entity.Room) error {
+func (rr *RoomRepository) Delete(room *entity.Room) error {
+	roomModel := RoomModel{}
+	copier.Copy(&roomModel, &room)
+	if err := rr.db.Delete(&roomModel).Error; err != nil {
+		return err
+	}
 	return nil
 }
