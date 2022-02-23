@@ -1,6 +1,6 @@
-# ExchangeDiary_Server
+# exchange-diary
 
-> ExchangeDiary backend server
+> `exchange-diary` backend server
 
 <div align="center">
   <img width="350" height="450" src="https://user-images.githubusercontent.com/37536298/153554715-f821d0f8-8f51-4f4c-b9e6-a19e02ecb5c2.png" />
@@ -37,6 +37,49 @@
 - domain: domain layer
 - infrastructure: infra layer
 
+## precommit-hook
+
+> [refs](https://tutorialedge.net/golang/improving-go-workflow-with-git-hooks/)
+
+### .zshrc or .bashrc
+
+- go mod를 사용할 경우
+
+```sh
+... 중략 ...
+export PATH="$PATH:$HOME/go/bin"
+export GO111MODULE=on
+```
+
+```bash
+$ go get golang.org/x/tools/cmd/goimports
+$ go get -u golang.org/x/lint/golint
+
+$ cp pre-commit.example .git/hooks/pre-commit
+$ chmod +x .git/hooks/pre-commit
+```
+
+## Build & Run
+
+_Step 1. Build application using Makefile._
+
+```sh
+make build
+```
+
+_Step 2. Run application with specific flag._
+
+```sh
+./bin/exchange-diray -phase=${phase}
+```
+
+- ${phase} would be "dev", "production", or "sandbox".
+- Example:
+
+```sh
+./bin/exchange-diray -phase=dev
+```
+
 ## Branching strategy with phase
 
 > 아직 proposal
@@ -60,16 +103,16 @@
 
 ## Erd
 
-![voda v1 erd](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/erd.puml)
+![voda v1 erd](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/exchange-diary/main/docs/erd.puml)
 
 ## Room flow
 
 > 다이어리방 관련된 플로우
 
-![room api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/rooms.puml)
+![room api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/exchange-diary/main/docs/rooms.puml)
 
 ## Diary flow
 
 > 다이어리 관련된 플로우
 
-![diary api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/ExchangeDiary_Server/main/docs/diaries.puml)
+![diary api](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/ExchangeDiary/exchange-diary/main/docs/diaries.puml)
