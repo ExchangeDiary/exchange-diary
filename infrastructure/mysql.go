@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Dsn(cfg *configs.DBConfig) string {
+func dsn(cfg *configs.DBConfig) string {
 	return fmt.Sprintf(
 		"%s:%s@tcp(%s:%d)/%s?charset=utf8&parseTime=True&loc=Local",
 		cfg.User,
@@ -21,10 +21,10 @@ func Dsn(cfg *configs.DBConfig) string {
 	)
 }
 
+// ConnectDatabase returns
 // https://gorm.io/docs/connecting_to_the_database.html
 func ConnectDatabase() *gorm.DB {
-	dsn := Dsn(configs.DatabaseConfig())
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(dsn(configs.DatabaseConfig())), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
@@ -41,7 +41,8 @@ func ConnectDatabase() *gorm.DB {
 	return db
 }
 
+// Migrate do db migrations
 func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&persistence.RoomModel{})
+	db.AutoMigrate(&persistence.RoomGormModel{})
 	// db.AutoMigrate()
 }

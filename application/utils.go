@@ -11,14 +11,21 @@ const (
 	defaultOffset = 0
 )
 
-func GetLimitAndOffset(c *gin.Context) (int, int) {
-	limit, err := strconv.Atoi(c.Query("limit"))
+// GetLimitAndOffset parse limit and offset from http context and convert them to uint type.
+func GetLimitAndOffset(c *gin.Context) (uint, uint) {
+	limit, err := ParseUint(c.Query("limit"))
 	if err != nil {
 		limit = defaultLimit
 	}
-	offset, err := strconv.Atoi(c.Query("offset"))
+	offset, err := ParseUint(c.Query("offset"))
 	if err != nil {
 		offset = defaultOffset
 	}
 	return limit, offset
+}
+
+// ParseUint parse string to uint
+func ParseUint(str string) (uint, error) {
+	val, err := strconv.ParseUint(str, 10, 64) // uint64
+	return uint(val), err
 }

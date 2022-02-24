@@ -2,7 +2,6 @@ package controller
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/exchange-diary/application"
 	"github.com/exchange-diary/domain/service"
@@ -42,7 +41,7 @@ type patchRequestRoom struct {
 }
 
 type responseRoom struct {
-	ID    int    `json:"id"`
+	ID    uint   `json:"id"`
 	Name  string `json:"name"`
 	Code  string `json:"code"`
 	Hint  string `json:"hint"`
@@ -75,7 +74,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 // 교환일기방 상세
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		roomID, err := strconv.Atoi(c.Param("room_id"))
+		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -125,13 +124,15 @@ func (rc *roomController) Post() gin.HandlerFunc {
 // 2. 코드/힌트 (code, hint)
 // 3. 작성순서(orders)
 func (rc *roomController) Patch() gin.HandlerFunc {
-	return func(c *gin.Context) {}
+	return func(c *gin.Context) {
+
+	}
 }
 
 // 교환일기방 삭제
 func (rc *roomController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		roomID, err := strconv.Atoi(c.Param("room_id"))
+		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return

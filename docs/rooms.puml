@@ -77,11 +77,11 @@ note right of client #Lavender
 {
     "orders": [
         {
-            "accountId": "<int>",
+            "accountID": "<int>",
             "profileUrl": "<url>" // https://voda-api.com/profiles/leoo.png
         },
         {
-            "accountId": "<int>",
+            "accountID": "<int>",
             "profileUrl": "<url>"
         }
     ],
@@ -129,7 +129,7 @@ note right of client #Lavender
             "createdAt": <datetime>, // 최근 다이어리 알려주기용
             "members": [
             {
-                "accountId": "<int>",
+                "accountID": "<int>",
                 "profileUrl": "<url>",
             },
             {}
