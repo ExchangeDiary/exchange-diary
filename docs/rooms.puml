@@ -27,6 +27,7 @@ note right of client #Lavender
     "name": 방이름,
     "code": 질문답변,
     "hint": 참여질문,
+    "period": 작성기한 (int),
     "theme": "1"|"2"|"3",
 }
 endnote
@@ -82,6 +83,8 @@ note right of client #Lavender
     "turnAccountName": "<str>", // 현재 턴 accountName i.g "고영희", ("고영희님이 이야기를 쓰고있어요!"일때 사용)
     "name": "<str>", // 다이어리 이름 i.g. 고영희 미만 다꾸러
     "theme": "<str>", // 다이어리 배경 테마명 i.g. #고영희_자랑하는 일기
+    "period": <int>, // 작성 기한 (방장설정화면 > 작성기한 재설정용)
+    "isMaster": "<bool>" // 다이어리 마스터 여부 (방장설정화면 접근 권한 체크용)
 }
 endnote
 
@@ -170,10 +173,105 @@ api -> api: verify(사용자작성코드, code)
 alt#Gold #LightBlue Successful case
     api -> client: **200 OK**
 else #Pink Failure
-    api -> client: **401 Unauthorized**
+    return  **401 Unauthorized**
 end
 
+||20||
+== PATCH /v1/rooms/<:room_id>  교환일기방 참여코드 재설정==
+user -> client++: 방장설정화면 클릭
+note right of client
+**GET /v1/rooms/<:room_id>교환일기방 상세화면** 에서 얻은 **isMaster**필드를 사용해
+방장 설정화면의 접근권한을 체크합니다.
+endnote
+return 방장설정화면
+user -> client++: 방장설정화면 > "비밀번호 변경" 클릭
+client -> client: 참여코드 재설정 "완료" 클릭
+client -> api++: **PATCH /v1/rooms/<:room_id>**
+note right of client #Lavender
+{
+    "code": 참여코드
+    "hint": 참여코드 힌트
+}
+endnote
+api -> db++: 마스터 여부 확인
+return isMaster (bool)
+alt#Gold #LightBlue Successful case
+    api -> db++: room update
+    return ok
+    api -> client: **204 No Content**
+else #Pink Failure
+   return **401 Unauthorized**
+end
+return 
 
+||20||
+== PATCH /v1/rooms/<:room_id>  교환일기방 작성기한 재설정==
+user -> client++: 방장설정화면 클릭
+note right of client
+**GET /v1/rooms/<:room_id>교환일기방 상세화면** 에서 얻은 **isMaster**필드를 사용해
+방장 설정화면의 접근권한을 체크합니다.
+endnote
+return 방장설정화면
+user -> client++: 방장설정화면 > "작성기한" 클릭
+note right of client
+**GET /v1/rooms/<:room_id>교환일기방 상세화면** 에서 얻은 **period 필드**를 사용해
+방장 설정화면의 "작성기한"을 렌더링해줍니다.
+endnote
+client -> client: 작성기한 변경 후 확인 클릭
+client -> api++: **PATCH /v1/rooms/<:room_id>**
+note right of client #Lavender
+{
+    "period": 작성기한
+}
+endnote
+api -> db++: 마스터 여부 확인
+return isMaster (bool)
+alt#Gold #LightBlue Successful case
+    api -> db++: room update
+    return ok
+    api -> client: **204 No Content**
+else #Pink Failure
+   return **401 Unauthorized**
+end
+return 
+
+||20||
+== PATCH /v1/rooms/<:room_id>  교환일기방 다이어리 작성 순서 변경==
+user -> client++: 방장설정화면 클릭
+note right of client
+**GET /v1/rooms/<:room_id>교환일기방 상세화면** 에서 얻은 **isMaster**필드를 사용해
+방장 설정화면의 접근권한을 체크합니다.
+endnote
+return 방장설정화면
+user -> client++: 방장설정화면 > "작성순서변경" 클릭
+note right of client
+**GET /v1/rooms/<:room_id>교환일기방 상세화면** 에서 얻은 **members 필드**를 사용해
+방장 설정화면의 "작성순서" 리스트를 렌더링해줍니다.
+endnote
+
+client -> client: 작성순서 변경 후 "완료" 클릭
+client -> api++: **PATCH /v1/rooms/<:room_id>**
+note right of client #Lavender
+{
+    "members": [
+        "1번 accountId",
+        "2번 accountId",
+        "3번 accountId",
+        "4번 accountId",
+        ...
+    ]
+}
+endnote
+api -> db++: 마스터 여부 확인
+return isMaster (bool)
+alt#Gold #LightBlue Successful case
+    api -> db++: room update
+    return ok
+    api -> client: **204 No Content**
+else #Pink Failure
+   return **401 Unauthorized**
+end
+return 
 
 ||20||
 == DELETE /v1/rooms/<:room_id> 교환일기방 나가기 ==
