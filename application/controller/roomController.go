@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/exchange-diary/application"
 	"github.com/exchange-diary/domain/service"
@@ -28,24 +29,46 @@ func NewRoomController(roomService service.RoomService) RoomController {
 }
 
 type postRequestRoom struct {
-	Name  string `json:"name"`
-	Theme string `json:"theme"`
-	patchRequestRoom
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Hint   string `json:"hint"`
+	Period uint8  `json:"period"`
+	Theme  string `json:"theme"`
 }
 
 type patchRequestRoom struct {
-	Code   string `json:"code"`
-	Hint   string `json:"hint"`
-	Period int    `json:"period"`
-	Orders int    `json:"orders"`
+	Code    string `json:"code"`
+	Hint    string `json:"hint"`
+	Period  uint8  `json:"period"`
+	Members int    `json:"members"`
+}
+
+// TODO: move to account
+type responseMember struct {
+	ID         uint   `json:"id"`
+	ProfileURL string `json:"profileUrl"`
 }
 
 type responseRoom struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Code  string `json:"code"`
-	Hint  string `json:"hint"`
-	Theme string `json:"theme"`
+	ID              uint             `json:"id"`
+	Name            *string          `json:"name"`
+	Code            *string          `json:"code,omitempty"`
+	Hint            *string          `json:"hint,omitempty"`
+	Theme           *string          `json:"theme,omitempty"`
+	Members         []responseMember `json:"members"`
+	TurnAccountID   uint             `json:"turnAccountId,omitempty"`
+	TurnAccountName *string          `json:"turnAccountName,omitempty"`
+	IsMaster        *bool            `json:"isMaster,omitempty"`
+	CreatedAt       *time.Time       `json:"createdAt"`
+}
+
+type listResponseRoom struct {
+	Rooms []responseRoom `json:"rooms"`
+}
+
+// TODO: implement it
+func mockAccountID(c *gin.Context) uint {
+	return 1
 }
 
 // 참여중인 교환일기방 리스트
@@ -57,17 +80,18 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		response := []responseRoom{}
+		// TODO: response Member population
+		members := []responseMember{}
+		roomsResponse := []responseRoom{}
 		for _, room := range *rooms {
-			response = append(response, responseRoom{
-				ID:    room.ID,
-				Name:  room.Name,
-				Code:  room.Code,
-				Hint:  room.Hint,
-				Theme: room.Theme,
+			roomsResponse = append(roomsResponse, responseRoom{
+				ID:        room.ID,
+				Name:      &room.Name,
+				Members:   members,
+				CreatedAt: &room.CreatedAt,
 			})
 		}
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, listResponseRoom{Rooms: roomsResponse})
 	}
 }
 
@@ -86,10 +110,10 @@ func (rc *roomController) Get() gin.HandlerFunc {
 		}
 		res := responseRoom{
 			ID:    room.ID,
-			Name:  room.Name,
-			Code:  room.Code,
-			Hint:  room.Hint,
-			Theme: room.Theme,
+			Name:  &room.Name,
+			Code:  &room.Code,
+			Hint:  &room.Hint,
+			Theme: &room.Theme,
 		}
 		c.JSON(http.StatusCreated, res)
 	}
@@ -103,17 +127,18 @@ func (rc *roomController) Post() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		room, err := rc.roomService.Create(req.Name, req.Code, req.Hint, req.Theme)
+		masterID := mockAccountID(c)
+		room, err := rc.roomService.Create(masterID, req.Name, req.Code, req.Hint, req.Theme, req.Period)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		res := responseRoom{
 			ID:    room.ID,
-			Name:  room.Name,
-			Code:  room.Code,
-			Hint:  room.Hint,
-			Theme: room.Theme,
+			Name:  &room.Name,
+			Code:  &room.Code,
+			Hint:  &room.Hint,
+			Theme: &room.Theme,
 		}
 		c.JSON(http.StatusCreated, res)
 	}

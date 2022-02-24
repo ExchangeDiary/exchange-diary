@@ -7,7 +7,7 @@ import (
 
 // RoomService ...
 type RoomService interface {
-	Create(name, code, hint, theme string) (*entity.Room, error)
+	Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error)
 	Get(id uint) (*entity.Room, error)
 	GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error)
 	GetAll(limit, offset uint) (*entity.Rooms, error)
@@ -24,8 +24,8 @@ func NewRoomService(roomRepository repository.RoomRepository) RoomService {
 	return &roomService{roomRepository: roomRepository}
 }
 
-func (rs *roomService) Create(name, code, hint, theme string) (*entity.Room, error) {
-	room, err := entity.NewRoom(name, code, hint, theme)
+func (rs *roomService) Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error) {
+	room, err := entity.NewRoom(masterID, name, code, hint, theme, period)
 	if err != nil {
 		return nil, err
 	}
