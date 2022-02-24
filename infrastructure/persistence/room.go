@@ -28,7 +28,7 @@ type RoomGormModel struct {
 }
 
 // TableName define gorm table name
-func (*RoomGormModel) TableName() string {
+func (RoomGormModel) TableName() string {
 	return "rooms"
 }
 

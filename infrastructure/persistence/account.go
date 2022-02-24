@@ -8,7 +8,7 @@ type AccountGormModel struct {
 }
 
 // TableName define gorm table name
-func (*AccountGormModel) TableName() string {
+func (AccountGormModel) TableName() string {
 	return "accounts"
 }
 
