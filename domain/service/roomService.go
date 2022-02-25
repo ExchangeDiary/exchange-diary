@@ -1,6 +1,8 @@
 package service
 
 import (
+	"errors"
+
 	"github.com/exchange-diary/domain/entity"
 	"github.com/exchange-diary/domain/repository"
 )
@@ -13,6 +15,8 @@ type RoomService interface {
 	GetAll(limit, offset uint) (*entity.Rooms, error)
 	Update(id uint, lastname, firstname string) (*entity.Room, error)
 	Delete(id uint) error
+	VerifyCode(id uint, code string) (bool, error)
+	JoinRoom(roomID, accountID uint) error
 }
 
 type roomService struct {
@@ -44,6 +48,7 @@ func (rs *roomService) Get(id uint) (*entity.Room, error) {
 	return room, nil
 }
 
+// Room Master + RoomMember table
 func (rs *roomService) GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error) {
 	return &entity.Rooms{}, nil
 }
@@ -67,5 +72,22 @@ func (rs *roomService) Delete(id uint) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (rs *roomService) VerifyCode(id uint, code string) (bool, error) {
+	room, err := rs.Get(id)
+	if err != nil {
+		return false, err
+	}
+	if room.Code != code {
+		return false, errors.New("Invalid code is given")
+	}
+	return true, nil
+}
+
+// update room.Orders
+// add roomMember row
+func (rs *roomService) JoinRoom(roomID, accountID uint) error {
 	return nil
 }

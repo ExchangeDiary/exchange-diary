@@ -16,6 +16,7 @@ type RoomController interface {
 	Post() gin.HandlerFunc
 	Patch() gin.HandlerFunc
 	Delete() gin.HandlerFunc
+	Join() gin.HandlerFunc
 	Leave() gin.HandlerFunc
 }
 
@@ -28,42 +29,10 @@ func NewRoomController(roomService service.RoomService) RoomController {
 	return &roomController{roomService: roomService}
 }
 
-type postRequestRoom struct {
-	Name   string `json:"name"`
-	Code   string `json:"code"`
-	Hint   string `json:"hint"`
-	Period uint8  `json:"period"`
-	Theme  string `json:"theme"`
-}
-
-type patchRequestRoom struct {
-	Code    string `json:"code"`
-	Hint    string `json:"hint"`
-	Period  uint8  `json:"period"`
-	Members int    `json:"members"`
-}
-
 // TODO: move to account
 type responseMember struct {
 	ID         uint   `json:"id"`
 	ProfileURL string `json:"profileUrl"`
-}
-
-type responseRoom struct {
-	ID              uint             `json:"id"`
-	Name            *string          `json:"name"`
-	Code            *string          `json:"code,omitempty"`
-	Hint            *string          `json:"hint,omitempty"`
-	Theme           *string          `json:"theme,omitempty"`
-	Members         []responseMember `json:"members"`
-	TurnAccountID   uint             `json:"turnAccountId,omitempty"`
-	TurnAccountName *string          `json:"turnAccountName,omitempty"`
-	IsMaster        *bool            `json:"isMaster,omitempty"`
-	CreatedAt       *time.Time       `json:"createdAt"`
-}
-
-type listResponseRoom struct {
-	Rooms []responseRoom `json:"rooms"`
 }
 
 // TODO: implement it
@@ -71,11 +40,15 @@ func mockAccountID(c *gin.Context) uint {
 	return 1
 }
 
+type listResponseRoom struct {
+	Rooms []responseRoom `json:"rooms"`
+}
+
 // 참여중인 교환일기방 리스트
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		limit, offset := application.GetLimitAndOffset(c)
-		rooms, err := rc.roomService.GetAll(limit, offset)
+		rooms, err := rc.roomService.GetAll(limit, offset) // TODO: GetAllJoinedRooms
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -95,9 +68,24 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 	}
 }
 
+type responseRoom struct {
+	ID              uint             `json:"id"`
+	Name            *string          `json:"name"`
+	Code            *string          `json:"code,omitempty"`
+	Hint            *string          `json:"hint,omitempty"`
+	Theme           *string          `json:"theme,omitempty"`
+	Period          uint8            `json:"period,omitempty"`
+	Members         []responseMember `json:"members"`
+	TurnAccountID   uint             `json:"turnAccountId,omitempty"`
+	TurnAccountName *string          `json:"turnAccountName,omitempty"`
+	IsMaster        bool             `json:"isMaster,omitempty"`
+	CreatedAt       *time.Time       `json:"createdAt"`
+}
+
 // 교환일기방 상세
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		curAccountID := mockAccountID(c)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -108,15 +96,35 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
+		// TODO: response Member population
+		members := []responseMember{}
+		turnAccountName := "MOCK 어카운트 이름"
 		res := responseRoom{
-			ID:    room.ID,
-			Name:  &room.Name,
-			Code:  &room.Code,
-			Hint:  &room.Hint,
-			Theme: &room.Theme,
+			ID:              room.ID,
+			Name:            &room.Name,
+			Theme:           &room.Theme,
+			Period:          room.Period,
+			Members:         members,
+			TurnAccountID:   room.TurnAccountID,
+			TurnAccountName: &turnAccountName,
+			CreatedAt:       &room.CreatedAt,
+			IsMaster:        room.IsMaster(curAccountID),
 		}
-		c.JSON(http.StatusCreated, res)
+		c.JSON(http.StatusOK, res)
 	}
+}
+
+type postRequestRoom struct {
+	Name   string `json:"name"`
+	Code   string `json:"code"`
+	Hint   string `json:"hint"`
+	Period uint8  `json:"period"`
+	Theme  string `json:"theme"`
+}
+
+type postResponseRoom struct {
+	RoomID uint `json:"roomId"`
 }
 
 // 교환일기방 생성
@@ -133,15 +141,16 @@ func (rc *roomController) Post() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
-		res := responseRoom{
-			ID:    room.ID,
-			Name:  &room.Name,
-			Code:  &room.Code,
-			Hint:  &room.Hint,
-			Theme: &room.Theme,
-		}
-		c.JSON(http.StatusCreated, res)
+		res := postResponseRoom{RoomID: room.ID}
+		c.JSON(http.StatusOK, res)
 	}
+}
+
+type patchRequestRoom struct {
+	Code    string `json:"code"`
+	Hint    string `json:"hint"`
+	Period  uint8  `json:"period"`
+	Members int    `json:"members"`
 }
 
 // 교환일기방 업데이트 (master only)
@@ -157,6 +166,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 // 교환일기방 삭제
 func (rc *roomController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// TODO: 현재 유저가 마스터 ID가 아니면 return 401
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -168,6 +178,42 @@ func (rc *roomController) Delete() gin.HandlerFunc {
 			return
 		}
 		c.Status(http.StatusNoContent)
+	}
+}
+
+type verifyRequestRoom struct {
+	Code string `json:"code"`
+}
+
+// 교환일기방 참여코드 체크 후, 교환일기방 멤버로 추가
+func (rc *roomController) Join() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req verifyRequestRoom
+		accountID := mockAccountID(c)
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		roomID, err := application.ParseUint(c.Param("room_id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		ok, err := rc.roomService.VerifyCode(roomID, req.Code)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		if !ok {
+			c.JSON(http.StatusUnauthorized, err.Error())
+			return
+		}
+		if err := rc.roomService.JoinRoom(roomID, accountID); err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		c.Status(http.StatusCreated)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// RoomRoutes is room api handler
 func RoomRoutes(incomingRoutes *gin.Engine, controller controller.RoomController) {
 	rooms := incomingRoutes.Group("v1/rooms")
 	{
@@ -13,6 +14,7 @@ func RoomRoutes(incomingRoutes *gin.Engine, controller controller.RoomController
 		rooms.POST("/", controller.Post())
 		rooms.PATCH("/:room_id", controller.Patch())
 		rooms.DELETE("/:room_id", controller.Delete())
+		rooms.POST("/:room_id/join", controller.Join())
 		rooms.PATCH("/:room_id/leave", controller.Leave())
 	}
 }

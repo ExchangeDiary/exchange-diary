@@ -16,7 +16,6 @@ type Room struct {
 	Orders        []uint // []Account.ID
 
 	CreatedAt time.Time
-	UpdatedAt time.Time
 }
 
 // Rooms ...
