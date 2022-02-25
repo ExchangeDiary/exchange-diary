@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -83,4 +84,13 @@ func (r *Room) ChangeMaster() error {
 	// Order에서 가장 위에 존재하는 account id로 선출
 	r.MasterID = r.Orders[0]
 	return nil
+}
+
+// OrdersToJSON 는 []uint 타입을 []byte json타입으로 마샬링 변환한다.
+func (r *Room) OrdersToJSON() ([]byte, error) {
+	orderJSON, err := json.Marshal(r.Orders)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(orderJSON), nil
 }

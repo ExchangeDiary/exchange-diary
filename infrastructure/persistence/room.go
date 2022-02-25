@@ -1,9 +1,13 @@
 package persistence
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/exchange-diary/domain/entity"
 	"github.com/exchange-diary/domain/repository"
 	"github.com/jinzhu/copier"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
@@ -21,8 +25,7 @@ type RoomGorm struct {
 	TurnAccountID uint        `gorm:"column:turn_account_id"`
 	TurnAccount   AccountGorm `gorm:"column:turn_account_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
-	// TODO: json field
-	// Orders        []uint
+	Orders datatypes.JSON `gorm:"column:orders"`
 
 	BaseGormModel
 }
@@ -47,16 +50,37 @@ func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 	return &RoomRepository{db: db}
 }
 
+// ToDTO : entity.Room -> RoomGorm
+func ToDTO(dto *RoomGorm, room *entity.Room) *RoomGorm {
+	copier.Copy(&dto, &room)
+	ordersJSON, _ := room.OrdersToJSON()
+	dto.Orders = datatypes.JSON(ordersJSON)
+	return dto
+}
+
+// ToEntity : RoomGorm -> entity.Room
+func ToEntity(dto *RoomGorm) *entity.Room {
+	var orders []uint
+
+	room := new(entity.Room)
+	copier.Copy(&room, &dto)
+
+	err := json.Unmarshal([]byte(dto.Orders), &orders)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	room.Orders = orders
+	return room
+}
+
 // Create func inserts a row to db
 func (rr *RoomRepository) Create(room *entity.Room) (*entity.Room, error) {
-	dto := RoomGorm{}
-	copier.Copy(&dto, &room)
+	dto := ToDTO(&RoomGorm{}, room)
 	if err := rr.db.Create(&dto).Error; err != nil {
 		return nil, err
 	}
-	newRoom := new(entity.Room)
-	copier.Copy(&newRoom, &dto)
-	return newRoom, nil
+	return ToEntity(dto), nil
 }
 
 // GetByID func find a row by entity's ID from db
@@ -65,15 +89,14 @@ func (rr *RoomRepository) GetByID(id uint) (*entity.Room, error) {
 	if err := rr.db.First(&dto).Error; err != nil {
 		return nil, err
 	}
-	room := new(entity.Room)
-	copier.Copy(&room, &dto)
-	return room, nil
+	return ToEntity(&dto), nil
 }
 
 // GetAll func get all row from db table
 func (rr *RoomRepository) GetAll(limit, offset uint) (*entity.Rooms, error) {
 	dto := RoomGorms{}
 	rr.db.Limit(int(limit)).Offset(int(offset)).Find(&dto)
+
 	rooms := new(entity.Rooms)
 	copier.Copy(&rooms, &dto)
 	return rooms, nil
@@ -86,20 +109,16 @@ func (rr *RoomRepository) GetAllByAccountID(accountID, limit, offset uint) (*ent
 
 // Update func update a room fields
 func (rr *RoomRepository) Update(room *entity.Room) (*entity.Room, error) {
-	dto := RoomGorm{}
-	copier.Copy(&dto, &room)
+	dto := ToDTO(&RoomGorm{}, room)
 	if err := rr.db.Save(&dto).Error; err != nil {
 		return nil, err
 	}
-	updatedRoom := new(entity.Room)
-	copier.Copy(&updatedRoom, &dto)
-	return updatedRoom, nil
+	return ToEntity(dto), nil
 }
 
 // Delete func delete a room
 func (rr *RoomRepository) Delete(room *entity.Room) error {
-	dto := RoomGorm{}
-	copier.Copy(&dto, &room)
+	dto := ToDTO(&RoomGorm{}, room)
 	if err := rr.db.Delete(&dto).Error; err != nil {
 		return err
 	}

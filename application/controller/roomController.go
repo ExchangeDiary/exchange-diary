@@ -54,13 +54,13 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 			return
 		}
 		// TODO: response Member population
-		members := []responseMember{}
+		// members := []responseMember{}
 		roomsResponse := []responseRoom{}
 		for _, room := range *rooms {
 			roomsResponse = append(roomsResponse, responseRoom{
 				ID:        room.ID,
 				Name:      &room.Name,
-				Members:   members,
+				Members:   room.Orders,
 				CreatedAt: &room.CreatedAt,
 			})
 		}
@@ -69,17 +69,17 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 }
 
 type responseRoom struct {
-	ID              uint             `json:"id"`
-	Name            *string          `json:"name"`
-	Code            *string          `json:"code,omitempty"`
-	Hint            *string          `json:"hint,omitempty"`
-	Theme           *string          `json:"theme,omitempty"`
-	Period          uint8            `json:"period,omitempty"`
-	Members         []responseMember `json:"members"`
-	TurnAccountID   uint             `json:"turnAccountId,omitempty"`
-	TurnAccountName *string          `json:"turnAccountName,omitempty"`
-	IsMaster        bool             `json:"isMaster,omitempty"`
-	CreatedAt       *time.Time       `json:"createdAt"`
+	ID              uint       `json:"id"`
+	Name            *string    `json:"name"`
+	Code            *string    `json:"code,omitempty"`
+	Hint            *string    `json:"hint,omitempty"`
+	Theme           *string    `json:"theme,omitempty"`
+	Period          uint8      `json:"period,omitempty"`
+	Members         []uint     `json:"members"`
+	TurnAccountID   uint       `json:"turnAccountId,omitempty"`
+	TurnAccountName *string    `json:"turnAccountName,omitempty"`
+	IsMaster        bool       `json:"isMaster,omitempty"`
+	CreatedAt       *time.Time `json:"createdAt"`
 }
 
 // 교환일기방 상세
@@ -98,14 +98,14 @@ func (rc *roomController) Get() gin.HandlerFunc {
 		}
 
 		// TODO: response Member population
-		members := []responseMember{}
+		// members := []responseMember{}
 		turnAccountName := "MOCK 어카운트 이름"
 		res := responseRoom{
 			ID:              room.ID,
 			Name:            &room.Name,
 			Theme:           &room.Theme,
 			Period:          room.Period,
-			Members:         members,
+			Members:         room.Orders,
 			TurnAccountID:   room.TurnAccountID,
 			TurnAccountName: &turnAccountName,
 			CreatedAt:       &room.CreatedAt,

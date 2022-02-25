@@ -102,7 +102,6 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 		return false, err
 	}
 	// 	2. append room.Orders
-	// TODO: Update JSON list field
 	room.AppendMember(accountID)
 	if _, err := rs.roomRepository.Update(room); err != nil {
 		return false, err
@@ -119,7 +118,7 @@ func (rs *roomService) LeaveRoom(id, accountID uint) error {
 		return err
 	}
 	if !room.IsAlreadyJoined(accountID) {
-		return nil
+		return errors.New("cannot leave room because you are not a memeber of this room")
 	}
 	if room.IsMaster(accountID) {
 		return rs.doMasterLeaveProcess(room, accountID)
@@ -128,7 +127,6 @@ func (rs *roomService) LeaveRoom(id, accountID uint) error {
 }
 
 func (rs *roomService) doMasterLeaveProcess(room *entity.Room, accountID uint) error {
-	fmt.Println("doMasterLeaveProcess")
 	// 다이어리방에 한명만 존재할 경우: 다이어리방 제거
 	if len(room.Orders) == 1 {
 		if err := rs.roomRepository.Delete(room); err != nil {
