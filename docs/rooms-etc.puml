@@ -35,6 +35,10 @@ api -> db++: Get a room code
 return code
 api -> api: verify(사용자작성코드, code)
 alt#Gold #LightBlue Successful case
+    api -> db++: Insert Account to RoomMember
+    return ok
+    api -> db++: Append AccountID to Room.Orders
+    return ok
     api -> client: **200 OK**
 else #Pink Failure
     return  **401 Unauthorized**
