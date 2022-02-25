@@ -21,9 +21,9 @@ note right of user
 endnote
 ||20||
 
-== POST /v1/rooms/<:room_id>/verify  교환일기방 참여코드 체크 ==
+== POST /v1/rooms/<:room_id>/join  교환일기방 참여 및 code 검증 ==
 user -> client: 다이어리방 참여코드 입력
-client -> api++: **POST /v1/rooms/<:room_id>/verify**
+client -> api++: **POST /v1/rooms/<:room_id>/join**
 
 note right of client #Lavender
 {
@@ -39,7 +39,7 @@ alt#Gold #LightBlue Successful case
     return ok
     api -> db++: Append AccountID to Room.Orders
     return ok
-    api -> client: **200 OK**
+    api -> client: **201 Created**
 else #Pink Failure
     return  **401 Unauthorized**
 end
