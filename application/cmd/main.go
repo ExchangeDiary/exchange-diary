@@ -58,7 +58,9 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 
 	// set DI
 	roomRepository := persistence.NewRoomRepository(db)
-	roomService := service.NewRoomService(roomRepository)
+	roomMemberRepository := persistence.NewRoomMemberRepository(db)
+	roomMemberService := service.NewRoomMemberService(roomMemberRepository)
+	roomService := service.NewRoomService(roomRepository, roomMemberService)
 	roomController := controller.NewRoomController(roomService)
 
 	// init server

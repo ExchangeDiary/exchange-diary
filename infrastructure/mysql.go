@@ -43,6 +43,8 @@ func ConnectDatabase() *gorm.DB {
 
 // Migrate do db migrations
 func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&persistence.RoomGormModel{})
+	db.AutoMigrate(&persistence.AccountGorm{})
+	db.AutoMigrate(&persistence.RoomGorm{})
+	db.AutoMigrate(&persistence.RoomMemberGorm{})
 	// db.AutoMigrate()
 }
