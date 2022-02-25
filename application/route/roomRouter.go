@@ -15,6 +15,6 @@ func RoomRoutes(incomingRoutes *gin.Engine, controller controller.RoomController
 		rooms.PATCH("/:room_id", controller.Patch())
 		rooms.DELETE("/:room_id", controller.Delete())
 		rooms.POST("/:room_id/join", controller.Join())
-		rooms.PATCH("/:room_id/leave", controller.Leave())
+		rooms.DELETE("/:room_id/leave", controller.Leave())
 	}
 }

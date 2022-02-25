@@ -8,9 +8,9 @@ import (
 // RoomMemberService ...
 type RoomMemberService interface {
 	Add(roomID, accountID uint) (*entity.RoomMember, error)
-	Get(id uint) (*entity.RoomMember, error)
+	Get(roomID, accountID uint) (*entity.RoomMember, error)
 	GetAll() (*entity.RoomMembers, error)
-	Delete(id uint) error
+	Delete(roomID, accountID uint) error
 }
 
 type roomMemberService struct {
@@ -34,8 +34,8 @@ func (rms *roomMemberService) Add(roomID, accountID uint) (*entity.RoomMember, e
 	return createdRoomMember, nil
 }
 
-func (rms *roomMemberService) Get(id uint) (*entity.RoomMember, error) {
-	roomMember, err := rms.roomMemberRepository.GetByID(id)
+func (rms *roomMemberService) Get(roomID, accountID uint) (*entity.RoomMember, error) {
+	roomMember, err := rms.roomMemberRepository.GetByUnq(roomID, accountID)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +50,8 @@ func (rms *roomMemberService) GetAll() (*entity.RoomMembers, error) {
 	return roomMembers, nil
 }
 
-func (rms *roomMemberService) Delete(id uint) error {
-	roomMember, err := rms.Get(id)
+func (rms *roomMemberService) Delete(roomID, accountID uint) error {
+	roomMember, err := rms.Get(roomID, accountID)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"errors"
 	"time"
 
 	"github.com/exchange-diary/domain"
@@ -55,4 +56,31 @@ func (r *Room) IsMaster(accountID uint) bool {
 // IsAlreadyJoined determines whether account is master or member of room
 func (r *Room) IsAlreadyJoined(accountID uint) bool {
 	return r.IsMaster(accountID) || domain.Contains(r.Orders, accountID)
+}
+
+// AppendMember ...
+func (r *Room) AppendMember(accountID uint) {
+	r.Orders = append(r.Orders, accountID)
+}
+
+// RemoveMember ...
+func (r *Room) RemoveMember(accountID uint) (uint, error) {
+	if len(r.Orders) == 0 {
+		return 0, errors.New("There is no room member")
+	}
+	r.Orders, accountID = domain.Remove(r.Orders, accountID)
+	if accountID == 0 {
+		return 0, errors.New("There is no matched accountID from room.Orders")
+	}
+	return accountID, nil
+}
+
+// ChangeMaster ...
+func (r *Room) ChangeMaster() error {
+	if _, err := r.RemoveMember(r.MasterID); err != nil {
+		return err
+	}
+	// Order에서 가장 위에 존재하는 account id로 선출
+	r.MasterID = r.Orders[0]
+	return nil
 }

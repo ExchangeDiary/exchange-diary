@@ -86,7 +86,14 @@ func (rr *RoomRepository) GetAllByAccountID(accountID, limit, offset uint) (*ent
 
 // Update func update a room fields
 func (rr *RoomRepository) Update(room *entity.Room) (*entity.Room, error) {
-	return &entity.Room{}, nil
+	dto := RoomGorm{}
+	copier.Copy(&dto, &room)
+	if err := rr.db.Save(&dto).Error; err != nil {
+		return nil, err
+	}
+	updatedRoom := new(entity.Room)
+	copier.Copy(&updatedRoom, &dto)
+	return updatedRoom, nil
 }
 
 // Delete func delete a room

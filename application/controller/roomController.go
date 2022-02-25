@@ -159,7 +159,6 @@ type patchRequestRoom struct {
 // 3. 작성순서(orders)
 func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
 	}
 }
 
@@ -214,10 +213,18 @@ func (rc *roomController) Join() gin.HandlerFunc {
 }
 
 // 교환일기방 나가기
-// 1.마스터일 경우
-// 2.멤버일 경우
 func (rc *roomController) Leave() gin.HandlerFunc {
 	return func(c *gin.Context) {
-
+		accountID := mockAccountID(c)
+		roomID, err := application.ParseUint(c.Param("room_id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		if err := rc.roomService.LeaveRoom(roomID, accountID); err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		c.Status(http.StatusNoContent)
 	}
 }

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/exchange-diary/domain/entity"
 	"github.com/exchange-diary/domain/repository"
@@ -16,6 +17,7 @@ type RoomService interface {
 	Update(id uint, lastname, firstname string) (*entity.Room, error)
 	Delete(id uint) error
 	JoinRoom(id, accountID uint, code string) (bool, error)
+	LeaveRoom(id, accountID uint) error
 }
 
 type roomService struct {
@@ -62,9 +64,11 @@ func (rs *roomService) GetAll(limit, offset uint) (*entity.Rooms, error) {
 	}
 	return rooms, nil
 }
+
 func (rs *roomService) Update(id uint, lastname, firstname string) (*entity.Room, error) {
 	return &entity.Room{}, nil
 }
+
 func (rs *roomService) Delete(id uint) error {
 	room, err := rs.Get(id)
 	if err != nil {
@@ -78,8 +82,6 @@ func (rs *roomService) Delete(id uint) error {
 	return nil
 }
 
-// update room.Orders
-// add roomMember row
 func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 	// get a room
 	room, err := rs.Get(id)
@@ -101,11 +103,65 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 	}
 	// 	2. append room.Orders
 	// TODO: Update JSON list field
-	room.Orders = append(room.Orders, accountID)
+	room.AppendMember(accountID)
 	if _, err := rs.roomRepository.Update(room); err != nil {
 		return false, err
 	}
 	// ===TODO: tx end===
 
 	return true, nil
+}
+
+func (rs *roomService) LeaveRoom(id, accountID uint) error {
+	// get a room
+	room, err := rs.Get(id)
+	if err != nil {
+		return err
+	}
+	if !room.IsAlreadyJoined(accountID) {
+		return nil
+	}
+	if room.IsMaster(accountID) {
+		return rs.doMasterLeaveProcess(room, accountID)
+	}
+	return rs.doMemberLeaveProcess(room, accountID)
+}
+
+func (rs *roomService) doMasterLeaveProcess(room *entity.Room, accountID uint) error {
+	fmt.Println("doMasterLeaveProcess")
+	// 다이어리방에 한명만 존재할 경우: 다이어리방 제거
+	if len(room.Orders) == 1 {
+		if err := rs.roomRepository.Delete(room); err != nil {
+			return err
+		}
+	}
+	// 새로운 마스터 선출
+	if err := room.ChangeMaster(); err != nil {
+		return err
+	}
+	// TODO: TurnAccountID 변경
+	// Update room
+	_, err := rs.roomRepository.Update(room)
+	return err
+}
+
+func (rs *roomService) doMemberLeaveProcess(room *entity.Room, accountID uint) error {
+	fmt.Println("doMemberLeaveProcess")
+	// TODO: TurnAccountID 변경
+
+	// room.Order에서 빼기
+	if _, err := room.RemoveMember(accountID); err != nil {
+		return err
+	}
+
+	// Update room
+	if _, err := rs.roomRepository.Update(room); err != nil {
+		return err
+	}
+
+	// roomMember에서 row 제거
+	if err := rs.roomMemberService.Delete(room.ID, accountID); err != nil {
+		return err
+	}
+	return nil
 }

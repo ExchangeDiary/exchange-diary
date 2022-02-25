@@ -48,9 +48,9 @@ func (rmr *RoomMemberRepository) Create(roomMember *entity.RoomMember) (*entity.
 	return newRoomMember, nil
 }
 
-// GetByID ...
-func (rmr *RoomMemberRepository) GetByID(id uint) (*entity.RoomMember, error) {
-	dto := RoomMemberGorm{ID: id}
+// GetByUnq func gets RoomMember row by unique_key(RoomID, AccountID)
+func (rmr *RoomMemberRepository) GetByUnq(roomID, accountID uint) (*entity.RoomMember, error) {
+	dto := RoomMemberGorm{RoomID: roomID, AccountID: accountID}
 	if err := rmr.db.First(&dto).Error; err != nil {
 		return nil, err
 	}
