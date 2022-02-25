@@ -19,14 +19,14 @@ type RoomService interface {
 }
 
 type roomService struct {
-	roomRepository repository.RoomRepository
+	roomRepository    repository.RoomRepository
 	roomMemberService RoomMemberService
 }
 
 // NewRoomService ...
 func NewRoomService(rr repository.RoomRepository, rms RoomMemberService) RoomService {
 	return &roomService{
-		roomRepository: rr,
+		roomRepository:    rr,
 		roomMemberService: rms,
 	}
 }
@@ -78,7 +78,6 @@ func (rs *roomService) Delete(id uint) error {
 	return nil
 }
 
-
 // update room.Orders
 // add roomMember row
 func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
@@ -97,15 +96,16 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 
 	// ===TODO: tx start===
 	// 	1. add roomMember
-	if _, err := rs.roomMemberService.Add(id, accountID); err !=nil {
+	if _, err := rs.roomMemberService.Add(id, accountID); err != nil {
 		return false, err
 	}
 	// 	2. append room.Orders
+	// TODO: Update JSON list field
 	room.Orders = append(room.Orders, accountID)
-	if _, err := rs.roomRepository.Update(room); err !=nil {
+	if _, err := rs.roomRepository.Update(room); err != nil {
 		return false, err
 	}
 	// ===TODO: tx end===
-	
+
 	return true, nil
 }

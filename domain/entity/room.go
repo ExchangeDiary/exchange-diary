@@ -52,6 +52,7 @@ func (r *Room) IsMaster(accountID uint) bool {
 	return r.MasterID == accountID
 }
 
+// IsAlreadyJoined determines whether account is master or member of room
 func (r *Room) IsAlreadyJoined(accountID uint) bool {
 	return r.IsMaster(accountID) || domain.Contains(r.Orders, accountID)
 }

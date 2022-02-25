@@ -11,10 +11,10 @@ import (
 // "idx_room_account" is a unique key combined with (RoomID, AccountID)
 type RoomMemberGorm struct {
 	ID        uint        `gorm:"primaryKey"`
-	RoomID    uint        `gorm:"column:room_id;uniqueIndex:idx_room_account"`
-	Room      RoomGorm    `gorm:"foreignKey:RoomID"`
-	AccountID uint        `gorm:"column:account_id;uniqueIndex:idx_room_account"`
-	Account   AccountGorm `gorm:"foreignKey:AccountID"`
+	RoomID    uint        `gorm:"column:room_id"`
+	Room      RoomGorm    `gorm:"uniqueIndex:idx_room_account;column:room_id;constraint:OnDelete:CASCADE;"`
+	AccountID uint        `gorm:"column:account_id"`
+	Account   AccountGorm `gorm:"uniqueIndex:idx_room_account;column:account_id;constraint:OnDelete:CASCADE;"`
 	BaseGormModel
 }
 

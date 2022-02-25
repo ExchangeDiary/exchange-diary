@@ -16,10 +16,10 @@ type RoomGorm struct {
 	Theme  string `gorm:"column:theme;not null"`
 	Period uint8  `gorm:"column:period;not null"`
 
-	MasterID      uint             `gorm:"column:master_id"`
-	Master        AccountGorm `gorm:"foreignKey:MasterID"`
-	TurnAccountID uint             `gorm:"column:turn_account_id"`
-	TurnAccount   AccountGorm `gorm:"foreignKey:TurnAccountID"`
+	MasterID      uint        `gorm:"column:master_id"`
+	Master        AccountGorm `gorm:"column:master_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	TurnAccountID uint        `gorm:"column:turn_account_id"`
+	TurnAccount   AccountGorm `gorm:"column:turn_account_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	// TODO: json field
 	// Orders        []uint
