@@ -15,17 +15,20 @@ type RoomService interface {
 	GetAll(limit, offset uint) (*entity.Rooms, error)
 	Update(id uint, lastname, firstname string) (*entity.Room, error)
 	Delete(id uint) error
-	VerifyCode(id uint, code string) (bool, error)
-	JoinRoom(roomID, accountID uint) error
+	JoinRoom(id, accountID uint, code string) (bool, error)
 }
 
 type roomService struct {
 	roomRepository repository.RoomRepository
+	roomMemberService RoomMemberService
 }
 
 // NewRoomService ...
-func NewRoomService(roomRepository repository.RoomRepository) RoomService {
-	return &roomService{roomRepository: roomRepository}
+func NewRoomService(rr repository.RoomRepository, rms RoomMemberService) RoomService {
+	return &roomService{
+		roomRepository: rr,
+		roomMemberService: rms,
+	}
 }
 
 func (rs *roomService) Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error) {
@@ -75,19 +78,34 @@ func (rs *roomService) Delete(id uint) error {
 	return nil
 }
 
-func (rs *roomService) VerifyCode(id uint, code string) (bool, error) {
+
+// update room.Orders
+// add roomMember row
+func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
+	// get a room
 	room, err := rs.Get(id)
 	if err != nil {
 		return false, err
 	}
+	if room.IsAlreadyJoined(accountID) {
+		return false, errors.New("Already joined room")
+	}
+	// validate code
 	if room.Code != code {
 		return false, errors.New("Invalid code is given")
 	}
-	return true, nil
-}
 
-// update room.Orders
-// add roomMember row
-func (rs *roomService) JoinRoom(roomID, accountID uint) error {
-	return nil
+	// ===TODO: tx start===
+	// 	1. add roomMember
+	if _, err := rs.roomMemberService.Add(id, accountID); err !=nil {
+		return false, err
+	}
+	// 	2. append room.Orders
+	room.Orders = append(room.Orders, accountID)
+	if _, err := rs.roomRepository.Update(room); err !=nil {
+		return false, err
+	}
+	// ===TODO: tx end===
+	
+	return true, nil
 }

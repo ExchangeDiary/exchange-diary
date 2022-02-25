@@ -200,17 +200,13 @@ func (rc *roomController) Join() gin.HandlerFunc {
 			return
 		}
 
-		ok, err := rc.roomService.VerifyCode(roomID, req.Code)
+		ok, err := rc.roomService.JoinRoom(roomID, accountID, req.Code)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		if !ok {
 			c.JSON(http.StatusUnauthorized, err.Error())
-			return
-		}
-		if err := rc.roomService.JoinRoom(roomID, accountID); err != nil {
-			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
 		c.Status(http.StatusCreated)

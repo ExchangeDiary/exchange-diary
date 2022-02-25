@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
-// RoomGormModel is a db representation of entity.Room
-type RoomGormModel struct {
+// RoomGorm is a db representation of entity.Room
+type RoomGorm struct {
 	ID     uint   `gorm:"primaryKey"`
 	Name   string `gorm:"column:name;not null"`
 	Code   string `gorm:"column:code;not null"`
@@ -17,9 +17,9 @@ type RoomGormModel struct {
 	Period uint8  `gorm:"column:period;not null"`
 
 	MasterID      uint             `gorm:"column:master_id"`
-	Master        AccountGormModel `gorm:"foreignKey:MasterID"`
+	Master        AccountGorm `gorm:"foreignKey:MasterID"`
 	TurnAccountID uint             `gorm:"column:turn_account_id"`
-	TurnAccount   AccountGormModel `gorm:"foreignKey:TurnAccountID"`
+	TurnAccount   AccountGorm `gorm:"foreignKey:TurnAccountID"`
 
 	// TODO: json field
 	// Orders        []uint
@@ -28,12 +28,12 @@ type RoomGormModel struct {
 }
 
 // TableName define gorm table name
-func (RoomGormModel) TableName() string {
+func (RoomGorm) TableName() string {
 	return "rooms"
 }
 
-// RoomModels define list of RoomGormModel
-type RoomModels []RoomGormModel
+// RoomGorms define list of RoomGorm
+type RoomGorms []RoomGorm
 
 // RoomRepository is a impl of domain/repository/roomRepository.go RoomRepository interface
 type RoomRepository struct {
@@ -49,33 +49,33 @@ func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 
 // Create func inserts a row to db
 func (rr *RoomRepository) Create(room *entity.Room) (*entity.Room, error) {
-	roomModel := RoomGormModel{}
-	copier.Copy(&roomModel, &room)
-	if err := rr.db.Create(&roomModel).Error; err != nil {
+	dto := RoomGorm{}
+	copier.Copy(&dto, &room)
+	if err := rr.db.Create(&dto).Error; err != nil {
 		return nil, err
 	}
 	newRoom := new(entity.Room)
-	copier.Copy(&newRoom, &roomModel)
+	copier.Copy(&newRoom, &dto)
 	return newRoom, nil
 }
 
 // GetByID func find a row by entity's ID from db
 func (rr *RoomRepository) GetByID(id uint) (*entity.Room, error) {
-	roomModel := RoomGormModel{ID: id}
-	if err := rr.db.First(&roomModel).Error; err != nil {
+	dto := RoomGorm{ID: id}
+	if err := rr.db.First(&dto).Error; err != nil {
 		return nil, err
 	}
 	room := new(entity.Room)
-	copier.Copy(&room, &roomModel)
+	copier.Copy(&room, &dto)
 	return room, nil
 }
 
 // GetAll func get all row from db table
 func (rr *RoomRepository) GetAll(limit, offset uint) (*entity.Rooms, error) {
-	roomModels := RoomModels{}
-	rr.db.Limit(int(limit)).Offset(int(offset)).Find(&roomModels)
+	dto := RoomGorms{}
+	rr.db.Limit(int(limit)).Offset(int(offset)).Find(&dto)
 	rooms := new(entity.Rooms)
-	copier.Copy(&rooms, &roomModels)
+	copier.Copy(&rooms, &dto)
 	return rooms, nil
 }
 
@@ -91,9 +91,9 @@ func (rr *RoomRepository) Update(room *entity.Room) (*entity.Room, error) {
 
 // Delete func delete a room
 func (rr *RoomRepository) Delete(room *entity.Room) error {
-	roomModel := RoomGormModel{}
-	copier.Copy(&roomModel, &room)
-	if err := rr.db.Delete(&roomModel).Error; err != nil {
+	dto := RoomGorm{}
+	copier.Copy(&dto, &room)
+	if err := rr.db.Delete(&dto).Error; err != nil {
 		return err
 	}
 	return nil

@@ -1,6 +1,10 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"github.com/exchange-diary/domain"
+)
 
 // Room ...
 type Room struct {
@@ -46,4 +50,8 @@ func (r *Room) IsEqual(other *Room) bool {
 // IsMaster returns whether account is a room's master or not
 func (r *Room) IsMaster(accountID uint) bool {
 	return r.MasterID == accountID
+}
+
+func (r *Room) IsAlreadyJoined(accountID uint) bool {
+	return r.IsMaster(accountID) || domain.Contains(r.Orders, accountID)
 }
