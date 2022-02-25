@@ -151,7 +151,7 @@ type patchRequestRoom struct {
 	Code    string `json:"code,omitempty"`
 	Hint    string `json:"hint,omitempty"`
 	Period  uint8  `json:"period,omitempty"`
-	Members []uint  `json:"members,omitempty"`
+	Members []uint `json:"members,omitempty"`
 }
 
 func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
@@ -173,8 +173,6 @@ func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
 type patchResponseRoom struct {
 	RoomID uint `json:"roomId"`
 }
-
-
 
 // 교환일기방 업데이트 (master only)
 // 1. 작성주기(period)
