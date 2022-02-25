@@ -14,7 +14,7 @@ type RoomService interface {
 	Get(id uint) (*entity.Room, error)
 	GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error)
 	GetAll(limit, offset uint) (*entity.Rooms, error)
-	Update(id uint, lastname, firstname string) (*entity.Room, error)
+	Update(room *entity.Room) (*entity.Room, error)
 	Delete(id uint) error
 	JoinRoom(id, accountID uint, code string) (bool, error)
 	LeaveRoom(id, accountID uint) error
@@ -65,8 +65,12 @@ func (rs *roomService) GetAll(limit, offset uint) (*entity.Rooms, error) {
 	return rooms, nil
 }
 
-func (rs *roomService) Update(id uint, lastname, firstname string) (*entity.Room, error) {
-	return &entity.Room{}, nil
+func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
+	room, err := rs.roomRepository.Update(room)
+	if err != nil {
+		return nil, err
+	}
+	return room, nil
 }
 
 func (rs *roomService) Delete(id uint) error {

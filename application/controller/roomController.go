@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/exchange-diary/application"
+	"github.com/exchange-diary/domain/entity"
 	"github.com/exchange-diary/domain/service"
 	"github.com/gin-gonic/gin"
 )
@@ -147,11 +148,33 @@ func (rc *roomController) Post() gin.HandlerFunc {
 }
 
 type patchRequestRoom struct {
-	Code    string `json:"code"`
-	Hint    string `json:"hint"`
-	Period  uint8  `json:"period"`
-	Members int    `json:"members"`
+	Code    string `json:"code,omitempty"`
+	Hint    string `json:"hint,omitempty"`
+	Period  uint8  `json:"period,omitempty"`
+	Members []uint  `json:"members,omitempty"`
 }
+
+func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
+	if p.Code != "" {
+		room.Code = p.Code
+	}
+	if p.Hint != "" {
+		room.Hint = p.Hint
+	}
+	if p.Period != 0 {
+		room.Period = p.Period
+	}
+	if p.Members != nil {
+		room.Orders = p.Members
+	}
+	return room
+}
+
+type patchResponseRoom struct {
+	RoomID uint `json:"roomId"`
+}
+
+
 
 // 교환일기방 업데이트 (master only)
 // 1. 작성주기(period)
@@ -159,6 +182,30 @@ type patchRequestRoom struct {
 // 3. 작성순서(orders)
 func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		var req patchRequestRoom
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		roomID, err := application.ParseUint(c.Param("room_id"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		room, err := rc.roomService.Get(roomID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		_, err = rc.roomService.Update(req.ToEntity(room))
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		res := patchResponseRoom{RoomID: room.ID}
+		c.JSON(http.StatusOK, res)
 	}
 }
 
