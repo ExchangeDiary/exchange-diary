@@ -24,7 +24,8 @@ RUN rm -rf /var/cache/apk/*
 WORKDIR /home
 # Copy binary from build step
 COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/exchange-diary exchange-diary
-
+# Copy config files to runtime
+COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/infrastructure infrastructure
 # Define timezone
 ENV TZ=Asia/Seoul
 
