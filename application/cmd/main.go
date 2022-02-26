@@ -53,7 +53,7 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	}
 
 	// init db
-	db := infrastructure.ConnectDatabase()
+	db := infrastructure.ConnectDatabase(configName)
 	infrastructure.Migrate(db)
 
 	// set DI
