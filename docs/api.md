@@ -129,14 +129,14 @@ header: {Authorization: JWT_ACCESS_TOKEN}
 ```
 {
     // 참여된 순으로 정렬 (방장 -> 멤버1, 멤법2...)
-    // 클라에서는 accountId를 비교해서 현재 로그인한 사용자 확인가능
+    // 클라에서는 accountID를 비교해서 현재 로그인한 사용자 확인가능
     "members": [
         {
-            "accountId": <int>,         // account_id이며, 본인이면 파랑색
+            "accountID": <int>,         // account_id이며, 본인이면 파랑색
             "profileUrl": <url> // https://voda-api.com/profiles/leoo.png
         },
         {
-            "accountId": <int>,
+            "accountID": <int>,
             "profileUrl": <url> // https://voda-api.com/profiles/leoo.png
         },
         ...
@@ -148,8 +148,8 @@ header: {Authorization: JWT_ACCESS_TOKEN}
         {
             "place"     :<str>,         // 장소 ig) "방구석에서"
             // 지금은 필요없지만, 사용자 프로필 클릭했을 경우, 유저 detail 보여질수도 있음
-            "accountId" :<int>,
-            "accountName" :<str>,         // 생성한 accountId
+            "accountID" :<int>,
+            "accountName" :<str>,         // 생성한 accountID
             "profileUrl"   :<url>,         // 사용자 프로필 이미지 url
             "createdAt" :<datetime>,    //생성 일자
         },
@@ -198,11 +198,11 @@ url: https://voda-api.com/v1/rooms/19
         // 최대 4명까지 제공, 참여된 순으로 정렬
         "members": [
             {
-                "accountId": <int>,         // account_id이며, 본인이면 파랑색
+                "accountID": <int>,         // account_id이며, 본인이면 파랑색
                 "profileUrl": <url> // https://voda-api.com/profiles/leoo.png
             },
             {
-                "accountId": <int>,
+                "accountID": <int>,
                 "profileUrl": <url> // https://voda-api.com/profiles/leoo.png
             },
             ...
@@ -262,7 +262,7 @@ GET https://voda-api.com/v1/rooms/<:room_id>/diaries/<:diary_id>
         "title": <str>,
         "place": <str>,
         // 지금은 필요없지만, 사용자 프로필 클릭했을 경우, 유저 detail 보여질수도 있음
-        "accountId" :<int>,     // 생성한 accountId
+        "accountID" :<int>,     // 생성한 accountID
         "accountName" :<str>,   // 생성한 account name      (탈퇴 경우 "OOO"로 대체)
         "profileUrl"   :<url>,  // 생성한 사용자 프로필 이미지 url (탈퇴 경우 default url로 대체)
 

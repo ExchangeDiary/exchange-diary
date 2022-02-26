@@ -99,3 +99,6 @@ Temporary Items
 
 # Ignore `bin` dir
 */bin/*
+
+
+.vscode/
