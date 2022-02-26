@@ -50,7 +50,7 @@ func Load(path string, name string) (Config, error) {
 	fmt.Println("[PHASE]: ", name)
 	viper.SetConfigName(name)
 	viper.SetConfigType(typeExtension)
-	
+
 	err := viper.ReadInConfig()
 
 	if err != nil {

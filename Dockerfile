@@ -31,7 +31,7 @@ ENV TZ=Asia/Seoul
 
 # Define the ENTRYPOINT
 
-CMD [ "/home/exchange-diary" ]
+CMD [ "/home/exchange-diary", "-phase=sandbox" ]
 # ENTRYPOINT ./exchange-diary
 
 # # Document that the service listens on port 8080.
