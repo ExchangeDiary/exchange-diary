@@ -9,9 +9,6 @@ APP_NAME = exchange-diary
 BIN_DIR = ./bin
 BUILD_DIR = ./application/cmd
 BUILD_FILE = $(addprefix $(BUILD_DIR)/, main.go)
-VERSION=$(shell git describe --abbrev=0 --tags 2> /dev/null || echo "0.1.0")
-# get sha1 
-BUILD=$(shell git rev-parse HEAD 2> /dev/null || echo "undefined")
 
 # local run
 run:
