@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/exchange-diary/domain/entity"
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 )
 
 // RoomMemberRepository ...

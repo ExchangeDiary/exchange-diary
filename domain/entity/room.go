@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/exchange-diary/domain"
+	"github.com/ExchangeDiary/exchange-diary/domain"
 )
 
 // Room ...

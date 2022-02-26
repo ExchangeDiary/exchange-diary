@@ -9,12 +9,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/exchange-diary/application/controller"
-	"github.com/exchange-diary/application/route"
-	"github.com/exchange-diary/domain/service"
-	"github.com/exchange-diary/infrastructure"
-	"github.com/exchange-diary/infrastructure/configs"
-	"github.com/exchange-diary/infrastructure/persistence"
+	"github.com/ExchangeDiary/exchange-diary/application/controller"
+	"github.com/ExchangeDiary/exchange-diary/application/route"
+	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"

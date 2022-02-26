@@ -1,4 +1,4 @@
-module github.com/exchange-diary
+module github.com/ExchangeDiary/exchange-diary
 
 go 1.15
 

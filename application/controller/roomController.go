@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/exchange-diary/application"
-	"github.com/exchange-diary/domain/entity"
-	"github.com/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/application"
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
+	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/gin-gonic/gin"
 )
 

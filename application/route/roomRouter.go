@@ -1,7 +1,7 @@
 package route
 
 import (
-	"github.com/exchange-diary/application/controller"
+	"github.com/ExchangeDiary/exchange-diary/application/controller"
 	"github.com/gin-gonic/gin"
 )
 

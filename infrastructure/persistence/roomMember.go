@@ -1,8 +1,8 @@
 package persistence
 
 import (
-	"github.com/exchange-diary/domain/entity"
-	"github.com/exchange-diary/domain/repository"
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
+	"github.com/ExchangeDiary/exchange-diary/domain/repository"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
 )

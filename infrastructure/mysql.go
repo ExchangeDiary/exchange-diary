@@ -3,8 +3,8 @@ package infrastructure
 import (
 	"fmt"
 
-	"github.com/exchange-diary/infrastructure/configs"
-	"github.com/exchange-diary/infrastructure/persistence"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
