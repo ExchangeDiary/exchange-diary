@@ -21,9 +21,9 @@ type RoomGorm struct {
 	Period uint8  `gorm:"column:period;not null"`
 
 	MasterID      uint        `gorm:"column:master_id"`
-	Master        AccountGorm `gorm:"column:master_id;constraint:OnDelete:SET NULL;"`
+	Master        AccountGorm `gorm:"column:master_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	TurnAccountID uint        `gorm:"column:turn_account_id"`
-	TurnAccount   AccountGorm `gorm:"column:turn_account_id;constraint:OnDelete:SET NULL;"`
+	TurnAccount   AccountGorm `gorm:"column:turn_account_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	Orders datatypes.JSON `gorm:"column:orders"`
 

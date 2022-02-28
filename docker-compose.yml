@@ -22,5 +22,5 @@ services:
       - 8080:8080
     depends_on:
       - cloudsql-proxy
-    command: bash -c 'while [[ "$$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' cloudsql-proxy:8090/readiness)" != "200" ]]; do echo ..; sleep 5; done;echo "$$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' cloudsql-proxy:8090/readiness)"; echo voda api is up;/home/exchange-diary -phase=sandbox'
+    command: bash -c 'while [[ "$$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' cloudsql-proxy:8090/readiness)" != "200" ]]; do echo ..; sleep 5; done; echo voda api is up;/home/exchange-diary -phase=sandbox'
     restart: always
