@@ -1,4 +1,4 @@
-.PHONY: run build docker up down clean
+.PHONY: run build swagger docker up down clean
 
 # export CGO_ENABLED=0
 # export GOOS=linux
@@ -12,11 +12,17 @@ BUILD_FILE = $(addprefix $(BUILD_DIR)/, main.go)
 
 # local run
 run:
+	make swagger
 	$(GO) run $(BUILD_FILE)
 
 # build binary
 build:
 	$(GO) build -ldflags="-s -w" -o $(BIN_DIR)/$(APP_NAME) $(BUILD_FILE)
+
+# generate swagger
+swagger:
+	echo "Update swagger to /docs"
+	swag init -g ./application/cmd/main.go
 
 docker:
 	make dbuild && make drun

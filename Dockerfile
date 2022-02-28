@@ -8,8 +8,10 @@ RUN apk add git
 
 WORKDIR /go/github.com/ExchangeDiary/exchange-diary
 COPY . .
+RUN go get -u github.com/swaggo/swag/cmd/swag
 RUN go mod tidy
 RUN GO111MODULE=on go build -ldflags="-s -w" -o exchange-diary ./application/cmd/main.go
+RUN swag init -g ./application/cmd/main.go --output=./docs
 
 # Final Step
 FROM alpine as runtime
@@ -29,6 +31,8 @@ WORKDIR /home
 COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/exchange-diary exchange-diary
 # Copy config files to runtime
 COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/infrastructure infrastructure
+# Copy swagger files
+COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/docs docs
 # Define timezone
 ENV TZ=Asia/Seoul
 

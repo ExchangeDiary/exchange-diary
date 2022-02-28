@@ -1,0 +1,284 @@
+basePath: /v1
+definitions:
+  controller.detailResponseRoom:
+    properties:
+      code:
+        type: string
+      createdAt:
+        type: string
+      hint:
+        type: string
+      id:
+        type: integer
+      isMaster:
+        type: boolean
+      members:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+      period:
+        type: integer
+      theme:
+        type: string
+      turnAccountId:
+        type: integer
+      turnAccountName:
+        type: string
+    type: object
+  controller.listResponseRoom:
+    properties:
+      rooms:
+        items:
+          $ref: '#/definitions/controller.responseRoom'
+        type: array
+    type: object
+  controller.patchRequestRoom:
+    properties:
+      code:
+        type: string
+      hint:
+        type: string
+      members:
+        items:
+          type: integer
+        type: array
+      period:
+        type: integer
+    type: object
+  controller.patchResponseRoom:
+    properties:
+      roomId:
+        type: integer
+    type: object
+  controller.postRequestRoom:
+    properties:
+      code:
+        type: string
+      hint:
+        type: string
+      name:
+        type: string
+      period:
+        type: integer
+      theme:
+        type: string
+    type: object
+  controller.postResponseRoom:
+    properties:
+      roomId:
+        type: integer
+    type: object
+  controller.responseRoom:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: integer
+      members:
+        items:
+          type: integer
+        type: array
+      name:
+        type: string
+    type: object
+  controller.verifyRequestRoom:
+    properties:
+      code:
+        type: string
+    type: object
+host: exchange-diary-b4mzhzbzcq-du.a.run.app
+info:
+  contact:
+    email: minkj1992@gmail.com
+    name: API Support
+    url: https://minkj1992.github.io
+  description: This is a voda api server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Voice Of Diary API (voda)
+  version: "1.0"
+paths:
+  /rooms:
+    get:
+      consumes:
+      - application/json
+      description: 참여중인 교환일기방 리스트
+      parameters:
+      - description: page size
+        format: uint
+        in: query
+        name: limit
+        type: integer
+      - description: page offset
+        format: uint
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.listResponseRoom'
+        "400":
+          description: ""
+      summary: List rooms
+      tags:
+      - rooms
+    post:
+      consumes:
+      - application/json
+      description: 교환일기방 생성
+      parameters:
+      - description: 교환일기방 생성요청 body
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/controller.postRequestRoom'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.postResponseRoom'
+        "400":
+          description: ""
+      summary: create a room
+      tags:
+      - rooms
+  /rooms/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 교환일기방 삭제
+      parameters:
+      - description: 교환일기방 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: ""
+      summary: (debug only) delete a room
+      tags:
+      - rooms
+    get:
+      consumes:
+      - application/json
+      description: 교환일기방 상세
+      parameters:
+      - description: 교환일기방 ID
+        format: uint
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.detailResponseRoom'
+        "400":
+          description: ""
+      summary: get a room
+      tags:
+      - rooms
+    patch:
+      consumes:
+      - application/json
+      description: |-
+        교환일기방 업데이트 (master only)
+        1. 작성주기 변경 (period)
+        2. 코드/힌트 변경 (code, hint)
+        3. 작성순서 변경(orders)
+      parameters:
+      - description: 교환일기방 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 교환일기방 수정 요청 body
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/controller.patchRequestRoom'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.patchResponseRoom'
+        "400":
+          description: ""
+      summary: update a room
+      tags:
+      - rooms
+  /rooms/{id}/join:
+    post:
+      consumes:
+      - application/json
+      description: 교환일기방 참여코드 체크 후, 교환일기방 멤버로 추가
+      parameters:
+      - description: 교환일기방 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 교환일기방 참여 요청 body
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/controller.verifyRequestRoom'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: ""
+        "400":
+          description: ""
+        "401":
+          description: ""
+      summary: join a room
+      tags:
+      - rooms
+  /rooms/{id}/leave:
+    delete:
+      consumes:
+      - application/json
+      description: |-
+        교환일기방 나가기
+        1. 교환일기방 마스터일 경우
+        2. 교환일기방 멤버일 경우
+      parameters:
+      - description: 교환일기방 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ""
+        "400":
+          description: ""
+      summary: leave a room
+      tags:
+      - rooms
+swagger: "2.0"
