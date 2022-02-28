@@ -7,8 +7,8 @@ import (
 )
 
 type Config struct {
-	DBConfig    DBConfig    `mapstructure:"db-config"`
-	KakaoClient KakaoClient `mapstructure:"kakao-client"`
+	DBConfig DBConfig `mapstructure:"db-config"`
+	Client   Client   `mapstructure:"client"`
 }
 
 type DBConfig struct {
@@ -19,14 +19,19 @@ type DBConfig struct {
 	Password string `mapstructure:"password"`
 }
 
+type Client struct {
+	Kakao Kakao `mapstructure:"kakao"`
+}
+
 type OAuthConfig struct {
 	ClientId     string `mapstructure:"client-id"`
 	ClientSecret string `mapstructure:"client-secret"`
 	RedirectUrl  string `mapstructure:"redirect-url"`
 }
 
-type KakaoClient struct {
-	Oauth OAuthConfig `mapstructure:"oauth"`
+type Kakao struct {
+	Oauth   OAuthConfig `mapstructure:"oauth"`
+	BaseUrl string      `mapstructure:"base-url"`
 }
 
 const (

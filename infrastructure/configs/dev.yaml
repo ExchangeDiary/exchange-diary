@@ -3,10 +3,12 @@ db-config:
   port: 3306
   user: "root"
   name: "voda"
-  password: "<로컬_DB_비밀번호>"
+  password: "root"
 
-kakao-client:
-  oauth:
-    client-id: "c663ce96b79395b5dcc6d7f774e1af67"
-    client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
-    redirect-url: "http://localhost:8080/auth/kakao"
+client:
+  kakao:
+    base-url: "https://kapi.kakao.com"
+    oauth:
+      client-id: "c663ce96b79395b5dcc6d7f774e1af67"
+      client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
+      redirect-url: "http://localhost:8080/api/v1/authentication/login/kakao"

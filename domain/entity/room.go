@@ -19,7 +19,7 @@ type Room struct {
 
 	MasterID      uint
 	TurnAccountID uint
-	Orders        []uint // []Account.ID
+	Orders        []uint // []Member.ID
 
 	CreatedAt time.Time
 }
