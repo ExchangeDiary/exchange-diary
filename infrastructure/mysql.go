@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
@@ -25,13 +26,24 @@ func sandboxDsn(cfg *configs.DBConfig) string {
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name)
 }
 
+func prodDsn(cfg *configs.DBConfig) string {
+	socketDir, isSet := os.LookupEnv("DB_SOCKET_DIR")
+	if !isSet {
+		socketDir = "/cloudsql"
+	}
+	return fmt.Sprintf("%s:%s@unix(/%s/%s)/%s?parseTime=true", cfg.User, cfg.Password, socketDir, cfg.Host, cfg.Name)
+}
+
 // ConnectDatabase returns
 // https://gorm.io/docs/connecting_to_the_database.html
 func ConnectDatabase(phase string) *gorm.DB {
 	var dsn string
-	if phase == "sandbox" {
+	switch phase {
+	case "sandbox":
 		dsn = sandboxDsn(configs.DatabaseConfig())
-	} else {
+	case "prod":
+		dsn = prodDsn(configs.DatabaseConfig())
+	default:
 		dsn = devDsn(configs.DatabaseConfig())
 	}
 

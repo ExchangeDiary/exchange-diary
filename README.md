@@ -63,6 +63,10 @@ $ chmod +x .git/hooks/pre-commit
 
 ## Cmd
 
+### local
+
+- go run + local mysql db
+
 ```sh
 $ make run
 $ make build
@@ -72,11 +76,19 @@ $ make clean
 $ ./bin/exchange-diray -phase=${phase}
 ```
 
-- docker compose build
+### sandbox
+
+- local docker api server image + google cloud sql
 
 ```sh
 $ make down && make up
 ```
+
+### prod
+
+- google cloud run + google cloud sql (same as sandbox db)
+- trigger (cloud build)
+  - **push to /main branch**
 
 ## Deploy env
 
@@ -88,6 +100,8 @@ $ make down && make up
   - `Cloud Monitoring`
   - `Cloud Logging`
   - `Cloud Trace`
+
+## Phase
 
 ## Erd
 
