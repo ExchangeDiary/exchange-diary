@@ -14,6 +14,7 @@ RUN GO111MODULE=on go build -ldflags="-s -w" -o exchange-diary ./application/cmd
 # Final Step
 FROM alpine as runtime
 
+
 # Base packages
 RUN apk update
 RUN apk upgrade
@@ -31,6 +32,5 @@ COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/infrastructure inf
 # Define timezone
 ENV TZ=Asia/Seoul
 
-# Define CMD, it will be overwritten from docker-compose or k8s yaml
-
-CMD [ "/home/exchange-diary", "-phase=sandbox" ]
+# sandbox phase will ignore this command, so this docker file cmd care for prod phase.
+CMD [ "/home/exchange-diary", "-phase=prod"]
