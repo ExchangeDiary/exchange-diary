@@ -1,8 +1,10 @@
 # host: project:region:instance
 db-config:
-  host: "voda-342511:asia-northeast3:voda"
+  # docker-compose.yml sql-proxy container name
+  host: "cloudsql-proxy"
   user: "root"
   name: "voda"
+  port: 5432
   password: "voda1!"
 
 kakao-client:

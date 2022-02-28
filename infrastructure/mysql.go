@@ -22,7 +22,7 @@ func devDsn(cfg *configs.DBConfig) string {
 }
 
 func sandboxDsn(cfg *configs.DBConfig) string {
-	return fmt.Sprintf("%s:%s@unix(/%s/%s)/%s?parseTime=true", cfg.User, cfg.Password, "/cloudsql", cfg.Host, cfg.Name)
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Name)
 }
 
 // ConnectDatabase returns

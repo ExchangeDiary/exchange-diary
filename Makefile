@@ -1,4 +1,4 @@
-.PHONY: run build docker dbuild drun clean
+.PHONY: run build docker up down clean
 
 # export CGO_ENABLED=0
 # export GOOS=linux
@@ -30,6 +30,15 @@ dbuild:
 # docker local run
 drun:
 	docker run --rm -p 8080:8080 --name exchange-diary exchange-diary
+
+# docker compose up
+up:
+	docker compose up -d --build --remove-orphans
+	docker compose logs -f
+
+# docker compose down
+down:
+	docker compose down --rmi local
 
 # rm  binary		
 clean:

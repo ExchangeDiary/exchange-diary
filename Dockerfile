@@ -17,6 +17,8 @@ FROM alpine as runtime
 # Base packages
 RUN apk update
 RUN apk upgrade
+RUN apk add --no-cache bash
+RUN apk --no-cache add curl
 RUN apk add ca-certificates && update-ca-certificates
 RUN apk add --update tzdata
 RUN rm -rf /var/cache/apk/*
@@ -29,10 +31,6 @@ COPY --from=build /go/github.com/ExchangeDiary/exchange-diary/infrastructure inf
 # Define timezone
 ENV TZ=Asia/Seoul
 
-# Define the ENTRYPOINT
+# Define CMD, it will be overwritten from docker-compose or k8s yaml
 
 CMD [ "/home/exchange-diary", "-phase=sandbox" ]
-# ENTRYPOINT ./exchange-diary
-
-# # Document that the service listens on port 8080.
-# EXPOSE 8080

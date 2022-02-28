@@ -72,6 +72,12 @@ $ make clean
 $ ./bin/exchange-diray -phase=${phase}
 ```
 
+- docker compose build
+
+```sh
+$ make down && make up
+```
+
 ## Deploy env
 
 - api server: `google cloud run`
