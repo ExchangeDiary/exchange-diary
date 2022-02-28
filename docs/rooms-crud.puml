@@ -138,7 +138,6 @@ note right of client #Lavender
         {
             "id": "<int>", //다이어리룸 id
             "name": "<str>", // 다이어리룸 이름
-            "totalMemberCount": <int>, // +2, +4
             "createdAt": <datetime>, // 최근 다이어리 알려주기용
             "members": [
             {
