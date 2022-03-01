@@ -109,7 +109,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 		return
 	}
 
-	authCode, err := ac.tokenService.IssueAuthCode(member.ID, member.Email, member.AuthType)
+	authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return

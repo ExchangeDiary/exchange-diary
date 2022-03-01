@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -36,7 +37,7 @@ func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 		clientToken := strings.Replace(bearerToken, tokenBearer, "", 1)
 		claims, err := f.verifier.Verify(clientToken)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
@@ -46,5 +47,6 @@ func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 			Name:  claims.Name,
 			Email: claims.Email,
 		})
+		fmt.Printf("[Current Member]: %+v", c.MustGet(application.CurrentMemberKey))
 	}
 }

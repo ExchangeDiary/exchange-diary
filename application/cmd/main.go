@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/application/controller"
+	"github.com/ExchangeDiary/exchange-diary/application/middleware"
 	"github.com/ExchangeDiary/exchange-diary/application/route"
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
@@ -94,6 +95,8 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
 	roomController := controller.NewRoomController(roomService)
+	
+	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
 	// init server
 	server := gin.New()
@@ -107,9 +110,12 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 
 	// init routes
 	v1 := server.Group(versionPrefix)
-	route.RoomRoutes(v1, roomController)
 	route.AuthRoutes(v1, authController)
 	route.TokenRoutes(v1, tokenController)
+
+	v1.Use(authenticationFilter.Authenticate())
+	route.RoomRoutes(v1, roomController)
+	
 	return server
 }
 

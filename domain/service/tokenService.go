@@ -19,7 +19,7 @@ const (
 
 // TokenService ...
 type TokenService interface {
-	IssueAuthCode(id uint, email string, authType string) (string, error)
+	IssueAuthCode(email string, authType string) (string, error)
 	IssueAccessToken(authCode string) (string, error)
 	IssueRefreshToken(authCode string) (string, error)
 	RefreshAccessToken(refreshToken string) (string, error)
@@ -40,10 +40,9 @@ func NewTokenService(service MemberService, authCodeVerifier TokenVerifier, refr
 	}
 }
 
-func (s *tokenService) IssueAuthCode(id uint, email string, authType string) (string, error) {
+func (s *tokenService) IssueAuthCode(email string, authType string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: authType,
-		ID:       id,
 		Email:    email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(authCodeValid).Unix(),

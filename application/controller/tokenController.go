@@ -20,12 +20,12 @@ type tokenController struct {
 
 // TokenRequest ...
 type TokenRequest struct {
-	AuthCode string `json:"auth_code"`
+	AuthCode string `json:"authCode"`
 }
 
 // TokenRefreshRequest ...
 type TokenRefreshRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 // NewTokenController ...
@@ -37,15 +37,18 @@ func (tc *tokenController) GetToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody TokenRequest
 		if err := c.BindJSON(&requestBody); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		accessToken, err := tc.service.IssueAccessToken(requestBody.AuthCode)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"errror": err})
+			c.JSON(http.StatusBadRequest, gin.H{"errror": err.Error()})
+			return
 		}
 		refreshToken, err := tc.service.IssueRefreshToken(requestBody.AuthCode)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		token := entity.Token{
 			AccessToken:  accessToken,
@@ -59,11 +62,13 @@ func (tc tokenController) RefreshAccessToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody TokenRefreshRequest
 		if err := c.BindJSON(&requestBody); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
 		}
 		accessToken, err := tc.service.RefreshAccessToken(requestBody.RefreshToken)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"errror": err})
+			c.JSON(http.StatusBadRequest, gin.H{"errror": err.Error()})
+			return
 		}
 		token := entity.Token{
 			AccessToken:  accessToken,
