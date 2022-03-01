@@ -95,7 +95,7 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
 	roomController := controller.NewRoomController(roomService)
-	
+
 	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
 	// init server
@@ -115,7 +115,7 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 
 	v1.Use(authenticationFilter.Authenticate())
 	route.RoomRoutes(v1, roomController)
-	
+
 	return server
 }
 

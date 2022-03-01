@@ -13,9 +13,8 @@ type RoomService interface {
 	Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error)
 	Get(id uint) (*entity.Room, error)
 	GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error)
-	GetAll(limit, offset uint) (*entity.Rooms, error)
 	Update(room *entity.Room) (*entity.Room, error)
-	Delete(id uint) error
+	Delete(room *entity.Room) error
 	JoinRoom(id, accountID uint, code string) (bool, error)
 	LeaveRoom(id, accountID uint) error
 }
@@ -55,10 +54,7 @@ func (rs *roomService) Get(id uint) (*entity.Room, error) {
 
 // Room Master + RoomMember table
 func (rs *roomService) GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error) {
-	return &entity.Rooms{}, nil
-}
-func (rs *roomService) GetAll(limit, offset uint) (*entity.Rooms, error) {
-	rooms, err := rs.roomRepository.GetAll(limit, offset)
+	rooms, err := rs.roomRepository.GetAllByAccountID(accountID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -73,13 +69,8 @@ func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
 	return room, nil
 }
 
-func (rs *roomService) Delete(id uint) error {
-	room, err := rs.Get(id)
-	if err != nil {
-		return err
-	}
-
-	err = rs.roomRepository.Delete(room)
+func (rs *roomService) Delete(room *entity.Room) error {
+	err := rs.roomRepository.Delete(room)
 	if err != nil {
 		return err
 	}

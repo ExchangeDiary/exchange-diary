@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -37,11 +36,6 @@ type responseMember struct {
 	ProfileURL string `json:"profileUrl"`
 }
 
-// TODO: implement it
-func mockAccountID(c *gin.Context) uint {
-	return 1
-}
-
 type responseRoom struct {
 	ID        uint       `json:"id"`
 	Name      *string    `json:"name"`
@@ -65,9 +59,9 @@ type listResponseRoom struct {
 // @Router       /rooms [get]
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("GetAll")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		limit, offset := application.GetLimitAndOffset(c)
-		rooms, err := rc.roomService.GetAll(limit, offset) // TODO: GetAllJoinedRooms
+		rooms, err := rc.roomService.GetAllJoinedRooms(currentMember.ID, limit, offset)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -112,8 +106,7 @@ type detailResponseRoom struct {
 // @Router       /rooms/{id} [get]
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Get")
-		curAccountID := mockAccountID(c)
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -137,7 +130,7 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			TurnAccountID:   room.TurnAccountID,
 			TurnAccountName: &turnAccountName,
 			CreatedAt:       &room.CreatedAt,
-			IsMaster:        room.IsMaster(curAccountID),
+			IsMaster:        room.IsMaster(currentMember.ID),
 		}
 		c.JSON(http.StatusOK, res)
 	}
@@ -166,14 +159,13 @@ type postResponseRoom struct {
 // @Router       /rooms [post]
 func (rc *roomController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Post")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req postRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		masterID := mockAccountID(c)
-		room, err := rc.roomService.Create(masterID, req.Name, req.Code, req.Hint, req.Theme, req.Period)
+		room, err := rc.roomService.Create(currentMember.ID, req.Name, req.Code, req.Hint, req.Theme, req.Period)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -225,7 +217,7 @@ type patchResponseRoom struct {
 // @Router       /rooms/{id} [patch]
 func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Patch")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req patchRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -243,6 +235,12 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
+		if !room.IsMaster(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only master can patch room")
+			return
+		}
+
 		_, err = rc.roomService.Update(req.ToEntity(room))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
@@ -264,14 +262,25 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 // @Router       /rooms/{id} [delete]
 func (rc *roomController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: 현재 유저가 마스터 ID가 아니면 return 401
-		fmt.Println("Delete")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		err = rc.roomService.Delete(roomID)
+
+		room, err := rc.roomService.Get(roomID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if !room.IsMaster(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only master can delete room")
+			return
+		}
+
+		err = rc.roomService.Delete(room)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -297,9 +306,8 @@ type verifyRequestRoom struct {
 // @Router       /rooms/{id}/join [post]
 func (rc *roomController) Join() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Join")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req verifyRequestRoom
-		accountID := mockAccountID(c)
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -310,7 +318,7 @@ func (rc *roomController) Join() gin.HandlerFunc {
 			return
 		}
 
-		ok, err := rc.roomService.JoinRoom(roomID, accountID, req.Code)
+		ok, err := rc.roomService.JoinRoom(roomID, currentMember.ID, req.Code)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -336,14 +344,13 @@ func (rc *roomController) Join() gin.HandlerFunc {
 // @Router       /rooms/{id}/leave [delete]
 func (rc *roomController) Leave() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Leave")
-		accountID := mockAccountID(c)
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if err := rc.roomService.LeaveRoom(roomID, accountID); err != nil {
+		if err := rc.roomService.LeaveRoom(roomID, currentMember.ID); err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}

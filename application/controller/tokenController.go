@@ -42,7 +42,7 @@ func (tc *tokenController) GetToken() gin.HandlerFunc {
 		}
 		accessToken, err := tc.service.IssueAccessToken(requestBody.AuthCode)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"errror": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		refreshToken, err := tc.service.IssueRefreshToken(requestBody.AuthCode)
@@ -67,7 +67,7 @@ func (tc tokenController) RefreshAccessToken() gin.HandlerFunc {
 		}
 		accessToken, err := tc.service.RefreshAccessToken(requestBody.RefreshToken)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"errror": err.Error()})
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		token := entity.Token{

@@ -41,6 +41,6 @@ func (t *TokenVerifier) Verify(authCode string) (claims *entity.AuthCodeClaims, 
 		err = fmt.Errorf("token is expired")
 		return
 	}
-	
+
 	return claims, err
 }

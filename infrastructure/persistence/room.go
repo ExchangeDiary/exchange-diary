@@ -92,19 +92,15 @@ func (rr *RoomRepository) GetByID(id uint) (*entity.Room, error) {
 	return ToEntity(&dto), nil
 }
 
-// GetAll func get all row from db table
-func (rr *RoomRepository) GetAll(limit, offset uint) (*entity.Rooms, error) {
-	dto := RoomGorms{}
-	rr.db.Limit(int(limit)).Offset(int(offset)).Find(&dto)
-
-	rooms := new(entity.Rooms)
-	copier.Copy(&rooms, &dto)
-	return rooms, nil
-}
-
 // GetAllByAccountID func finds all Rooms which account is joined from db table
 func (rr *RoomRepository) GetAllByAccountID(accountID, limit, offset uint) (*entity.Rooms, error) {
-	return &entity.Rooms{}, nil
+	dto := RoomGorms{}
+	rr.db.Limit(int(limit)).Offset(int(offset)).Where(&RoomGorm{MasterID: accountID}).Find(&dto)
+	rooms := entity.Rooms{}
+	for _, roomGorm := range dto {
+		rooms = append(rooms, *ToEntity(&roomGorm))
+	}
+	return &rooms, nil
 }
 
 // Update func update a room fields
