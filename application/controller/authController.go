@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/kakao"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
@@ -13,7 +14,7 @@ import (
 	kakaoOAuth "golang.org/x/oauth2/kakao"
 )
 
-const defaultRedirectURL = "/api/v1/authentication/authenticated"
+const defaultRedirectURL = "/v1/authentication/authenticated"
 
 // AuthController ...
 type AuthController interface {
@@ -61,13 +62,12 @@ func (ac *authController) Login() gin.HandlerFunc {
 		case kakao.AuthType:
 			ac.kakaoLogin(c)
 		}
-
 	}
 }
 
 func (ac *authController) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authCode := c.Param("authCode")
+		authCode := c.Query(application.AuthCodeKey)
 		c.JSON(http.StatusOK, gin.H{
 			"authCode": authCode,
 		})
@@ -90,28 +90,31 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 		return
 	}
 	member, err := ac.memberService.GetByEmail(kakaoUser.Account.Email)
+	if err != nil {
+		member, err = ac.memberService.Create(
+			kakaoUser.Account.Email,
+			kakaoUser.Profile.NickName,
+			kakaoUser.Profile.ProfileImage,
+			kakao.AuthType,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+	}
+
 	// When the user try to login with registered email and different authType.
-	if member != nil && member.AuthType != kakao.AuthType {
+	if member.AuthType != kakao.AuthType {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "The account is already registered"})
 		return
 	}
-	member, err = ac.memberService.Create(
-		kakaoUser.Account.Email,
-		kakaoUser.Profile.NickName,
-		kakaoUser.Profile.ProfileImage,
-		kakao.AuthType,
-	)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-		return
-	}
 
-	authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
+	authCode, err := ac.tokenService.IssueAuthCode(member.ID, member.Email, member.AuthType)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?authcode=%s", defaultRedirectURL, authCode))
+	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
 }
 
 func kakaoLoginURL(kakaoOAuth *oauth2.Config) string {

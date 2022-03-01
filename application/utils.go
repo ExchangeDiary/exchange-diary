@@ -11,6 +11,13 @@ const (
 	defaultPageOffset = 0
 )
 
+// CurrentMemberDTO is a current member dto which parsed from jwtAuthentication middleware.
+type CurrentMemberDTO struct {
+	ID    uint
+	Name  string
+	Email string
+}
+
 // GetLimitAndOffset parse limit and offset from http context and convert them to uint type.
 func GetLimitAndOffset(c *gin.Context) (uint, uint) {
 	limit, err := ParseUint(c.Query("limit"))

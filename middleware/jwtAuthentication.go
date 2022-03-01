@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/gin-gonic/gin"
 )
@@ -39,6 +40,11 @@ func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		c.Set("email", claims.Email)
+
+		c.Set(application.CurrentMemberKey, application.CurrentMemberDTO{
+			ID:    claims.ID,
+			Name:  claims.Name,
+			Email: claims.Email,
+		})
 	}
 }

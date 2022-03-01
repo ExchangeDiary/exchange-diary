@@ -19,7 +19,7 @@ const (
 
 // TokenService ...
 type TokenService interface {
-	IssueAuthCode(email string, authType string) (string, error)
+	IssueAuthCode(id uint, email string, authType string) (string, error)
 	IssueAccessToken(authCode string) (string, error)
 	IssueRefreshToken(authCode string) (string, error)
 	RefreshAccessToken(refreshToken string) (string, error)
@@ -40,9 +40,10 @@ func NewTokenService(service MemberService, authCodeVerifier TokenVerifier, refr
 	}
 }
 
-func (s *tokenService) IssueAuthCode(email string, authType string) (string, error) {
+func (s *tokenService) IssueAuthCode(id uint, email string, authType string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: authType,
+		ID:       id,
 		Email:    email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(authCodeValid).Unix(),
@@ -64,6 +65,7 @@ func (s *tokenService) IssueAccessToken(authCode string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: member.AuthType,
+		ID:       member.ID,
 		Email:    member.Email,
 		Name:     member.Name,
 		StandardClaims: jwt.StandardClaims{
@@ -82,6 +84,7 @@ func (s *tokenService) IssueRefreshToken(authCode string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: claims.AuthType,
+		ID:       claims.ID,
 		Email:    claims.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(refreshTokenValid).Unix(),
@@ -103,6 +106,7 @@ func (s tokenService) RefreshAccessToken(refreshToken string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: member.AuthType,
+		ID:       member.ID,
 		Email:    member.Email,
 		Name:     member.Name,
 		StandardClaims: jwt.StandardClaims{

@@ -6,7 +6,7 @@ import (
 
 // Member ...
 type Member struct {
-	ID                int
+	ID                uint
 	Email             string
 	Name              string
 	ProfileURL        string
