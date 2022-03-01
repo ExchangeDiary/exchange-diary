@@ -153,24 +153,24 @@ note right of client #Lavender
     ]
 }
 endnote
-alt#Gold #Pink Android
-    client -> api++: **GET /v1/rooms/urgent**
-note right of client
-	1. 본인이 참여하고 있는 방이어야한다.
-	2. 해당하는 방들 중, 본인이 작성할 턴이어야 한다.
-	3. 그 중 가장 일정이 촉박한(urgent) 방 정보를 클라에 전달한다.
-    (만약 조건에 맞는 방이 없다면) **204 no content**를 return.
-endnote
-    api -> client: **200 OK**
-note right of client #Lavender
-{
-    "id": "<int>", // 다이어리 방 id
-    "name": "<str>", // 다이어리 방 이름 i.g. 고영희 미만 다꾸러
-    "theme": "<str>", // 다이어리 배경 테마명
-    "dueAt": <datetime> // 참여하고 있는 방들 중, 본인의 턴이면서 가장 가까운 일정
-}
-endnote   
-end
+' alt#Gold #Pink (TODO) 알림 영역으로 대체되어야함
+'     client -> api++: **GET /v1/rooms/urgent**
+' note right of client
+' 	1. 본인이 참여하고 있는 방이어야한다.
+' 	2. 해당하는 방들 중, 본인이 작성할 턴이어야 한다.
+' 	3. 그 중 가장 일정이 촉박한(urgent) 방 정보를 클라에 전달한다.
+    
+' endnote
+'     api -> client: **200 OK**
+' note right of client #Lavender
+' {
+'     "id": "<int>", // 다이어리 방 id
+'     "name": "<str>", // 다이어리 방 이름 i.g. 고영희 미만 다꾸러
+'     "theme": "<str>", // 다이어리 배경 테마명
+'     "dueAt": <datetime> // 참여하고 있는 방들 중, 본인의 턴이면서 가장 가까운 일정
+' }
+' endnote   
+' end
 
 client -> user: 다이어리방 home 화면 렌더링
 
