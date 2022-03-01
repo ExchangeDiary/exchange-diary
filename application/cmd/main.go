@@ -3,11 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-
-	"github.com/ExchangeDiary/exchange-diary/domain/service"
-	"github.com/ExchangeDiary/exchange-diary/infrastructure"
-	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
-
 	"log"
 	"os"
 	"os/signal"
@@ -16,13 +11,14 @@ import (
 
 	"github.com/ExchangeDiary/exchange-diary/application/controller"
 	"github.com/ExchangeDiary/exchange-diary/application/route"
-
+	"github.com/ExchangeDiary/exchange-diary/docs"
+	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-
-	docs "github.com/ExchangeDiary/exchange-diary/docs"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
