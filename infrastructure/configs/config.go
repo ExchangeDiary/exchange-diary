@@ -6,10 +6,15 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	typeEXT      = "yaml"
+	defaultPhase = "dev"
+)
+
 // Config ...
 type Config struct {
-	DBConfig    DBConfig    `mapstructure:"db-config"`
-	KakaoClient KakaoClient `mapstructure:"kakao-client"`
+	DBConfig DBConfig `mapstructure:"db-config"`
+	Client   Client   `mapstructure:"client"`
 }
 
 // DBConfig ...
@@ -21,6 +26,11 @@ type DBConfig struct {
 	Password string `mapstructure:"password"`
 }
 
+// Client ...
+type Client struct {
+	Kakao Kakao `mapstructure:"kakao"`
+}
+
 // OAuthConfig ...
 type OAuthConfig struct {
 	ClientID     string `mapstructure:"client-id"`
@@ -28,15 +38,11 @@ type OAuthConfig struct {
 	RedirectURL  string `mapstructure:"redirect-url"`
 }
 
-// KakaoClient ...
-type KakaoClient struct {
-	Oauth OAuthConfig `mapstructure:"oauth"`
+// Kakao ...
+type Kakao struct {
+	Oauth   OAuthConfig `mapstructure:"oauth"`
+	BaseURL string      `mapstructure:"base-url"`
 }
-
-const (
-	typeExtension = "yaml"
-	defaultPhase  = "dev"
-)
 
 // Load ...
 func Load(path string, name string) (Config, error) {
@@ -49,7 +55,7 @@ func Load(path string, name string) (Config, error) {
 	}
 	fmt.Println("[PHASE]: ", name)
 	viper.SetConfigName(name)
-	viper.SetConfigType(typeExtension)
+	viper.SetConfigType(typeEXT)
 
 	err := viper.ReadInConfig()
 

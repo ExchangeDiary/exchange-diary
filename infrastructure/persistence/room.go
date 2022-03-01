@@ -20,10 +20,10 @@ type RoomGorm struct {
 	Theme  string `gorm:"column:theme;not null"`
 	Period uint8  `gorm:"column:period;not null"`
 
-	MasterID      uint        `gorm:"column:master_id"`
-	Master        AccountGorm `gorm:"column:master_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-	TurnAccountID uint        `gorm:"column:turn_account_id"`
-	TurnAccount   AccountGorm `gorm:"column:turn_account_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	MasterID      uint       `gorm:"column:master_id"`
+	Master        MemberGorm `gorm:"column:master_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	TurnAccountID uint       `gorm:"column:turn_account_id"`
+	TurnAccount   MemberGorm `gorm:"column:turn_account_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	Orders datatypes.JSON `gorm:"column:orders"`
 

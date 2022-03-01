@@ -6,8 +6,8 @@ import (
 )
 
 // RoomRoutes is room api handler
-func RoomRoutes(incomingRoutes *gin.Engine, controller controller.RoomController) {
-	rooms := incomingRoutes.Group("v1/rooms")
+func RoomRoutes(router *gin.RouterGroup, controller controller.RoomController) {
+	rooms := router.Group("/rooms")
 	{
 		rooms.GET("/", controller.GetAll())
 		rooms.GET("/:room_id", controller.Get())
