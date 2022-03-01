@@ -8,6 +8,6 @@ import (
 type RoomMemberRepository interface {
 	Create(roomMember *entity.RoomMember) (*entity.RoomMember, error)
 	GetByUnq(roomID, accountID uint) (*entity.RoomMember, error)
-	GetAll() (*entity.RoomMembers, error)
+	GetAllRoomIDsByMemberID(memberID uint) ([]uint, error)
 	Delete(roomMember *entity.RoomMember) error
 }

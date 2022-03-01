@@ -30,11 +30,6 @@ type RoomGorm struct {
 	BaseGormModel
 }
 
-// TableName define gorm table name
-func (RoomGorm) TableName() string {
-	return "rooms"
-}
-
 // RoomGorms define list of RoomGorm
 type RoomGorms []RoomGorm
 
@@ -43,11 +38,31 @@ type RoomRepository struct {
 	db *gorm.DB
 }
 
+// TableName define gorm table name
+func (RoomGorm) TableName() string {
+	return "rooms"
+}
+
 // NewRoomRepository ...
 // Domain layer의 RoomRepository interface를 만족시키는 repository impl.
 // gorm connection을 들고 가지고 있다.
 func NewRoomRepository(db *gorm.DB) repository.RoomRepository {
 	return &RoomRepository{db: db}
+}
+
+func masterOrMember(masterID uint, memberRoomIDs []uint) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if memberRoomIDs != nil {
+			return db.Where("id IN (?)", memberRoomIDs).Or("master_id = ?", masterID)
+		}
+		return db.Where("master_id = ?", masterID)
+	}
+}
+
+func paginate(limit, offset uint) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Offset(int(offset)).Limit(int(limit))
+	}
 }
 
 // ToDTO : entity.Room -> RoomGorm
@@ -92,10 +107,10 @@ func (rr *RoomRepository) GetByID(id uint) (*entity.Room, error) {
 	return ToEntity(&dto), nil
 }
 
-// GetAllByAccountID func finds all Rooms which account is joined from db table
-func (rr *RoomRepository) GetAllByAccountID(accountID, limit, offset uint) (*entity.Rooms, error) {
+// GetAll rooms from masterID or roomIDs
+func (rr *RoomRepository) GetAll(accountID uint, roomIDs []uint, limit, offset uint) (*entity.Rooms, error) {
 	dto := RoomGorms{}
-	rr.db.Limit(int(limit)).Offset(int(offset)).Where(&RoomGorm{MasterID: accountID}).Find(&dto)
+	rr.db.Scopes(paginate(limit, offset), masterOrMember(accountID, roomIDs)).Order(" created_at desc ").Find(&dto)
 	rooms := entity.Rooms{}
 	for _, roomGorm := range dto {
 		rooms = append(rooms, *ToEntity(&roomGorm))

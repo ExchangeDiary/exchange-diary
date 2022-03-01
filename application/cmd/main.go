@@ -86,8 +86,8 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	memberRepository := persistence.NewMemberRepository(db)
 
 	roomMemberService := service.NewRoomMemberService(roomMemberRepository)
-	roomService := service.NewRoomService(roomRepository, roomMemberService)
 	memberService := service.NewMemberService(memberRepository)
+	roomService := service.NewRoomService(roomRepository, memberRepository, roomMemberService)
 	authCodeVerifier := service.NewTokenVerifier(service.AuthCodeSecretKey)
 	refreshTokenVerifier := service.NewTokenVerifier(service.AccessTokenSecretKey)
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)

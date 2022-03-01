@@ -20,14 +20,16 @@ type RoomService interface {
 }
 
 type roomService struct {
-	roomRepository    repository.RoomRepository
 	roomMemberService RoomMemberService
+	roomRepository    repository.RoomRepository
+	memberRepository  repository.MemberRepository
 }
 
 // NewRoomService ...
-func NewRoomService(rr repository.RoomRepository, rms RoomMemberService) RoomService {
+func NewRoomService(rr repository.RoomRepository, mr repository.MemberRepository, rms RoomMemberService) RoomService {
 	return &roomService{
 		roomRepository:    rr,
+		memberRepository:  mr,
 		roomMemberService: rms,
 	}
 }
@@ -44,21 +46,37 @@ func (rs *roomService) Create(masterID uint, name, code, hint, theme string, per
 	return createdRoom, nil
 }
 
-func (rs *roomService) Get(id uint) (*entity.Room, error) {
-	room, err := rs.roomRepository.GetByID(id)
-	if err != nil {
+func (rs *roomService) Get(id uint) (room *entity.Room, err error) {
+	if room, err = rs.roomRepository.GetByID(id); err != nil {
 		return nil, err
 	}
-	return room, nil
+	return rs.populateMembersByOrders(room)
 }
 
-// Room Master + RoomMember table
+// SELECT * FROM `rooms` WHERE id IN (memberRoomIDs) OR master_id = accountID ORDER BY  created_at desc  LIMIT limit OFFSET offset;
 func (rs *roomService) GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error) {
-	rooms, err := rs.roomRepository.GetAllByAccountID(accountID, limit, offset)
+	// O(1)
+	memberRoomIDs, err := rs.roomMemberService.GetAllMemberRoomIDs(accountID)
 	if err != nil {
 		return nil, err
 	}
-	return rooms, nil
+
+	// O(1)
+	rooms, err := rs.roomRepository.GetAll(accountID, memberRoomIDs, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	// O(n)
+	populatedRooms := entity.Rooms{}
+	for _, room := range *rooms {
+		populatedRoom, err := rs.populateMembersByOrders(&room)
+		if err != nil {
+			return nil, err
+		}
+		populatedRooms = append(populatedRooms, *populatedRoom)
+	}
+	return &populatedRooms, nil
 }
 
 func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
@@ -66,7 +84,7 @@ func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
 	if err != nil {
 		return nil, err
 	}
-	return room, nil
+	return rs.populateMembersByOrders(room)
 }
 
 func (rs *roomService) Delete(room *entity.Room) error {
@@ -157,4 +175,17 @@ func (rs *roomService) doMemberLeaveProcess(room *entity.Room, accountID uint) e
 		return err
 	}
 	return nil
+}
+
+// TODO: roomMember.created_at 기준으로 populate 하는 코드 필요
+// TODO: /v1/rooms/<:room_id>/orders 분리용
+func (rs *roomService) populateMembersByOrders(room *entity.Room) (*entity.Room, error) {
+	if len(room.Orders) != 0 {
+		members, err := rs.memberRepository.GetAllByIDs(room.Orders)
+		if err != nil {
+			return nil, err
+		}
+		room.Members = members
+	}
+	return room, nil
 }

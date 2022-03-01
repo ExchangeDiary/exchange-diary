@@ -59,13 +59,14 @@ func (rmr *RoomMemberRepository) GetByUnq(roomID, accountID uint) (*entity.RoomM
 	return roomMember, nil
 }
 
-// GetAll ...
-func (rmr *RoomMemberRepository) GetAll() (*entity.RoomMembers, error) {
+// GetAllRoomIDsByMemberID ...
+func (rmr *RoomMemberRepository) GetAllRoomIDsByMemberID(memberID uint) (roomIDs []uint, err error) {
 	dto := RoomMemberGorms{}
-	rmr.db.Find(&dto)
-	roomMembers := new(entity.RoomMembers)
-	copier.Copy(&roomMembers, &dto)
-	return roomMembers, nil
+	rmr.db.Select("id").Where("account_id = ?", memberID).Find(&dto)
+	for _, roomMemberGorm := range dto {
+		roomIDs = append(roomIDs, roomMemberGorm.ID)
+	}
+	return roomIDs, err
 }
 
 // Delete ...

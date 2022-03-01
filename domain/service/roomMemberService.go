@@ -9,7 +9,7 @@ import (
 type RoomMemberService interface {
 	Add(roomID, accountID uint) (*entity.RoomMember, error)
 	Get(roomID, accountID uint) (*entity.RoomMember, error)
-	GetAll() (*entity.RoomMembers, error)
+	GetAllMemberRoomIDs(accountID uint) ([]uint, error)
 	Delete(roomID, accountID uint) error
 }
 
@@ -42,12 +42,12 @@ func (rms *roomMemberService) Get(roomID, accountID uint) (*entity.RoomMember, e
 	return roomMember, nil
 }
 
-func (rms *roomMemberService) GetAll() (*entity.RoomMembers, error) {
-	roomMembers, err := rms.roomMemberRepository.GetAll()
+func (rms *roomMemberService) GetAllMemberRoomIDs(accountID uint) (roomIDs []uint, err error) {
+	roomIDs, err = rms.roomMemberRepository.GetAllRoomIDsByMemberID(accountID)
 	if err != nil {
 		return nil, err
 	}
-	return roomMembers, nil
+	return roomIDs, nil
 }
 
 func (rms *roomMemberService) Delete(roomID, accountID uint) error {
