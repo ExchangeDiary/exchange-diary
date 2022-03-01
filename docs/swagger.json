@@ -301,7 +301,7 @@
                 "members": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/controller.responseMember"
                     }
                 },
                 "name": {
@@ -317,6 +317,9 @@
                     "type": "integer"
                 },
                 "turnAccountName": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -388,6 +391,17 @@
                 }
             }
         },
+        "controller.responseMember": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "profileUrl": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.responseRoom": {
             "type": "object",
             "properties": {
@@ -400,10 +414,19 @@
                 "members": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/controller.responseMember"
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

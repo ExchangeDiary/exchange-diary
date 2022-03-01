@@ -14,7 +14,7 @@ definitions:
         type: boolean
       members:
         items:
-          type: integer
+          $ref: '#/definitions/controller.responseMember'
         type: array
       name:
         type: string
@@ -25,6 +25,8 @@ definitions:
       turnAccountId:
         type: integer
       turnAccountName:
+        type: string
+      updatedAt:
         type: string
     type: object
   controller.listResponseRoom:
@@ -70,6 +72,13 @@ definitions:
       roomId:
         type: integer
     type: object
+  controller.responseMember:
+    properties:
+      id:
+        type: integer
+      profileUrl:
+        type: string
+    type: object
   controller.responseRoom:
     properties:
       createdAt:
@@ -78,9 +87,15 @@ definitions:
         type: integer
       members:
         items:
-          type: integer
+          $ref: '#/definitions/controller.responseMember'
         type: array
       name:
+        type: string
+      orders:
+        items:
+          type: integer
+        type: array
+      updatedAt:
         type: string
     type: object
   controller.verifyRequestRoom:

@@ -37,10 +37,12 @@ type responseMember struct {
 }
 
 type responseRoom struct {
-	ID        uint       `json:"id"`
-	Name      *string    `json:"name"`
-	Members   []uint     `json:"members"`
-	CreatedAt *time.Time `json:"createdAt"`
+	ID        uint              `json:"id"`
+	Name      *string           `json:"name"`
+	Orders    []uint            `json:"orders"`
+	Members   *[]responseMember `json:"members"`
+	CreatedAt *time.Time        `json:"createdAt"`
+	UpdatedAt *time.Time        `json:"updatedAt"`
 }
 
 type listResponseRoom struct {
@@ -66,33 +68,43 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		// TODO: response Member population
-		// members := []responseMember{}
+
 		roomsResponse := []responseRoom{}
 		for _, room := range *rooms {
+			members := []responseMember{}
+			for _, member := range *room.Members {
+				members = append(members, responseMember{
+					ID:         member.ID,
+					ProfileURL: member.ProfileURL,
+				})
+			}
 			roomsResponse = append(roomsResponse, responseRoom{
 				ID:        room.ID,
 				Name:      &room.Name,
-				Members:   room.Orders,
-				CreatedAt: &room.CreatedAt,
+				Orders:    room.Orders,
+				Members:   &members,
+				CreatedAt: room.CreatedAt,
+				UpdatedAt: room.UpdatedAt,
 			})
+
 		}
 		c.JSON(http.StatusOK, listResponseRoom{Rooms: roomsResponse})
 	}
 }
 
 type detailResponseRoom struct {
-	ID              uint       `json:"id"`
-	Name            *string    `json:"name"`
-	Members         []uint     `json:"members"`
-	CreatedAt       *time.Time `json:"createdAt"`
-	Theme           *string    `json:"theme,omitempty"`
-	Period          uint8      `json:"period,omitempty"`
-	TurnAccountID   uint       `json:"turnAccountId,omitempty"`
-	TurnAccountName *string    `json:"turnAccountName,omitempty"`
-	Code            *string    `json:"code,omitempty"`
-	Hint            *string    `json:"hint,omitempty"`
-	IsMaster        bool       `json:"isMaster,omitempty"`
+	ID              uint              `json:"id"`
+	Name            *string           `json:"name"`
+	Members         *[]responseMember `json:"members"`
+	CreatedAt       *time.Time        `json:"createdAt"`
+	UpdatedAt       *time.Time        `json:"updatedAt"`
+	Theme           *string           `json:"theme,omitempty"`
+	Period          uint8             `json:"period,omitempty"`
+	TurnAccountID   uint              `json:"turnAccountId,omitempty"`
+	TurnAccountName *string           `json:"turnAccountName,omitempty"`
+	Code            *string           `json:"code,omitempty"`
+	Hint            *string           `json:"hint,omitempty"`
+	IsMaster        bool              `json:"isMaster,omitempty"`
 }
 
 // @Summary      get a room
@@ -118,18 +130,24 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			return
 		}
 
-		// TODO: response Member population
-		// members := []responseMember{}
+		members := []responseMember{}
+		for _, member := range *room.Members {
+			members = append(members, responseMember{
+				ID:         member.ID,
+				ProfileURL: member.ProfileURL,
+			})
+		}
 		turnAccountName := "MOCK 어카운트 이름"
 		res := detailResponseRoom{
 			ID:              room.ID,
 			Name:            &room.Name,
 			Theme:           &room.Theme,
 			Period:          room.Period,
-			Members:         room.Orders,
+			Members:         &members,
 			TurnAccountID:   room.TurnAccountID,
 			TurnAccountName: &turnAccountName,
-			CreatedAt:       &room.CreatedAt,
+			CreatedAt:       room.CreatedAt,
+			UpdatedAt:       room.UpdatedAt,
 			IsMaster:        room.IsMaster(currentMember.ID),
 		}
 		c.JSON(http.StatusOK, res)

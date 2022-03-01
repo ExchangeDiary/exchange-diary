@@ -17,11 +17,13 @@ type Room struct {
 	Theme  string
 	Period uint8
 
-	MasterID      uint
-	TurnAccountID uint
+	MasterID      uint   // TODO: Member
+	TurnAccountID uint   // TODO: Member
 	Orders        []uint // []Member.ID
+	Members       *Members
 
-	CreatedAt time.Time
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
 }
 
 // Rooms ...
@@ -86,7 +88,7 @@ func (r *Room) ChangeMaster() error {
 	return nil
 }
 
-// OrdersToJSON 는 []uint 타입을 []byte json타입으로 마샬링 변환한다.
+// OrdersToJSON 는 []uint 타입을 []byte json타입으로 마샬링한다.
 func (r *Room) OrdersToJSON() ([]byte, error) {
 	orderJSON, err := json.Marshal(r.Orders)
 	if err != nil {

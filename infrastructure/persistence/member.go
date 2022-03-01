@@ -69,6 +69,19 @@ func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
 	return ToMemberEntity(&dto), nil
 }
 
+// GetAllByIDs ...
+func (r *MemberRepository) GetAllByIDs(ids []uint) (*entity.Members, error) {
+	dto := MembersGorm{}
+	if err := r.db.Where("id IN (?)", ids).Find(&dto).Error; err != nil {
+		return nil, err
+	}
+	members := entity.Members{}
+	for _, memberTO := range dto {
+		members = append(members, *ToMemberEntity(&memberTO))
+	}
+	return &members, nil
+}
+
 // Update ...
 func (r *MemberRepository) Update(member *entity.Member) (*entity.Member, error) {
 	dto := ToMemberDTO(member)

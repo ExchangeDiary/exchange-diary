@@ -308,7 +308,7 @@ const docTemplate = `{
                 "members": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/controller.responseMember"
                     }
                 },
                 "name": {
@@ -324,6 +324,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "turnAccountName": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
@@ -395,6 +398,17 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.responseMember": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "profileUrl": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.responseRoom": {
             "type": "object",
             "properties": {
@@ -407,10 +421,19 @@ const docTemplate = `{
                 "members": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/controller.responseMember"
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }
