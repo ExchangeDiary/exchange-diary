@@ -7,19 +7,19 @@ import (
 )
 
 const (
-	defaultLimit  = 10
-	defaultOffset = 0
+	defaultPageLimit  = 10
+	defaultPageOffset = 0
 )
 
 // GetLimitAndOffset parse limit and offset from http context and convert them to uint type.
 func GetLimitAndOffset(c *gin.Context) (uint, uint) {
 	limit, err := ParseUint(c.Query("limit"))
 	if err != nil {
-		limit = defaultLimit
+		limit = defaultPageLimit
 	}
 	offset, err := ParseUint(c.Query("offset"))
 	if err != nil {
-		offset = defaultOffset
+		offset = defaultPageOffset
 	}
 	return limit, offset
 }
