@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -41,13 +42,30 @@ func mockAccountID(c *gin.Context) uint {
 	return 1
 }
 
+type responseRoom struct {
+	ID        uint       `json:"id"`
+	Name      *string    `json:"name"`
+	Members   []uint     `json:"members"`
+	CreatedAt *time.Time `json:"createdAt"`
+}
+
 type listResponseRoom struct {
 	Rooms []responseRoom `json:"rooms"`
 }
 
-// 참여중인 교환일기방 리스트
+// @Summary      List rooms
+// @Description  참여중인 교환일기방 리스트
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        limit    query     uint  false  "page size"  Format(uint)
+// @Param        offset    query    uint  false  "page offset"  Format(uint)
+// @Success      200  {object}   listResponseRoom
+// @Failure      400
+// @Router       /rooms [get]
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println("GetAll")
 		limit, offset := application.GetLimitAndOffset(c)
 		rooms, err := rc.roomService.GetAll(limit, offset) // TODO: GetAllJoinedRooms
 		if err != nil {
@@ -69,23 +87,32 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 	}
 }
 
-type responseRoom struct {
+type detailResponseRoom struct {
 	ID              uint       `json:"id"`
 	Name            *string    `json:"name"`
-	Code            *string    `json:"code,omitempty"`
-	Hint            *string    `json:"hint,omitempty"`
+	Members         []uint     `json:"members"`
+	CreatedAt       *time.Time `json:"createdAt"`
 	Theme           *string    `json:"theme,omitempty"`
 	Period          uint8      `json:"period,omitempty"`
-	Members         []uint     `json:"members"`
 	TurnAccountID   uint       `json:"turnAccountId,omitempty"`
 	TurnAccountName *string    `json:"turnAccountName,omitempty"`
+	Code            *string    `json:"code,omitempty"`
+	Hint            *string    `json:"hint,omitempty"`
 	IsMaster        bool       `json:"isMaster,omitempty"`
-	CreatedAt       *time.Time `json:"createdAt"`
 }
 
-// 교환일기방 상세
+// @Summary      get a room
+// @Description  교환일기방 상세
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        id    path     int  true  "교환일기방 ID"  Format(uint)
+// @Success      200  {object}   detailResponseRoom
+// @Failure      400
+// @Router       /rooms/{id} [get]
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println("Get")
 		curAccountID := mockAccountID(c)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
@@ -101,7 +128,7 @@ func (rc *roomController) Get() gin.HandlerFunc {
 		// TODO: response Member population
 		// members := []responseMember{}
 		turnAccountName := "MOCK 어카운트 이름"
-		res := responseRoom{
+		res := detailResponseRoom{
 			ID:              room.ID,
 			Name:            &room.Name,
 			Theme:           &room.Theme,
@@ -128,9 +155,18 @@ type postResponseRoom struct {
 	RoomID uint `json:"roomId"`
 }
 
-// 교환일기방 생성
+// @Summary      create a room
+// @Description  교환일기방 생성
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        room  body     postRequestRoom  true  "교환일기방 생성요청 body"
+// @Success      200  {object}   postResponseRoom
+// @Failure      400
+// @Router       /rooms [post]
 func (rc *roomController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println("Post")
 		var req postRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -174,12 +210,22 @@ type patchResponseRoom struct {
 	RoomID uint `json:"roomId"`
 }
 
-// 교환일기방 업데이트 (master only)
-// 1. 작성주기(period)
-// 2. 코드/힌트 (code, hint)
-// 3. 작성순서(orders)
+// @Summary      update a room
+// @Description  교환일기방 업데이트 (master only)
+// @Description  1. 작성주기 변경 (period)
+// @Description  2. 코드/힌트 변경 (code, hint)
+// @Description  3. 작성순서 변경(orders)
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        id  path 	int  true "교환일기방 ID"
+// @Param        room  body 	patchRequestRoom  true "교환일기방 수정 요청 body"
+// @Success      200  {object}   patchResponseRoom
+// @Failure      400
+// @Router       /rooms/{id} [patch]
 func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println("Patch")
 		var req patchRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -207,10 +253,19 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 	}
 }
 
-// 교환일기방 삭제
+// @Summary      (debug only) delete a room
+// @Description  교환일기방 삭제
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        id  path 	int  true "교환일기방 ID"
+// @Success      204
+// @Failure      400
+// @Router       /rooms/{id} [delete]
 func (rc *roomController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// TODO: 현재 유저가 마스터 ID가 아니면 return 401
+		fmt.Println("Delete")
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -229,9 +284,20 @@ type verifyRequestRoom struct {
 	Code string `json:"code"`
 }
 
-// 교환일기방 참여코드 체크 후, 교환일기방 멤버로 추가
+// @Summary      join a room
+// @Description  교환일기방 참여코드 체크 후, 교환일기방 멤버로 추가
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        id  path 	int  true "교환일기방 ID"
+// @Param        room  body 	verifyRequestRoom  true "교환일기방 참여 요청 body"
+// @Success      201
+// @Failure      400
+// @Failure      401
+// @Router       /rooms/{id}/join [post]
 func (rc *roomController) Join() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println("Join")
 		var req verifyRequestRoom
 		accountID := mockAccountID(c)
 		if err := c.BindJSON(&req); err != nil {
@@ -257,9 +323,20 @@ func (rc *roomController) Join() gin.HandlerFunc {
 	}
 }
 
-// 교환일기방 나가기
+// @Summary      leave a room
+// @Description  교환일기방 나가기
+// @Description  1. 교환일기방 마스터일 경우
+// @Description  2. 교환일기방 멤버일 경우
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        id  path 	int  true "교환일기방 ID"
+// @Success      204
+// @Failure      400
+// @Router       /rooms/{id}/leave [delete]
 func (rc *roomController) Leave() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		fmt.Println("Leave")
 		accountID := mockAccountID(c)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {

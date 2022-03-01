@@ -1,0 +1,14 @@
+# host: project:region:instance
+db-config:
+  # docker-compose.yml sql-proxy container name
+  host: "cloudsql-proxy"
+  user: "root"
+  name: "voda"
+  port: 5432
+  password: "voda1!"
+
+kakao-client:
+  oauth:
+    client-id: "c663ce96b79395b5dcc6d7f774e1af67"
+    client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
+    redirect-url: "http://localhost:8080/auth/kakao"

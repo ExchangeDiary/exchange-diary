@@ -19,8 +19,27 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 
+	docs "github.com/ExchangeDiary/exchange-diary/docs"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
+
+// refs: https://github.com/swaggo/swag/blob/master/example/celler/main.go
+// @title           Voice Of Diary API (voda)
+// @version         1.0
+// @description     This is a voda api server.
+
+// @contact.name   API Support
+// @contact.url    https://minkj1992.github.io
+// @contact.email  minkj1992@gmail.com
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      exchange-diary-b4mzhzbzcq-du.a.run.app
+// 로컬 테스트용 host      localhost:8080
+// @BasePath  /v1
 
 func main() {
 	logger := setLogger()
@@ -53,7 +72,7 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	}
 
 	// init db
-	db := infrastructure.ConnectDatabase()
+	db := infrastructure.ConnectDatabase(configName)
 	infrastructure.Migrate(db)
 
 	// set DI
@@ -66,6 +85,9 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	// init server
 	server := gin.New()
 
+	// set swagger
+	swagger(server)
+
 	// zap middlewares
 	server.Use(ginzap.Ginzap(logger, time.RFC3339, true))
 	server.Use(ginzap.RecoveryWithZap(logger, true)) // log all panic
@@ -73,6 +95,11 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	// init routes
 	route.RoomRoutes(server, roomController)
 	return server
+}
+
+func swagger(server *gin.Engine) {
+	docs.SwaggerInfo.BasePath = "/v1"
+	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }
 
 func shutdown(logger *zap.Logger) {

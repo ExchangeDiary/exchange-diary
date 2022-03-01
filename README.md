@@ -39,7 +39,7 @@
 - `domain/`: domain layer
 - `infrastructure/`: infra layer
 
-## precommit-hook
+## Precommit-hook
 
 > [refs](https://tutorialedge.net/golang/improving-go-workflow-with-git-hooks/)
 
@@ -61,26 +61,34 @@ $ cp pre-commit.example .git/hooks/pre-commit
 $ chmod +x .git/hooks/pre-commit
 ```
 
-## Build & Run
+## Cmd
 
-_Step 1. Build application using Makefile._
+### local
 
-```sh
-make build
-```
-
-_Step 2. Run application with specific flag._
+- go run + local mysql db
 
 ```sh
-./bin/exchange-diray -phase=${phase}
+$ make run
+$ make build
+$ make docker
+$ make clean
+
+$ ./bin/exchange-diray -phase=${phase}
 ```
 
-- ${phase} would be "dev", "production", or "sandbox".
-- Example:
+### sandbox
+
+- local docker api server image + google cloud sql
 
 ```sh
-./bin/exchange-diray -phase=dev
+$ make down && make up
 ```
+
+### prod
+
+- google cloud run + google cloud sql (same as sandbox db)
+- trigger (cloud build)
+  - **push to /main branch**
 
 ## Deploy env
 
@@ -92,6 +100,8 @@ _Step 2. Run application with specific flag._
   - `Cloud Monitoring`
   - `Cloud Logging`
   - `Cloud Trace`
+
+## Phase
 
 ## Erd
 

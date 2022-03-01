@@ -1,0 +1,26 @@
+version: "3"
+services:
+  # refs: https://github.com/GoogleCloudPlatform/cloudsql-proxy/blob/main/examples/k8s-health-check/proxy_with_http_health_check.yaml#L38
+  cloudsql-proxy:
+    container_name: cloudsql-proxy
+    # 1.19는 health-check를 제공하지 않는다.
+    image: gcr.io/cloudsql-docker/gce-proxy:1.28.0
+    # command: /cloud_sql_proxy --dir=/cloudsql -instances=<YOUR INSTANCE ID HERE>=tcp:0.0.0.0:5432 -credential_file=/secrets/cloudsql/credentials.json -use_http_health_check -health_check_port=8090
+
+    command: /cloud_sql_proxy --dir=/cloudsql -instances=voda-342511:asia-northeast3:voda=tcp:0.0.0.0:5432 -credential_file=/secrets/cloudsql/credentials.json -use_http_health_check -health_check_port=8090
+    ports:
+      - 5432:5432
+      - 8090:8090
+    volumes:
+      - ./credentials.json:/secrets/cloudsql/credentials.json
+    restart: always
+
+  voda:
+    container_name: voda
+    build: .
+    ports:
+      - 8080:8080
+    depends_on:
+      - cloudsql-proxy
+    command: bash -c 'while [[ "$$(curl --connect-timeout 2 -s -o /dev/null -w ''%{http_code}'' cloudsql-proxy:8090/readiness)" != "200" ]]; do echo ..; sleep 5; done; echo voda api is up;/home/exchange-diary -phase=sandbox'
+    restart: always

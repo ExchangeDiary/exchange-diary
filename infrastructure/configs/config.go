@@ -35,6 +35,7 @@ type KakaoClient struct {
 
 const (
 	typeExtension = "yaml"
+	defaultPhase  = "dev"
 )
 
 // Load ...
@@ -43,6 +44,10 @@ func Load(path string, name string) (Config, error) {
 	fmt.Println("Load config file - profile:", name)
 
 	viper.AddConfigPath(path)
+	if name == "" {
+		name = defaultPhase
+	}
+	fmt.Println("[PHASE]: ", name)
 	viper.SetConfigName(name)
 	viper.SetConfigType(typeExtension)
 
