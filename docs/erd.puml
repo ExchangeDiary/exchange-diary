@@ -20,7 +20,7 @@ note as N1
 end note
 
 ' entities
-Table(accounts, "accounts\n계정") {
+Table(members, "members\n계정") {
     pk(id) INTEGER
     not_null(unique(email)) VARCHAR[255]
     not_null(name) VARCHAR[]    계정 닉네임
@@ -44,6 +44,7 @@ Table(rooms, "rooms\n다이어리방") {
     not_null(turn_account_id) INTEGER   현재 작성 순서인 멤버 account_id
     not_null(created_at) DATETIME
     not_null(updated_at) DATETIME
+    not_null(due_at) DATETIME   현재 작성 순서인 멤버의 마감 기한
 }
 
 Table(diaries, "diaries\n다이어리") {
@@ -99,10 +100,10 @@ Table(notices, "notices\n공지사항") {
 diaries "1" -- "1" audio
 
 ' one to may relationship
-accounts "1" --> "0..N" rooms : "A user(master) may have\n many DiaryRooms"
-accounts "1" --> "0..N" diaries : "A user may have\n many Diary stories"
-accounts "1" --> "0..N" room_members : "A user may can be\n many diary_room's member"
+members "1" --> "0..N" rooms : "A user(master) may have\n many DiaryRooms"
+members "1" --> "0..N" diaries : "A user may have\n many Diary stories"
+members "1" --> "0..N" room_members : "A user may can be\n many diary_room's member"
 rooms "1" --> "0..N" diaries : "A room may can have\n many diaries"
-rooms "1" --> "0..N" room_members : "A room may can have\n many accounts(members)"
+rooms "1" --> "0..N" room_members : "A room may can have\n many members(members)"
 diaries "1" --> "0..N" photos : "A diary may can have\n many photos."
 @enduml

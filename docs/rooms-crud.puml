@@ -28,7 +28,7 @@ note right of client #Lavender
     "code": 질문답변,
     "hint": 참여질문,
     "period": 작성기한 (int),
-    "theme": "1"|"2"|"3",
+    "theme": <str> // aos의 경우 hex color 값, ios의 경우 원하는 식별자 string 형식으로
 }
 endnote
 
@@ -82,9 +82,9 @@ note right of client #Lavender
     "turnAccountId": "<int>", // 현재 턴 accountID (이걸 기준으로 orders에서 파랑색 동그라미)
     "turnAccountName": "<str>", // 현재 턴 accountName i.g "고영희", ("고영희님이 이야기를 쓰고있어요!"일때 사용)
     "name": "<str>", // 다이어리 이름 i.g. 고영희 미만 다꾸러
-    "theme": "<str>", // 다이어리 배경 테마명 i.g. #고영희_자랑하는 일기
+    "theme": "<str>", // 다이어리 배경 테마명
     "period": <int>, // 작성 기한 (방장설정화면 > 작성기한 재설정용)
-    "isMaster": "<bool>" // 다이어리 마스터 여부 (방장설정화면 접근 권한 체크용)
+    "isMaster": "<bool>" // 다이어리 마스터 여부 (방장설정화면 접근 권한 체크용)    
 }
 endnote
 
@@ -153,6 +153,26 @@ note right of client #Lavender
     ]
 }
 endnote
+alt#Gold #Pink Android
+    client -> api++: **GET /v1/rooms/urgent**
+note right of client
+	1. 본인이 참여하고 있는 방이어야한다.
+	2. 해당하는 방들 중, 본인이 작성할 턴이어야 한다.
+	3. 그 중 가장 일정이 촉박한(urgent) 방 정보를 클라에 전달한다.
+    (만약 조건에 맞는 방이 없다면) **204 no content**를 return.
+endnote
+    api -> client: **200 OK**
+note right of client #Lavender
+{
+    "id": "<int>", // 다이어리 방 id
+    "name": "<str>", // 다이어리 방 이름 i.g. 고영희 미만 다꾸러
+    "theme": "<str>", // 다이어리 배경 테마명
+    "dueAt": <datetime> // 참여하고 있는 방들 중, 본인의 턴이면서 가장 가까운 일정
+}
+endnote   
+end
+
+client -> user: 다이어리방 home 화면 렌더링
 
 ||20||
 
