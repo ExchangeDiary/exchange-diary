@@ -3,6 +3,7 @@ package entity
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/domain"
@@ -95,4 +96,14 @@ func (r *Room) OrdersToJSON() ([]byte, error) {
 		return nil, err
 	}
 	return []byte(orderJSON), nil
+}
+
+// MemberOnlyOrders returns master excluded memberIDs
+func (r *Room) MemberOnlyOrders() ([]uint, error) {
+	for i, accountID := range r.Orders {
+		if r.IsMaster(accountID) {
+			return append(r.Orders[:i], r.Orders[i+1:]...), nil
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("There is no masterID in orders: %+v", r))
 }

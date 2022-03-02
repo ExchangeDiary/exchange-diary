@@ -9,7 +9,11 @@ import (
 type RoomMemberService interface {
 	Add(roomID, accountID uint) (*entity.RoomMember, error)
 	Get(roomID, accountID uint) (*entity.RoomMember, error)
-	GetAllMemberRoomIDs(accountID uint) ([]uint, error)
+	GetAllRoomIDs(accountID uint) ([]uint, error)
+	GetAllMemberIDs(roomID uint) ([]uint, error)
+	PopulateMembers(accountIDs []uint) (*entity.Members, error)
+	PopulateSortedMembers(masterID uint, accountIDs []uint) (*entity.Members, error)
+	GetPopulatedMasterMemberProfiles(roomID uint) ([]uint, error)
 	Delete(roomID, accountID uint) error
 }
 
@@ -42,12 +46,29 @@ func (rms *roomMemberService) Get(roomID, accountID uint) (*entity.RoomMember, e
 	return roomMember, nil
 }
 
-func (rms *roomMemberService) GetAllMemberRoomIDs(accountID uint) (roomIDs []uint, err error) {
+func (rms *roomMemberService) GetAllRoomIDs(accountID uint) (roomIDs []uint, err error) {
 	roomIDs, err = rms.roomMemberRepository.GetAllRoomIDsByMemberID(accountID)
 	if err != nil {
 		return nil, err
 	}
 	return roomIDs, nil
+}
+
+//  TODO:
+func (rms *roomMemberService) PopulateMembers(accountIDs []uint) (*entity.Members, error) {
+	members, err := rms.memberRepository.GetAllByIDs(accountIDs)
+	if err != nil {
+		return nil, err
+	}
+	return members, nil
+}
+
+func (rms *roomMemberService) PopulateSortedMembers(masterID uint, accountIDs []uint) (*entity.Members, error) {
+	sortedIDs, err := rms.roomMemberRepository.SortedByCreatedAt(accountIDs)
+	if err != nil {
+		return nil, err
+	}
+	return PopulateMembers(append([]uint{masterID}, sortedIDs))
 }
 
 func (rms *roomMemberService) Delete(roomID, accountID uint) error {

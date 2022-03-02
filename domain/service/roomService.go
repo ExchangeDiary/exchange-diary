@@ -50,41 +50,37 @@ func (rs *roomService) Get(id uint) (room *entity.Room, err error) {
 	if room, err = rs.roomRepository.GetByID(id); err != nil {
 		return nil, err
 	}
-	return rs.populateMembersByOrders(room)
+	rs.populateMembers(room)
+	return room, nil
 }
 
 // SELECT * FROM `rooms` WHERE id IN (memberRoomIDs) OR master_id = accountID ORDER BY  created_at desc  LIMIT limit OFFSET offset;
 func (rs *roomService) GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error) {
 	// O(1)
-	memberRoomIDs, err := rs.roomMemberService.GetAllMemberRoomIDs(accountID)
+	memberRoomIDs, err := rs.roomMemberService.GetAllRoomIDs(accountID)
 	if err != nil {
 		return nil, err
 	}
-
 	// O(1)
 	rooms, err := rs.roomRepository.GetAll(accountID, memberRoomIDs, limit, offset)
 	if err != nil {
 		return nil, err
 	}
-
-	// O(n)
-	populatedRooms := entity.Rooms{}
-	for _, room := range *rooms {
-		populatedRoom, err := rs.populateMembersByOrders(&room)
-		if err != nil {
-			return nil, err
-		}
-		populatedRooms = append(populatedRooms, *populatedRoom)
+	
+	if err:= rs.populateAllMembers(rooms); err != nil {
+		return nil, err
 	}
-	return &populatedRooms, nil
+	return rooms, nil
 }
+
 
 func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
 	room, err := rs.roomRepository.Update(room)
 	if err != nil {
 		return nil, err
 	}
-	return rs.populateMembersByOrders(room)
+	rs.populateMembers(room)
+	return room, nil
 }
 
 func (rs *roomService) Delete(room *entity.Room) error {
@@ -177,10 +173,38 @@ func (rs *roomService) doMemberLeaveProcess(room *entity.Room, accountID uint) e
 	return nil
 }
 
-// TODO: roomMember.created_at 기준으로 populate 하는 코드 필요
+// TODO room Member service로 이동
+func (rs *roomService) populateAllMembers(rooms *entity.Rooms) error {
+	// O(n)
+	for _, room := range *rooms {
+		if err:= rs.populateMembers(&room); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// roomMember.created_at 기준으로 populate
+func (rs *roomService) populateMembers(room *entity.Room) error {
+	// O(1)
+	memberIDs,err := room.MemberOnlyOrders()
+	if err != nil {
+		return err
+	}
+	members,err := rs.roomMemberService.PopulateSortedMembers(room.MasterID, memberIDs)
+	if err != nil {
+		return err
+	}
+	room.Members = members
+	return nil
+}
+
+
+// TODO remove memberRepository dependency
 // TODO: /v1/rooms/<:room_id>/orders 분리용
 func (rs *roomService) populateMembersByOrders(room *entity.Room) (*entity.Room, error) {
 	if len(room.Orders) != 0 {
+		// PopulateMembers
 		members, err := rs.memberRepository.GetAllByIDs(room.Orders)
 		if err != nil {
 			return nil, err
