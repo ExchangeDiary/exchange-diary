@@ -59,14 +59,28 @@ func (rmr *RoomMemberRepository) GetByUnq(roomID, accountID uint) (*entity.RoomM
 	return roomMember, nil
 }
 
-// GetAllRoomIDsByMemberID ...
-func (rmr *RoomMemberRepository) GetAllRoomIDsByMemberID(memberID uint) (roomIDs []uint, err error) {
+// GetAllRoomIDs ...
+func (rmr *RoomMemberRepository) GetAllRoomIDs(memberID uint) (roomIDs []uint, err error) {
 	dto := RoomMemberGorms{}
-	rmr.db.Select("id").Where("account_id = ?", memberID).Find(&dto)
+	rmr.db.Select("room_id").Where("account_id = ?", memberID).Find(&dto)
 	for _, roomMemberGorm := range dto {
-		roomIDs = append(roomIDs, roomMemberGorm.ID)
+		roomIDs = append(roomIDs, roomMemberGorm.RoomID)
 	}
 	return roomIDs, err
+}
+
+// SortedMemberIDs ...
+func (rmr *RoomMemberRepository) SortedMemberIDs(memberIDs []uint) (sortedMemberIDs []uint, err error) {
+	dto := RoomMemberGorms{}
+	if len(memberIDs) <= 0 {
+		return []uint{}, nil
+	}
+
+	rmr.db.Select("account_id").Where("account_id IN (?)", memberIDs).Order(" created_at desc ").Find(&dto)
+	for _, roomMemberGorm := range dto {
+		sortedMemberIDs = append(sortedMemberIDs, roomMemberGorm.AccountID)
+	}
+	return sortedMemberIDs, err
 }
 
 // Delete ...

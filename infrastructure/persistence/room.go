@@ -84,7 +84,6 @@ func ToEntity(dto *RoomGorm) *entity.Room {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-
 	room.Orders = orders
 	return room
 }
@@ -110,7 +109,7 @@ func (rr *RoomRepository) GetByID(id uint) (*entity.Room, error) {
 // GetAll rooms from masterID or roomIDs
 func (rr *RoomRepository) GetAll(accountID uint, roomIDs []uint, limit, offset uint) (*entity.Rooms, error) {
 	dto := RoomGorms{}
-	rr.db.Scopes(paginate(limit, offset), masterOrMember(accountID, roomIDs)).Order(" created_at desc ").Find(&dto)
+	rr.db.Scopes(paginate(limit, offset), masterOrMember(accountID, roomIDs)).Order(" updated_at desc ").Find(&dto)
 	rooms := entity.Rooms{}
 	for _, roomGorm := range dto {
 		rooms = append(rooms, *ToEntity(&roomGorm))
