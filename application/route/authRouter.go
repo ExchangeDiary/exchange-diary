@@ -15,5 +15,6 @@ func AuthRoutes(router *gin.RouterGroup, controller controller.AuthController) {
 	{
 		auth.GET("/login/:auth_type", controller.Login())
 		auth.GET("/authenticated", controller.Authenticate())
+		auth.POST("/mock", controller.MockRegister())
 	}
 }

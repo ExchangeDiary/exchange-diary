@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/application/controller"
+	"github.com/ExchangeDiary/exchange-diary/application/middleware"
 	"github.com/ExchangeDiary/exchange-diary/application/route"
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
@@ -37,8 +38,12 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host      exchange-diary-b4mzhzbzcq-du.a.run.app
-// 로컬 테스트용 host      localhost:8080
+//// @host      localhost:8080
 // @BasePath  /v1
+
+// @securityDefinitions.apikey  ApiKeyAuth
+// @in                          header
+// @name                        Authorization
 
 const (
 	//
@@ -84,9 +89,9 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	roomMemberRepository := persistence.NewRoomMemberRepository(db)
 	memberRepository := persistence.NewMemberRepository(db)
 
-	roomMemberService := service.NewRoomMemberService(roomMemberRepository)
-	roomService := service.NewRoomService(roomRepository, roomMemberService)
+	roomMemberService := service.NewRoomMemberService(roomMemberRepository, memberRepository)
 	memberService := service.NewMemberService(memberRepository)
+	roomService := service.NewRoomService(roomRepository, roomMemberService)
 	authCodeVerifier := service.NewTokenVerifier(service.AuthCodeSecretKey)
 	refreshTokenVerifier := service.NewTokenVerifier(service.AccessTokenSecretKey)
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
@@ -94,6 +99,8 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
 	roomController := controller.NewRoomController(roomService)
+
+	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
 	// init server
 	server := gin.New()
@@ -107,9 +114,12 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 
 	// init routes
 	v1 := server.Group(versionPrefix)
-	route.RoomRoutes(v1, roomController)
 	route.AuthRoutes(v1, authController)
 	route.TokenRoutes(v1, tokenController)
+
+	v1.Use(authenticationFilter.Authenticate())
+	route.RoomRoutes(v1, roomController)
+
 	return server
 }
 

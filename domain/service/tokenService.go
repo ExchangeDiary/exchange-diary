@@ -64,6 +64,7 @@ func (s *tokenService) IssueAccessToken(authCode string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: member.AuthType,
+		ID:       member.ID,
 		Email:    member.Email,
 		Name:     member.Name,
 		StandardClaims: jwt.StandardClaims{
@@ -82,6 +83,7 @@ func (s *tokenService) IssueRefreshToken(authCode string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: claims.AuthType,
+		ID:       claims.ID,
 		Email:    claims.Email,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(refreshTokenValid).Unix(),
@@ -103,6 +105,7 @@ func (s tokenService) RefreshAccessToken(refreshToken string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: member.AuthType,
+		ID:       member.ID,
 		Email:    member.Email,
 		Name:     member.Name,
 		StandardClaims: jwt.StandardClaims{

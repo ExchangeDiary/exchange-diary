@@ -1,9 +1,11 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/gin-gonic/gin"
 )
@@ -35,10 +37,16 @@ func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 		clientToken := strings.Replace(bearerToken, tokenBearer, "", 1)
 		claims, err := f.verifier.Verify(clientToken)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
-		c.Set("email", claims.Email)
+
+		c.Set(application.CurrentMemberKey, application.CurrentMemberDTO{
+			ID:    claims.ID,
+			Name:  claims.Name,
+			Email: claims.Email,
+		})
+		fmt.Printf("[Current Member]: %+v", c.MustGet(application.CurrentMemberKey))
 	}
 }

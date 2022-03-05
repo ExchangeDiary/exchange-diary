@@ -24,8 +24,89 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/authentication/login/:auth_type": {
+            "get": {
+                "description": "회원가입 하지 않았을 경우, email로 회원가입 자동 진행\n이후 jwt 토큰 발급에 필요한 authCode를 전달한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "string",
+                        "description": "kakao | google | apple",
+                        "name": "auth_type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/authentication/mock": {
+            "post": {
+                "description": "클라 테스트용. 주어진 email이 db에 없으면 회원가입 프로세스 동시에 진행\nAccessToken을 사용해서 헤더에 {\"Authorization\": AccessToken} 넣어주면 된다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "(debug) mock login / register",
+                "parameters": [
+                    {
+                        "description": "모킹할 유저정보",
+                        "name": "room",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.mockMemberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.mockMemberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/rooms": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "참여중인 교환일기방 리스트",
                 "consumes": [
                     "application/json"
@@ -66,6 +147,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "교환일기방 생성",
                 "consumes": [
                     "application/json"
@@ -103,6 +189,11 @@ const docTemplate = `{
         },
         "/rooms/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "교환일기방 상세",
                 "consumes": [
                     "application/json"
@@ -137,6 +228,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "교환일기방 삭제",
                 "consumes": [
                     "application/json"
@@ -167,6 +263,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "교환일기방 업데이트 (master only)\n1. 작성주기 변경 (period)\n2. 코드/힌트 변경 (code, hint)\n3. 작성순서 변경(orders)",
                 "consumes": [
                     "application/json"
@@ -211,6 +312,11 @@ const docTemplate = `{
         },
         "/rooms/{id}/join": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "교환일기방 참여코드 체크 후, 교환일기방 멤버로 추가",
                 "consumes": [
                     "application/json"
@@ -255,6 +361,11 @@ const docTemplate = `{
         },
         "/rooms/{id}/leave": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "교환일기방 나가기\n1. 교환일기방 마스터일 경우\n2. 교환일기방 멤버일 경우",
                 "consumes": [
                     "application/json"
@@ -284,9 +395,105 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/token": {
+            "post": {
+                "description": "AuthCode를 전달하여, access \u0026 refresh 토큰을 발급 받는다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "JWT 토큰 발급",
+                "parameters": [
+                    {
+                        "description": "발급받은 AuthCode",
+                        "name": "room",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.TokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.tokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/token/refresh": {
+            "get": {
+                "description": "refresh token을 전달하여, accessToken을 재발급받는다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "AccessToken 재발급",
+                "parameters": [
+                    {
+                        "description": "refresh 토큰",
+                        "name": "room",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.TokenRefreshRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.tokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "controller.TokenRefreshRequest": {
+            "type": "object",
+            "properties": {
+                "refreshToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.TokenRequest": {
+            "type": "object",
+            "properties": {
+                "authCode": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.detailResponseRoom": {
             "type": "object",
             "properties": {
@@ -308,7 +515,7 @@ const docTemplate = `{
                 "members": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/controller.responseMember"
                     }
                 },
                 "name": {
@@ -325,6 +532,9 @@ const docTemplate = `{
                 },
                 "turnAccountName": {
                     "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -336,6 +546,31 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/controller.responseRoom"
                     }
+                }
+            }
+        },
+        "controller.mockMemberRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.mockMemberResponse": {
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "type": "string"
+                },
+                "authCode": {
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "type": "string"
                 }
             }
         },
@@ -395,6 +630,17 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.responseMember": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "profileUrl": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.responseRoom": {
             "type": "object",
             "properties": {
@@ -407,10 +653,30 @@ const docTemplate = `{
                 "members": {
                     "type": "array",
                     "items": {
-                        "type": "integer"
+                        "$ref": "#/definitions/controller.responseMember"
                     }
                 },
                 "name": {
+                    "type": "string"
+                },
+                "orders": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.tokenResponse": {
+            "type": "object",
+            "properties": {
+                "accesstoken": {
+                    "type": "string"
+                },
+                "refreshToken": {
                     "type": "string"
                 }
             }
@@ -423,13 +689,20 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "exchange-diary-b4mzhzbzcq-du.a.run.app",
+	Host:             "localhost:8080",
 	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Voice Of Diary API (voda)",

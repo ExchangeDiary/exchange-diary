@@ -27,15 +27,7 @@
    ```
    header: {Authorization: JWT_ACCESS_TOKEN}
    body:{
-       "turnAlarmFlag": <bool>
-   }
-   ```
-2. 활동 알림 on/off
-   - PATCH /v1/users/<:user_id>
-   ```
-   header: {Authorization: JWT_ACCESS_TOKEN}
-   body:{
-       "activityAlarmFlag": <bool>
+       "alarmFlag": <bool>
    }
    ```
 

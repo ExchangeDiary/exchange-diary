@@ -1,5 +1,15 @@
 basePath: /v1
 definitions:
+  controller.TokenRefreshRequest:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+  controller.TokenRequest:
+    properties:
+      authCode:
+        type: string
+    type: object
   controller.detailResponseRoom:
     properties:
       code:
@@ -14,7 +24,7 @@ definitions:
         type: boolean
       members:
         items:
-          type: integer
+          $ref: '#/definitions/controller.responseMember'
         type: array
       name:
         type: string
@@ -26,6 +36,8 @@ definitions:
         type: integer
       turnAccountName:
         type: string
+      updatedAt:
+        type: string
     type: object
   controller.listResponseRoom:
     properties:
@@ -33,6 +45,22 @@ definitions:
         items:
           $ref: '#/definitions/controller.responseRoom'
         type: array
+    type: object
+  controller.mockMemberRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  controller.mockMemberResponse:
+    properties:
+      accessToken:
+        type: string
+      authCode:
+        type: string
+      refreshToken:
+        type: string
     type: object
   controller.patchRequestRoom:
     properties:
@@ -70,6 +98,13 @@ definitions:
       roomId:
         type: integer
     type: object
+  controller.responseMember:
+    properties:
+      id:
+        type: integer
+      profileUrl:
+        type: string
+    type: object
   controller.responseRoom:
     properties:
       createdAt:
@@ -78,9 +113,22 @@ definitions:
         type: integer
       members:
         items:
-          type: integer
+          $ref: '#/definitions/controller.responseMember'
         type: array
       name:
+        type: string
+      orders:
+        items:
+          type: integer
+        type: array
+      updatedAt:
+        type: string
+    type: object
+  controller.tokenResponse:
+    properties:
+      accesstoken:
+        type: string
+      refreshToken:
         type: string
     type: object
   controller.verifyRequestRoom:
@@ -88,7 +136,7 @@ definitions:
       code:
         type: string
     type: object
-host: exchange-diary-b4mzhzbzcq-du.a.run.app
+host: localhost:8080
 info:
   contact:
     email: minkj1992@gmail.com
@@ -101,6 +149,60 @@ info:
   title: Voice Of Diary API (voda)
   version: "1.0"
 paths:
+  /authentication/login/:auth_type:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        회원가입 하지 않았을 경우, email로 회원가입 자동 진행
+        이후 jwt 토큰 발급에 필요한 authCode를 전달한다.
+      parameters:
+      - description: kakao | google | apple
+        format: string
+        in: query
+        name: auth_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: login
+      tags:
+      - auth
+  /authentication/mock:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        클라 테스트용. 주어진 email이 db에 없으면 회원가입 프로세스 동시에 진행
+        AccessToken을 사용해서 헤더에 {"Authorization": AccessToken} 넣어주면 된다.
+      parameters:
+      - description: 모킹할 유저정보
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/controller.mockMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.mockMemberResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: (debug) mock login / register
+      tags:
+      - auth
   /rooms:
     get:
       consumes:
@@ -126,6 +228,8 @@ paths:
             $ref: '#/definitions/controller.listResponseRoom'
         "400":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: List rooms
       tags:
       - rooms
@@ -149,6 +253,8 @@ paths:
             $ref: '#/definitions/controller.postResponseRoom'
         "400":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: create a room
       tags:
       - rooms
@@ -170,6 +276,8 @@ paths:
           description: ""
         "400":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: (debug only) delete a room
       tags:
       - rooms
@@ -193,6 +301,8 @@ paths:
             $ref: '#/definitions/controller.detailResponseRoom'
         "400":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: get a room
       tags:
       - rooms
@@ -225,6 +335,8 @@ paths:
             $ref: '#/definitions/controller.patchResponseRoom'
         "400":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: update a room
       tags:
       - rooms
@@ -254,6 +366,8 @@ paths:
           description: ""
         "401":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: join a room
       tags:
       - rooms
@@ -278,7 +392,66 @@ paths:
           description: ""
         "400":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: leave a room
       tags:
       - rooms
+  /token:
+    post:
+      consumes:
+      - application/json
+      description: AuthCode를 전달하여, access & refresh 토큰을 발급 받는다.
+      parameters:
+      - description: 발급받은 AuthCode
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/controller.TokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.tokenResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: JWT 토큰 발급
+      tags:
+      - auth
+  /token/refresh:
+    get:
+      consumes:
+      - application/json
+      description: refresh token을 전달하여, accessToken을 재발급받는다.
+      parameters:
+      - description: refresh 토큰
+        in: body
+        name: room
+        required: true
+        schema:
+          $ref: '#/definitions/controller.TokenRefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.tokenResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: AccessToken 재발급
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

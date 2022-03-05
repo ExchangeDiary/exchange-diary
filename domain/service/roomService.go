@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
@@ -13,16 +12,15 @@ type RoomService interface {
 	Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error)
 	Get(id uint) (*entity.Room, error)
 	GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error)
-	GetAll(limit, offset uint) (*entity.Rooms, error)
 	Update(room *entity.Room) (*entity.Room, error)
-	Delete(id uint) error
+	Delete(room *entity.Room) error
 	JoinRoom(id, accountID uint, code string) (bool, error)
 	LeaveRoom(id, accountID uint) error
 }
 
 type roomService struct {
-	roomRepository    repository.RoomRepository
 	roomMemberService RoomMemberService
+	roomRepository    repository.RoomRepository
 }
 
 // NewRoomService ...
@@ -45,24 +43,35 @@ func (rs *roomService) Create(masterID uint, name, code, hint, theme string, per
 	return createdRoom, nil
 }
 
-func (rs *roomService) Get(id uint) (*entity.Room, error) {
-	room, err := rs.roomRepository.GetByID(id)
+func (rs *roomService) Get(id uint) (room *entity.Room, err error) {
+	if room, err = rs.roomRepository.GetByID(id); err != nil {
+		return nil, err
+	}
+	populatedRoom, err := rs.roomMemberService.PopulateRoomMembers(room)
 	if err != nil {
 		return nil, err
 	}
-	return room, nil
+	return populatedRoom, nil
 }
 
-// Room Master + RoomMember table
+// SELECT * FROM `rooms` WHERE id IN (memberRoomIDs) OR master_id = accountID ORDER BY  created_at desc  LIMIT limit OFFSET offset;
 func (rs *roomService) GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error) {
-	return &entity.Rooms{}, nil
-}
-func (rs *roomService) GetAll(limit, offset uint) (*entity.Rooms, error) {
-	rooms, err := rs.roomRepository.GetAll(limit, offset)
+	// O(1)
+	memberRoomIDs, err := rs.roomMemberService.GetAllRoomIDs(accountID)
 	if err != nil {
 		return nil, err
 	}
-	return rooms, nil
+	// O(1)
+	rooms, err := rs.roomRepository.GetAll(accountID, memberRoomIDs, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	populatedRooms, err := rs.roomMemberService.PopulateRoomsMembers(rooms)
+	if err != nil {
+		return nil, err
+	}
+	return populatedRooms, nil
 }
 
 func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
@@ -70,16 +79,12 @@ func (rs *roomService) Update(room *entity.Room) (*entity.Room, error) {
 	if err != nil {
 		return nil, err
 	}
+	rs.roomMemberService.PopulateRoomMembers(room)
 	return room, nil
 }
 
-func (rs *roomService) Delete(id uint) error {
-	room, err := rs.Get(id)
-	if err != nil {
-		return err
-	}
-
-	err = rs.roomRepository.Delete(room)
+func (rs *roomService) Delete(room *entity.Room) error {
+	err := rs.roomRepository.Delete(room)
 	if err != nil {
 		return err
 	}
@@ -93,11 +98,11 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 		return false, err
 	}
 	if room.IsAlreadyJoined(accountID) {
-		return false, errors.New("Already joined room")
+		return false, fmt.Errorf("Already joined room")
 	}
 	// validate code
 	if room.Code != code {
-		return false, errors.New("Invalid code is given")
+		return false, fmt.Errorf("Invalid code is given")
 	}
 
 	// ===TODO: tx start===
@@ -122,7 +127,7 @@ func (rs *roomService) LeaveRoom(id, accountID uint) error {
 		return err
 	}
 	if !room.IsAlreadyJoined(accountID) {
-		return errors.New("cannot leave room because you are not a memeber of this room")
+		return fmt.Errorf("cannot leave room because you are not a memeber of this room")
 	}
 	if room.IsMaster(accountID) {
 		return rs.doMasterLeaveProcess(room, accountID)
@@ -136,11 +141,18 @@ func (rs *roomService) doMasterLeaveProcess(room *entity.Room, accountID uint) e
 		if err := rs.roomRepository.Delete(room); err != nil {
 			return err
 		}
+		return nil
 	}
 	// 새로운 마스터 선출
 	if err := room.ChangeMaster(); err != nil {
 		return err
 	}
+
+	// 새로운 마스터를 멤버에서 제외
+	if err := rs.roomMemberService.Delete(room.ID, room.MasterID); err != nil {
+		return err
+	}
+
 	// TODO: TurnAccountID 변경
 	// Update room
 	_, err := rs.roomRepository.Update(room)
@@ -148,14 +160,12 @@ func (rs *roomService) doMasterLeaveProcess(room *entity.Room, accountID uint) e
 }
 
 func (rs *roomService) doMemberLeaveProcess(room *entity.Room, accountID uint) error {
-	fmt.Println("doMemberLeaveProcess")
 	// TODO: TurnAccountID 변경
 
 	// room.Order에서 빼기
 	if _, err := room.RemoveMember(accountID); err != nil {
 		return err
 	}
-
 	// Update room
 	if _, err := rs.roomRepository.Update(room); err != nil {
 		return err

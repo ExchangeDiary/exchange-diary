@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -37,16 +36,13 @@ type responseMember struct {
 	ProfileURL string `json:"profileUrl"`
 }
 
-// TODO: implement it
-func mockAccountID(c *gin.Context) uint {
-	return 1
-}
-
 type responseRoom struct {
-	ID        uint       `json:"id"`
-	Name      *string    `json:"name"`
-	Members   []uint     `json:"members"`
-	CreatedAt *time.Time `json:"createdAt"`
+	ID        uint              `json:"id"`
+	Name      *string           `json:"name"`
+	Orders    []uint            `json:"orders"`
+	Members   *[]responseMember `json:"members"`
+	CreatedAt *time.Time        `json:"createdAt"`
+	UpdatedAt *time.Time        `json:"updatedAt"`
 }
 
 type listResponseRoom struct {
@@ -63,24 +59,32 @@ type listResponseRoom struct {
 // @Success      200  {object}   listResponseRoom
 // @Failure      400
 // @Router       /rooms [get]
+// @Security ApiKeyAuth
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("GetAll")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		limit, offset := application.GetLimitAndOffset(c)
-		rooms, err := rc.roomService.GetAll(limit, offset) // TODO: GetAllJoinedRooms
+		rooms, err := rc.roomService.GetAllJoinedRooms(currentMember.ID, limit, offset)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		// TODO: response Member population
-		// members := []responseMember{}
 		roomsResponse := []responseRoom{}
 		for _, room := range *rooms {
+			members := []responseMember{}
+			for _, member := range *room.Members {
+				members = append(members, responseMember{
+					ID:         member.ID,
+					ProfileURL: member.ProfileURL,
+				})
+			}
 			roomsResponse = append(roomsResponse, responseRoom{
 				ID:        room.ID,
 				Name:      &room.Name,
-				Members:   room.Orders,
-				CreatedAt: &room.CreatedAt,
+				Orders:    room.Orders,
+				Members:   &members,
+				CreatedAt: room.CreatedAt,
+				UpdatedAt: room.UpdatedAt,
 			})
 		}
 		c.JSON(http.StatusOK, listResponseRoom{Rooms: roomsResponse})
@@ -88,17 +92,18 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 }
 
 type detailResponseRoom struct {
-	ID              uint       `json:"id"`
-	Name            *string    `json:"name"`
-	Members         []uint     `json:"members"`
-	CreatedAt       *time.Time `json:"createdAt"`
-	Theme           *string    `json:"theme,omitempty"`
-	Period          uint8      `json:"period,omitempty"`
-	TurnAccountID   uint       `json:"turnAccountId,omitempty"`
-	TurnAccountName *string    `json:"turnAccountName,omitempty"`
-	Code            *string    `json:"code,omitempty"`
-	Hint            *string    `json:"hint,omitempty"`
-	IsMaster        bool       `json:"isMaster,omitempty"`
+	ID              uint              `json:"id"`
+	Name            *string           `json:"name"`
+	Members         *[]responseMember `json:"members"`
+	CreatedAt       *time.Time        `json:"createdAt"`
+	UpdatedAt       *time.Time        `json:"updatedAt"`
+	Theme           *string           `json:"theme,omitempty"`
+	Period          uint8             `json:"period,omitempty"`
+	TurnAccountID   uint              `json:"turnAccountId,omitempty"`
+	TurnAccountName *string           `json:"turnAccountName,omitempty"`
+	Code            *string           `json:"code,omitempty"`
+	Hint            *string           `json:"hint,omitempty"`
+	IsMaster        bool              `json:"isMaster,omitempty"`
 }
 
 // @Summary      get a room
@@ -110,10 +115,10 @@ type detailResponseRoom struct {
 // @Success      200  {object}   detailResponseRoom
 // @Failure      400
 // @Router       /rooms/{id} [get]
+// @Security ApiKeyAuth
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Get")
-		curAccountID := mockAccountID(c)
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -124,20 +129,30 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+		if !room.IsAlreadyJoined(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only member or master can access")
+			return
+		}
 
-		// TODO: response Member population
-		// members := []responseMember{}
+		members := []responseMember{}
+		for _, member := range *room.Members {
+			members = append(members, responseMember{
+				ID:         member.ID,
+				ProfileURL: member.ProfileURL,
+			})
+		}
 		turnAccountName := "MOCK 어카운트 이름"
 		res := detailResponseRoom{
 			ID:              room.ID,
 			Name:            &room.Name,
 			Theme:           &room.Theme,
 			Period:          room.Period,
-			Members:         room.Orders,
+			Members:         &members,
 			TurnAccountID:   room.TurnAccountID,
 			TurnAccountName: &turnAccountName,
-			CreatedAt:       &room.CreatedAt,
-			IsMaster:        room.IsMaster(curAccountID),
+			CreatedAt:       room.CreatedAt,
+			UpdatedAt:       room.UpdatedAt,
+			IsMaster:        room.IsMaster(currentMember.ID),
 		}
 		c.JSON(http.StatusOK, res)
 	}
@@ -164,16 +179,16 @@ type postResponseRoom struct {
 // @Success      200  {object}   postResponseRoom
 // @Failure      400
 // @Router       /rooms [post]
+// @Security ApiKeyAuth
 func (rc *roomController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Post")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req postRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		masterID := mockAccountID(c)
-		room, err := rc.roomService.Create(masterID, req.Name, req.Code, req.Hint, req.Theme, req.Period)
+		room, err := rc.roomService.Create(currentMember.ID, req.Name, req.Code, req.Hint, req.Theme, req.Period)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -223,9 +238,10 @@ type patchResponseRoom struct {
 // @Success      200  {object}   patchResponseRoom
 // @Failure      400
 // @Router       /rooms/{id} [patch]
+// @Security ApiKeyAuth
 func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Patch")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req patchRequestRoom
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -243,6 +259,12 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
+		if !room.IsMaster(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only master can patch room")
+			return
+		}
+
 		_, err = rc.roomService.Update(req.ToEntity(room))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
@@ -262,16 +284,28 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 // @Success      204
 // @Failure      400
 // @Router       /rooms/{id} [delete]
+// @Security ApiKeyAuth
 func (rc *roomController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// TODO: 현재 유저가 마스터 ID가 아니면 return 401
-		fmt.Println("Delete")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		err = rc.roomService.Delete(roomID)
+
+		room, err := rc.roomService.Get(roomID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+
+		if !room.IsMaster(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only master can delete room")
+			return
+		}
+
+		err = rc.roomService.Delete(room)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -295,11 +329,11 @@ type verifyRequestRoom struct {
 // @Failure      400
 // @Failure      401
 // @Router       /rooms/{id}/join [post]
+// @Security ApiKeyAuth
 func (rc *roomController) Join() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Join")
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req verifyRequestRoom
-		accountID := mockAccountID(c)
 		if err := c.BindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
@@ -310,7 +344,7 @@ func (rc *roomController) Join() gin.HandlerFunc {
 			return
 		}
 
-		ok, err := rc.roomService.JoinRoom(roomID, accountID, req.Code)
+		ok, err := rc.roomService.JoinRoom(roomID, currentMember.ID, req.Code)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -334,16 +368,16 @@ func (rc *roomController) Join() gin.HandlerFunc {
 // @Success      204
 // @Failure      400
 // @Router       /rooms/{id}/leave [delete]
+// @Security ApiKeyAuth
 func (rc *roomController) Leave() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		fmt.Println("Leave")
-		accountID := mockAccountID(c)
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		if err := rc.roomService.LeaveRoom(roomID, accountID); err != nil {
+		if err := rc.roomService.LeaveRoom(roomID, currentMember.ID); err != nil {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}

@@ -5,17 +5,17 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // MemberGorm is a db representation of entity.Member
 type MemberGorm struct {
-	ID                uint   `gorm:"primaryKey"`
-	Email             string `gorm:"column:email;uniqueIndex,not null"`
-	Name              string `gorm:"column:name;not null"`
-	ProfileURL        string `gorm:"column:profile_url"`
-	AuthType          string `gorm:"column:auth_type"`
-	TurnAlarmFlag     bool   `gorm:"column:turn_alarm_flag"`
-	ActivityAlarmFlag bool   `gorm:"column:activity_alarm_flag"`
+	ID         uint   `gorm:"primaryKey"`
+	Email      string `gorm:"column:email;uniqueIndex,not null"`
+	Name       string `gorm:"column:name;not null"`
+	ProfileURL string `gorm:"column:profile_url"`
+	AuthType   string `gorm:"column:auth_type"`
+	AlarmFlag  bool   `gorm:"column:alarm_flag"`
 	BaseGormModel
 }
 
@@ -62,11 +62,27 @@ func (r *MemberRepository) Create(member *entity.Member) (*entity.Member, error)
 
 // GetByEmail ...
 func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
-	dto := MemberGorm{Email: email}
-	if err := r.db.First(&dto).Error; err != nil {
+	dto := MemberGorm{}
+	if err := r.db.Where("email = ?", email).First(&dto).Error; err != nil {
 		return nil, err
 	}
 	return ToMemberEntity(&dto), nil
+}
+
+// GetAllByIDs ...
+func (r *MemberRepository) GetAllByIDs(ids []uint) (*entity.Members, error) {
+	dto := MembersGorm{}
+	if err := r.db.Where("id IN (?)", ids).Clauses(clause.OrderBy{
+		Expression: clause.Expr{SQL: "FIELD(id,?)", Vars: []interface{}{ids}, WithoutParentheses: true},
+	}).Find(&dto).Error; err != nil {
+		return nil, err
+	}
+
+	members := entity.Members{}
+	for _, memberTO := range dto {
+		members = append(members, *ToMemberEntity(&memberTO))
+	}
+	return &members, nil
 }
 
 // Update ...

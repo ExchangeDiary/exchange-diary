@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/golang-jwt/jwt"
@@ -18,17 +19,28 @@ func NewTokenVerifier(secretKey string) TokenVerifier {
 }
 
 // Verify ...
-func (t *TokenVerifier) Verify(authCode string) (*entity.AuthCodeClaims, error) {
-	token, err := jwt.Parse(authCode, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return t.SecretKey, nil
-	})
-	claims, ok := token.Claims.(entity.AuthCodeClaims)
-
-	if ok && token.Valid {
-		return &claims, nil
+func (t *TokenVerifier) Verify(authCode string) (claims *entity.AuthCodeClaims, err error) {
+	token, err := jwt.ParseWithClaims(
+		authCode,
+		&entity.AuthCodeClaims{},
+		func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(t.SecretKey), nil
+		},
+	)
+	claims, ok := token.Claims.(*entity.AuthCodeClaims)
+	if !ok {
+		err = fmt.Errorf("the token is invalid")
+		return
 	}
-	return nil, err
+	//the token is expired
+	if claims.ExpiresAt < time.Now().Local().Unix() {
+		fmt.Println(claims.ExpiresAt)
+		err = fmt.Errorf("token is expired")
+		return
+	}
+
+	return claims, err
 }

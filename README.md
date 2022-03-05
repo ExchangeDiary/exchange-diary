@@ -54,8 +54,8 @@ export GO111MODULE=on
 ```
 
 ```bash
-$ go get golang.org/x/tools/cmd/goimports
-$ go get -u golang.org/x/lint/golint
+$ go install golang.org/x/tools/cmd/goimports
+$ go install golang.org/x/lint/golint
 
 $ cp pre-commit.example .git/hooks/pre-commit
 $ chmod +x .git/hooks/pre-commit
