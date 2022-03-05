@@ -125,14 +125,14 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 				kakao.AuthType,
 			)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 		}
 
 		authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -157,12 +157,12 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 
 func (ac *authController) kakaoLogin(c *gin.Context) {
 	code := c.Query("code")
-	token, err := ac.kakaoOAuthConf.Exchange(context.TODO(), code)
+	token, err := ac.kakaoOAuthConf.Exchange(context.Background(), code)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	client := ac.kakaoOAuthConf.Client(context.TODO(), token)
+	client := ac.kakaoOAuthConf.Client(context.Background(), token)
 	kakaoClient := kakao.NewClient(ac.client.Kakao.BaseURL, client)
 
 	kakaoUser, err := kakaoClient.GetKakaoUserInfo()
@@ -179,7 +179,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 			kakao.AuthType,
 		)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 	}
@@ -192,7 +192,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 
 	authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))

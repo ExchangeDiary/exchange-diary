@@ -5,8 +5,10 @@ db-config:
   name: "voda"
   password: "voda1!"
 
-kakao-client:
-  oauth:
-    client-id: "c663ce96b79395b5dcc6d7f774e1af67"
-    client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
-    redirect-url: "http://localhost:8080/auth/kakao"
+client:
+  kakao:
+    base-url: "https://kapi.kakao.com"
+    oauth:
+      client-id: "c663ce96b79395b5dcc6d7f774e1af67"
+      client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
+      redirect-url: "https://exchange-diary-b4mzhzbzcq-du.a.run.app/v1/authentication/login/kakao"
