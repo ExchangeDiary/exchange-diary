@@ -195,7 +195,9 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+	// TODO: domain 주소 env로 빼기
+	// c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("https://exchange-diary-b4mzhzbzcq-du.a.run.app%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
 }
 
 func kakaoLoginURL(kakaoOAuth *oauth2.Config) string {
