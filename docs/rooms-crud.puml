@@ -71,11 +71,11 @@ note right of client #Lavender
 {   // 방에 참여한 멤버 ( 작성순서대로 전달됨 )
     "members": [
         {
-            "accountId": "<int>",
+            "accountID": "<int>",
             "profileUrl": "<url>" // https://voda-api.com/profiles/leoo.png
         },
         {
-            "accountId": "<int>",
+            "accountID": "<int>",
             "profileUrl": "<url>"
         }
     ],
@@ -141,7 +141,7 @@ note right of client #Lavender
             "createdAt": <datetime>, // 최근 다이어리 알려주기용
             "members": [
             {
-                "accountId": "<int>",
+                "accountID": "<int>",
                 "profileUrl": "<url>",
             },
             {}

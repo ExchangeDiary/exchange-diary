@@ -25,8 +25,7 @@ Table(members, "members\n계정") {
     not_null(unique(email)) VARCHAR[255]
     not_null(name) VARCHAR[]    계정 닉네임
     not_null(profile_url) VARCHAR[255]    프로필 이미지 url
-    not_null(turn_alarm_flag) TINYINT[1]        디바이스 턴 알람 설정
-    not_null(activity_alarm_flag) TINYINT[1]    디바이스 액티비티 알람 설정
+    not_null(alarm_flag) TINYINT[1]        사용자 알람 플래그 on/off
     ...jwt, oauth 필드들
     not_null(created_at) DATETIME
     not_null(updated_at) DATETIME

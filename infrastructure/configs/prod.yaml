@@ -1,7 +1,9 @@
+# connection: project:region:instance
 db-config:
-  host: "test"
-  name: "test"
-  port: 10090
+  host: "voda-342511:asia-northeast3:voda"
+  user: "root"
+  name: "voda"
+  password: "voda1!"
 
 kakao-client:
   oauth:

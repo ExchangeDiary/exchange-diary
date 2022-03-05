@@ -103,7 +103,7 @@ return []photoUUID
 api ->> tms: (async) 새로운 글 작성 알람 event broadcast
 note right of api
 여기에는 작성자를 제외한 member들의 device 주소들이 필요하며
-이 account의 activity_alarm_flag가 false이면 제외
+이 account의 alarm_flag가 false이면 제외
 추가로 이벤트 타입 필요하다.
 endnote
 api -> db: 턴 변경하기 진행\
