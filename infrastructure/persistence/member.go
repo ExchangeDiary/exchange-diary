@@ -62,8 +62,8 @@ func (r *MemberRepository) Create(member *entity.Member) (*entity.Member, error)
 
 // GetByEmail ...
 func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
-	dto := MemberGorm{Email: email}
-	if err := r.db.First(&dto).Error; err != nil {
+	dto := MemberGorm{}
+	if err := r.db.Where("email = ?", email).Find(&dto).Error; err != nil {
 		return nil, err
 	}
 	return ToMemberEntity(&dto), nil

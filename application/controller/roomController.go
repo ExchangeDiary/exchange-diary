@@ -68,7 +68,6 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
 		roomsResponse := []responseRoom{}
 		for _, room := range *rooms {
 			members := []responseMember{}
@@ -86,7 +85,6 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 				CreatedAt: room.CreatedAt,
 				UpdatedAt: room.UpdatedAt,
 			})
-
 		}
 		c.JSON(http.StatusOK, listResponseRoom{Rooms: roomsResponse})
 	}

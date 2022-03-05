@@ -21,6 +21,7 @@ type AuthController interface {
 	Redirect() gin.HandlerFunc
 	Login() gin.HandlerFunc
 	Authenticate() gin.HandlerFunc
+	MockRegister() gin.HandlerFunc
 }
 
 type authController struct {
@@ -70,6 +71,65 @@ func (ac *authController) Authenticate() gin.HandlerFunc {
 		authCode := c.Query(application.AuthCodeKey)
 		c.JSON(http.StatusOK, gin.H{
 			"authCode": authCode,
+		})
+	}
+}
+
+type mockMemberRequest struct {
+	Email string `json:"email"`
+	Name  string `json:"name"`
+}
+
+type mockMemberResponse struct {
+	AuthCode     string `json:"authCode"`
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+// POST
+func (ac *authController) MockRegister() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req mockMemberRequest
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		member, err := ac.memberService.GetByEmail(req.Email)
+		if err != nil {
+			defaultProfileURL := "https://user-images.githubusercontent.com/37536298/153554715-f821d0f8-8f51-4f4c-b9e6-a19e02ecb5c2.png"
+			member, err = ac.memberService.Create(
+				req.Email,
+				req.Name,
+				defaultProfileURL,
+				kakao.AuthType,
+			)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+				return
+			}
+		}
+
+		authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+			return
+		}
+
+		accessToken, err := ac.tokenService.IssueAccessToken(authCode)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		refreshToken, err := ac.tokenService.IssueRefreshToken(authCode)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, mockMemberResponse{
+			AuthCode:     authCode,
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
 		})
 	}
 }
