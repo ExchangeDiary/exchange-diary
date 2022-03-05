@@ -59,6 +59,7 @@ type listResponseRoom struct {
 // @Success      200  {object}   listResponseRoom
 // @Failure      400
 // @Router       /rooms [get]
+// @Security ApiKeyAuth
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
@@ -114,6 +115,7 @@ type detailResponseRoom struct {
 // @Success      200  {object}   detailResponseRoom
 // @Failure      400
 // @Router       /rooms/{id} [get]
+// @Security ApiKeyAuth
 func (rc *roomController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
@@ -177,6 +179,7 @@ type postResponseRoom struct {
 // @Success      200  {object}   postResponseRoom
 // @Failure      400
 // @Router       /rooms [post]
+// @Security ApiKeyAuth
 func (rc *roomController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
@@ -235,6 +238,7 @@ type patchResponseRoom struct {
 // @Success      200  {object}   patchResponseRoom
 // @Failure      400
 // @Router       /rooms/{id} [patch]
+// @Security ApiKeyAuth
 func (rc *roomController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
@@ -280,6 +284,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 // @Success      204
 // @Failure      400
 // @Router       /rooms/{id} [delete]
+// @Security ApiKeyAuth
 func (rc *roomController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
@@ -324,6 +329,7 @@ type verifyRequestRoom struct {
 // @Failure      400
 // @Failure      401
 // @Router       /rooms/{id}/join [post]
+// @Security ApiKeyAuth
 func (rc *roomController) Join() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
@@ -362,6 +368,7 @@ func (rc *roomController) Join() gin.HandlerFunc {
 // @Success      204
 // @Failure      400
 // @Router       /rooms/{id}/leave [delete]
+// @Security ApiKeyAuth
 func (rc *roomController) Leave() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)

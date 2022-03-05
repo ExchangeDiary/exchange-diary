@@ -9,7 +9,7 @@ import (
 func TokenRoutes(router *gin.RouterGroup, controller controller.TokenController) {
 	token := router.Group("/token")
 	{
-		token.GET("", controller.GetToken())
+		token.POST("", controller.GetToken())
 		token.GET("/refresh", controller.RefreshAccessToken())
 	}
 }

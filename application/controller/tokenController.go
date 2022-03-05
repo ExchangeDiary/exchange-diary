@@ -3,7 +3,6 @@ package controller
 import (
 	"net/http"
 
-	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/gin-gonic/gin"
 )
@@ -33,6 +32,21 @@ func NewTokenController(service service.TokenService) TokenController {
 	return &tokenController{service: service}
 }
 
+type tokenResponse struct {
+	AccessToken  string `json:"accesstoken"`
+	RefreshToken string `json:"refreshToken"`
+}
+
+// @Summary      JWT 토큰 발급
+// @Description	 AuthCode를 전달하여, access & refresh 토큰을 발급 받는다.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        room  body     TokenRequest  true  "발급받은 AuthCode"
+// @Success      200  {object}   tokenResponse
+// @Failure      400
+// @Failure      500
+// @Router       /token [post]
 func (tc *tokenController) GetToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody TokenRequest
@@ -50,14 +64,20 @@ func (tc *tokenController) GetToken() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		token := entity.Token{
-			AccessToken:  accessToken,
-			RefreshToken: refreshToken,
-		}
-		c.JSON(http.StatusOK, token)
+		c.JSON(http.StatusOK, tokenResponse{AccessToken: accessToken, RefreshToken: refreshToken})
 	}
 }
 
+// @Summary      AccessToken 재발급
+// @Description	 refresh token을 전달하여, accessToken을 재발급받는다.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        room  body     TokenRefreshRequest  true  "refresh 토큰"
+// @Success      200  {object}   tokenResponse
+// @Failure      400
+// @Failure      500
+// @Router       /token/refresh [get]
 func (tc tokenController) RefreshAccessToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody TokenRefreshRequest
@@ -70,10 +90,6 @@ func (tc tokenController) RefreshAccessToken() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		token := entity.Token{
-			AccessToken:  accessToken,
-			RefreshToken: requestBody.RefreshToken,
-		}
-		c.JSON(http.StatusOK, token)
+		c.JSON(http.StatusOK, tokenResponse{AccessToken: accessToken, RefreshToken: requestBody.RefreshToken})
 	}
 }

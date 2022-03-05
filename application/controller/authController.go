@@ -57,6 +57,17 @@ func (ac *authController) Redirect() gin.HandlerFunc {
 	}
 }
 
+// @Summary      login
+// @Description	 회원가입 하지 않았을 경우, email로 회원가입 자동 진행
+// @Description	 이후 jwt 토큰 발급에 필요한 authCode를 전달한다.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        auth_type    query     string  true  "kakao | google | apple"  Format(string)
+// @Success      200
+// @Failure      400
+// @Failure      500
+// @Router       /authentication/login/:auth_type [get]
 func (ac *authController) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Param("auth_type") {
@@ -86,7 +97,17 @@ type mockMemberResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
-// POST
+// @Summary      (debug) mock login / register
+// @Description	 클라 테스트용. 주어진 email이 db에 없으면 회원가입 프로세스 동시에 진행
+// @Description	 AccessToken을 사용해서 헤더에 {"Authorization": AccessToken} 넣어주면 된다.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        room  body     mockMemberRequest  true  "모킹할 유저정보"
+// @Success      200  {object}   mockMemberResponse
+// @Failure      400
+// @Failure      500
+// @Router       /authentication/mock [post]
 func (ac *authController) MockRegister() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req mockMemberRequest
