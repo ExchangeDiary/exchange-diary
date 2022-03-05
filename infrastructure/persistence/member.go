@@ -5,6 +5,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
 	"github.com/jinzhu/copier"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // MemberGorm is a db representation of entity.Member
@@ -63,7 +64,7 @@ func (r *MemberRepository) Create(member *entity.Member) (*entity.Member, error)
 // GetByEmail ...
 func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
 	dto := MemberGorm{}
-	if err := r.db.Where("email = ?", email).Find(&dto).Error; err != nil {
+	if err := r.db.Where("email = ?", email).First(&dto).Error; err != nil {
 		return nil, err
 	}
 	return ToMemberEntity(&dto), nil
@@ -72,9 +73,12 @@ func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
 // GetAllByIDs ...
 func (r *MemberRepository) GetAllByIDs(ids []uint) (*entity.Members, error) {
 	dto := MembersGorm{}
-	if err := r.db.Where("id IN (?)", ids).Find(&dto).Error; err != nil {
+	if err := r.db.Where("id IN (?)", ids).Clauses(clause.OrderBy{
+		Expression: clause.Expr{SQL: "FIELD(id,?)", Vars: []interface{}{ids}, WithoutParentheses: true},
+	}).Find(&dto).Error; err != nil {
 		return nil, err
 	}
+
 	members := entity.Members{}
 	for _, memberTO := range dto {
 		members = append(members, *ToMemberEntity(&memberTO))
