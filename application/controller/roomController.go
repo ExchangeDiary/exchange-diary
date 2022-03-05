@@ -127,6 +127,10 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+		if !room.IsAlreadyJoined(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only member or master can access")
+			return
+		}
 
 		members := []responseMember{}
 		for _, member := range *room.Members {
