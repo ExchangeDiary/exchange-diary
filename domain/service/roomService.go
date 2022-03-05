@@ -98,11 +98,11 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 		return false, err
 	}
 	if room.IsAlreadyJoined(accountID) {
-		return false, errors.New("Already joined room")
+		return false, fmt.Errorf("Already joined room")
 	}
 	// validate code
 	if room.Code != code {
-		return false, errors.New("Invalid code is given")
+		return false, fmt.Errorf("Invalid code is given")
 	}
 
 	// ===TODO: tx start===
@@ -127,7 +127,7 @@ func (rs *roomService) LeaveRoom(id, accountID uint) error {
 		return err
 	}
 	if !room.IsAlreadyJoined(accountID) {
-		return errors.New("cannot leave room because you are not a memeber of this room")
+		return fmt.Errorf("cannot leave room because you are not a memeber of this room")
 	}
 	if room.IsMaster(accountID) {
 		return rs.doMasterLeaveProcess(room, accountID)

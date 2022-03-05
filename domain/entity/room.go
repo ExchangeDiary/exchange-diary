@@ -2,11 +2,11 @@ package entity
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/domain"
+	"github.com/jinzhu/copier"
 )
 
 // Room ...
@@ -70,22 +70,23 @@ func (r *Room) AppendMember(accountID uint) {
 // RemoveMember ...
 func (r *Room) RemoveMember(accountID uint) (uint, error) {
 	if len(r.Orders) == 0 {
-		return 0, errors.New("There is no room member")
+		return 0, fmt.Errorf("There is no room member")
 	}
 	r.Orders, accountID = domain.Remove(r.Orders, accountID)
 	if accountID == 0 {
-		return 0, errors.New("There is no matched accountID from room.Orders")
+		return 0, fmt.Errorf("There is no matched accountID from room.Orders")
 	}
 	return accountID, nil
 }
 
 // ChangeMaster ...
 func (r *Room) ChangeMaster() error {
+	nextCandidateIdx := 1
 	if _, err := r.RemoveMember(r.MasterID); err != nil {
 		return err
 	}
-	// Order에서 가장 위에 존재하는 account id로 선출
-	r.MasterID = r.Orders[0]
+	// Members에서 [] 가장 위에 존재하는 account id로 선출
+	r.MasterID = (*r.Members)[nextCandidateIdx].ID
 	return nil
 }
 
@@ -100,10 +101,13 @@ func (r *Room) OrdersToJSON() ([]byte, error) {
 
 // MemberOnlyOrders returns master excluded memberIDs
 func (r *Room) MemberOnlyOrders() ([]uint, error) {
-	for i, accountID := range r.Orders {
+	var orders []uint
+	copier.Copy(&orders, &r.Orders)
+
+	for i, accountID := range orders {
 		if r.IsMaster(accountID) {
-			return append(r.Orders[:i], r.Orders[i+1:]...), nil
+			return append(orders[:i], orders[i+1:]...), nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("There is no masterID in orders: %+v", r))
+	return nil, fmt.Errorf("There is no masterID in orders: %+v", r)
 }
