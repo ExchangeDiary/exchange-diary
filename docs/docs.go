@@ -24,42 +24,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/authentication/login/:auth_type": {
-            "get": {
-                "description": "회원가입 하지 않았을 경우, email로 회원가입 자동 진행\n이후 jwt 토큰 발급에 필요한 authCode를 전달한다.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "login",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "format": "string",
-                        "description": "kakao | google | apple",
-                        "name": "auth_type",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": ""
-                    },
-                    "400": {
-                        "description": ""
-                    },
-                    "500": {
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/authentication/mock": {
             "post": {
                 "description": "클라 테스트용. 주어진 email이 db에 없으면 회원가입 프로세스 동시에 진행\nAccessToken을 사용해서 헤더에 {\"Authorization\": AccessToken} 넣어주면 된다.",
@@ -90,6 +54,41 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/controller.mockMemberResponse"
                         }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/login/{auth_type}": {
+            "get": {
+                "description": "회원가입 하지 않았을 경우, email로 회원가입 자동 진행\n이후 jwt 토큰 발급에 필요한 authCode를 전달한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "kakao | google | apple",
+                        "name": "auth_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "301": {
+                        "description": ""
                     },
                     "400": {
                         "description": ""

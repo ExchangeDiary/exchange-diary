@@ -1,9 +1,9 @@
 package configs
 
 import (
-	"fmt"
-
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 const (
@@ -46,14 +46,14 @@ type Kakao struct {
 
 // Load ...
 func Load(path string, name string) (Config, error) {
+	logger.Info("viper config is loading...", zap.String("phase", name))
+
 	config := Config{}
-	fmt.Println("Load config file - profile:", name)
 
 	viper.AddConfigPath(path)
 	if name == "" {
 		name = defaultPhase
 	}
-	fmt.Println("[PHASE]: ", name)
 	viper.SetConfigName(name)
 	viper.SetConfigType(typeEXT)
 

@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/golang-jwt/jwt"
+	"go.uber.org/zap"
 )
 
 // TokenVerifier ...
@@ -37,7 +39,7 @@ func (t *TokenVerifier) Verify(authCode string) (claims *entity.AuthCodeClaims, 
 	}
 	//the token is expired
 	if claims.ExpiresAt < time.Now().Local().Unix() {
-		fmt.Println(claims.ExpiresAt)
+		logger.Info("Token is Expired", zap.Int64("expiredAt", claims.ExpiresAt))
 		err = fmt.Errorf("token is expired")
 		return
 	}

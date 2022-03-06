@@ -2,10 +2,10 @@ package persistence
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/jinzhu/copier"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -82,7 +82,7 @@ func ToEntity(dto *RoomGorm) *entity.Room {
 
 	err := json.Unmarshal([]byte(dto.Orders), &orders)
 	if err != nil {
-		fmt.Println(err.Error())
+		logger.Error(err.Error())
 	}
 	room.Orders = orders
 	return room

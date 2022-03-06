@@ -9,7 +9,9 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/kakao"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	kakaoOAuth "golang.org/x/oauth2/kakao"
 )
@@ -46,6 +48,17 @@ func NewAuthController(client configs.Client, memberService service.MemberServic
 	}
 }
 
+// @Summary      login
+// @Description	 회원가입 하지 않았을 경우, email로 회원가입 자동 진행
+// @Description	 이후 jwt 토큰 발급에 필요한 authCode를 전달한다.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        auth_type   path      string  true  "kakao | google | apple"
+// @Success      301
+// @Failure      400
+// @Failure      500
+// @Router       /login/{auth_type} [get]
 func (ac *authController) Redirect() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		redirectURL := ""
@@ -53,21 +66,11 @@ func (ac *authController) Redirect() gin.HandlerFunc {
 		case kakao.AuthType:
 			redirectURL = kakaoLoginURL(&ac.kakaoOAuthConf)
 		}
+		logger.Info("Redirect login is accepted", zap.String("redirectURL", redirectURL))
 		c.Redirect(http.StatusMovedPermanently, redirectURL)
 	}
 }
 
-// @Summary      login
-// @Description	 회원가입 하지 않았을 경우, email로 회원가입 자동 진행
-// @Description	 이후 jwt 토큰 발급에 필요한 authCode를 전달한다.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        auth_type    query     string  true  "kakao | google | apple"  Format(string)
-// @Success      200
-// @Failure      400
-// @Failure      500
-// @Router       /authentication/login/:auth_type [get]
 func (ac *authController) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Param("auth_type") {
@@ -112,6 +115,7 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req mockMemberRequest
 		if err := c.BindJSON(&req); err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -125,6 +129,7 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 				kakao.AuthType,
 			)
 			if err != nil {
+				logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
@@ -132,17 +137,20 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 
 		authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		accessToken, err := ac.tokenService.IssueAccessToken(authCode)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		refreshToken, err := ac.tokenService.IssueRefreshToken(authCode)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -157,8 +165,11 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 
 func (ac *authController) kakaoLogin(c *gin.Context) {
 	code := c.Query("code")
+	logger.Info(fmt.Sprintf("kakao login code is < %s >", code))
 	token, err := ac.kakaoOAuthConf.Exchange(context.Background(), code)
+
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -167,6 +178,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 
 	kakaoUser, err := kakaoClient.GetKakaoUserInfo()
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -179,6 +191,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 			kakao.AuthType,
 		)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -192,6 +205,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 
 	authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
