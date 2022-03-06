@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 const (
@@ -41,12 +42,13 @@ func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		c.Set(application.CurrentMemberKey, application.CurrentMemberDTO{
+		currentMember := application.CurrentMemberDTO{
 			ID:    claims.ID,
 			Name:  claims.Name,
 			Email: claims.Email,
-		})
-		fmt.Printf("[Current Member]: %+v", c.MustGet(application.CurrentMemberKey))
+		}
+		c.Set(application.CurrentMemberKey, currentMember)
+
+		logger.Info("current member", zap.Uint("ID", currentMember.ID), zap.String("Name", currentMember.Name), zap.String("Email", currentMember.Email))
 	}
 }

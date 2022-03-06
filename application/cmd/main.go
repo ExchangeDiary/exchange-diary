@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -16,6 +15,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
 
 	ginzap "github.com/gin-contrib/zap"
@@ -38,7 +38,7 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host      exchange-diary-b4mzhzbzcq-du.a.run.app
-//// host      localhost:8080
+// host      localhost:8080
 // @BasePath  /v1
 
 // @securityDefinitions.apikey  ApiKeyAuth
@@ -51,22 +51,13 @@ const (
 )
 
 func main() {
-	logger := setLogger()
-	server := bootstrap(logger)
+	logger.Info("start application")
+	server := bootstrap()
 	server.Run(":8080") // TODO: viper
-	shutdown(logger)
+	shutdown()
 }
 
-func setLogger() *zap.Logger {
-	logger, err := zap.NewProduction()
-	if err != nil {
-		log.Fatalf("can't initialize zap logger: %v", err)
-	}
-	defer logger.Sync()
-	return logger
-}
-
-func bootstrap(logger *zap.Logger) *gin.Engine {
+func bootstrap() *gin.Engine {
 	// Initialize configuration
 	defaultConfig := "dev"
 	configPath := "./infrastructure/configs" // TODO: Dockerfile path
@@ -109,8 +100,8 @@ func bootstrap(logger *zap.Logger) *gin.Engine {
 	swagger(server)
 
 	// zap middlewares
-	server.Use(ginzap.Ginzap(logger, time.RFC3339, true))
-	server.Use(ginzap.RecoveryWithZap(logger, true)) // log all panic
+	server.Use(ginzap.Ginzap(logger.Log, time.RFC3339, true))
+	server.Use(ginzap.RecoveryWithZap(logger.Log, true)) // log all panic
 
 	// init routes
 	v1 := server.Group(versionPrefix)
@@ -128,7 +119,7 @@ func swagger(server *gin.Engine) {
 	server.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }
 
-func shutdown(logger *zap.Logger) {
+func shutdown() {
 	// Wait for termination signals.
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
