@@ -14,7 +14,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "exchange-diary-b4mzhzbzcq-du.a.run.app",
     "basePath": "/v1",
     "paths": {
         "/authentication/login/:auth_type": {

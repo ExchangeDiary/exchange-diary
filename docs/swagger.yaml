@@ -136,7 +136,7 @@ definitions:
       code:
         type: string
     type: object
-host: localhost:8080
+host: exchange-diary-b4mzhzbzcq-du.a.run.app
 info:
   contact:
     email: minkj1992@gmail.com

@@ -38,7 +38,7 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host      exchange-diary-b4mzhzbzcq-du.a.run.app
-//// @host      localhost:8080
+//// host      localhost:8080
 // @BasePath  /v1
 
 // @securityDefinitions.apikey  ApiKeyAuth
