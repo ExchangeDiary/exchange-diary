@@ -115,6 +115,7 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req mockMemberRequest
 		if err := c.BindJSON(&req); err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -128,6 +129,7 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 				kakao.AuthType,
 			)
 			if err != nil {
+				logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
@@ -135,17 +137,20 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 
 		authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		accessToken, err := ac.tokenService.IssueAccessToken(authCode)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		refreshToken, err := ac.tokenService.IssueRefreshToken(authCode)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -173,6 +178,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 
 	kakaoUser, err := kakaoClient.GetKakaoUserInfo()
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
@@ -185,6 +191,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 			kakao.AuthType,
 		)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -198,6 +205,7 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 
 	authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
 	if err != nil {
+		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -51,16 +52,19 @@ func (tc *tokenController) GetToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody TokenRequest
 		if err := c.BindJSON(&requestBody); err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		accessToken, err := tc.service.IssueAccessToken(requestBody.AuthCode)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		refreshToken, err := tc.service.IssueRefreshToken(requestBody.AuthCode)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
@@ -82,11 +86,13 @@ func (tc tokenController) RefreshAccessToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var requestBody TokenRefreshRequest
 		if err := c.BindJSON(&requestBody); err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		accessToken, err := tc.service.RefreshAccessToken(requestBody.RefreshToken)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}

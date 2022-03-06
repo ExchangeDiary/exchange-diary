@@ -38,6 +38,7 @@ func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 		clientToken := strings.Replace(bearerToken, tokenBearer, "", 1)
 		claims, err := f.verifier.Verify(clientToken)
 		if err != nil {
+			logger.Error(err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
