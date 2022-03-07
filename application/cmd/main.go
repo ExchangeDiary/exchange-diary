@@ -14,6 +14,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
@@ -52,6 +53,9 @@ const (
 
 func main() {
 	logger.Info("start application")
+	storageClient := cloudstorage.GetClient()
+	defer storageClient.Close()
+
 	server := bootstrap()
 	server.Run(":8080") // TODO: viper
 	shutdown()
