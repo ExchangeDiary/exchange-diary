@@ -79,7 +79,7 @@ func (vb *VBucket) Put(name string, r io.Reader, size int64, metadata map[string
 }
 
 func (vb *VBucket) convertToVItem(attr *storage.ObjectAttrs) (*VItem, error) {
-	u, err := prepUrl(attr.MediaLink)
+	u, err := prepURL(attr.MediaLink)
 	if err != nil {
 		return nil, err
 	}
