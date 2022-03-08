@@ -47,12 +47,12 @@ type audioFileRequest struct {
 }
 
 type filePostRequestForm struct {
-	PhotoUUID string `form:"photoUUID" description:"유니크한 uuid" default:"e4947e0c-490b-4588-a14d-e74dd3b8371f"`
+	PhotoUUID string `form:"photoUUID" description:"유니크한 uuid" example:"e4947e0c-490b-4588-a14d-e74dd3b8371f"`
 	photoFileRequest
-	AudioUUID string `form:"audioUUID" description:"유니크한 uuid" default:"ad5bb198-942f-4ddf-a248-3aaa4bba3b9b"`
+	AudioUUID string `form:"audioUUID" description:"유니크한 uuid" example:"ad5bb198-942f-4ddf-a248-3aaa4bba3b9b"`
 	audioFileRequest
-	AudioTitle string `form:"audioTitle" description:"오디오 파일명" default:"LastDayOnEarth"`
-	AudioPitch string `form:"audioPitch" description:"오디오 피치값" default:"1.5"`
+	AudioTitle string `form:"audioTitle" description:"오디오 파일명" example:"LastDayOnEarth"`
+	AudioPitch string `form:"audioPitch" description:"오디오 피치값" example:"1.5"`
 }
 
 type filePostResponse struct {
@@ -75,7 +75,7 @@ type filePostResponse struct {
 // @Failure      400
 // @Failure      500
 // @Router       /rooms/{room_id}/files [post]
-// Security ApiKeyAuth
+// @Security ApiKeyAuth
 func (fc *fileController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var fileForm filePostRequestForm

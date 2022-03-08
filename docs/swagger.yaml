@@ -94,19 +94,19 @@ definitions:
   controller.postRequestRoom:
     properties:
       code:
-        default: 제민욱
+        example: 제민욱
         type: string
       hint:
-        default: 레오의 본명은?
+        example: 레오의 본명은?
         type: string
       name:
-        default: 고영희방
+        example: 고영희방
         type: string
       period:
-        default: 5
+        example: 5
         type: integer
       theme:
-        default: "1"
+        example: "1"
         type: string
     type: object
   controller.postResponseRoom:
@@ -423,19 +423,19 @@ paths:
         name: room_id
         required: true
         type: integer
-      - default: "1.5"
+      - example: "1.5"
         in: formData
         name: audioPitch
         type: string
-      - default: LastDayOnEarth
+      - example: LastDayOnEarth
         in: formData
         name: audioTitle
         type: string
-      - default: ad5bb198-942f-4ddf-a248-3aaa4bba3b9b
+      - example: ad5bb198-942f-4ddf-a248-3aaa4bba3b9b
         in: formData
         name: audioUUID
         type: string
-      - default: e4947e0c-490b-4588-a14d-e74dd3b8371f
+      - example: e4947e0c-490b-4588-a14d-e74dd3b8371f
         in: formData
         name: photoUUID
         type: string
@@ -458,6 +458,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: upload static files
       tags:
       - files
