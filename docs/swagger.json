@@ -14,7 +14,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "exchange-diary-b4mzhzbzcq-du.a.run.app",
     "basePath": "/v1",
     "paths": {
         "/authentication/mock": {
@@ -411,25 +411,25 @@
                     },
                     {
                         "type": "string",
-                        "example": "1.5",
+                        "default": "1.5",
                         "name": "audioPitch",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "example": "LastDayOnEarth",
+                        "default": "LastDayOnEarth",
                         "name": "audioTitle",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "example": "ad5bb198-942f-4ddf-a248-3aaa4bba3b9b",
+                        "default": "ad5bb198-942f-4ddf-a248-3aaa4bba3b9b",
                         "name": "audioUUID",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "example": "e4947e0c-490b-4588-a14d-e74dd3b8371f",
+                        "default": "e4947e0c-490b-4588-a14d-e74dd3b8371f",
                         "name": "photoUUID",
                         "in": "formData"
                     },
@@ -689,19 +689,24 @@
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "제민욱"
                 },
                 "hint": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "레오의 본명은?"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "고영희방"
                 },
                 "period": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 5
                 },
                 "theme": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "1"
                 }
             }
         },

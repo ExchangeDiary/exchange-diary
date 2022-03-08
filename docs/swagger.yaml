@@ -94,14 +94,19 @@ definitions:
   controller.postRequestRoom:
     properties:
       code:
+        default: 제민욱
         type: string
       hint:
+        default: 레오의 본명은?
         type: string
       name:
+        default: 고영희방
         type: string
       period:
+        default: 5
         type: integer
       theme:
+        default: "1"
         type: string
     type: object
   controller.postResponseRoom:
@@ -147,7 +152,7 @@ definitions:
       code:
         type: string
     type: object
-host: localhost:8080
+host: exchange-diary-b4mzhzbzcq-du.a.run.app
 info:
   contact:
     email: minkj1992@gmail.com
@@ -418,19 +423,19 @@ paths:
         name: room_id
         required: true
         type: integer
-      - example: "1.5"
+      - default: "1.5"
         in: formData
         name: audioPitch
         type: string
-      - example: LastDayOnEarth
+      - default: LastDayOnEarth
         in: formData
         name: audioTitle
         type: string
-      - example: ad5bb198-942f-4ddf-a248-3aaa4bba3b9b
+      - default: ad5bb198-942f-4ddf-a248-3aaa4bba3b9b
         in: formData
         name: audioUUID
         type: string
-      - example: e4947e0c-490b-4588-a14d-e74dd3b8371f
+      - default: e4947e0c-490b-4588-a14d-e74dd3b8371f
         in: formData
         name: photoUUID
         type: string

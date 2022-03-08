@@ -13,7 +13,6 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
-	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
@@ -39,7 +38,6 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 
 // @host      exchange-diary-b4mzhzbzcq-du.a.run.app
-// host      localhost:8080
 // @BasePath  /v1
 
 // @securityDefinitions.apikey  ApiKeyAuth
@@ -70,9 +68,6 @@ func main() {
 	}
 
 	logger.Info("start application")
-
-	storageClient := cloudstorage.GetClient()
-	defer storageClient.Close()
 
 	server := bootstrap()
 	server.Run(":8080") // TODO: viper

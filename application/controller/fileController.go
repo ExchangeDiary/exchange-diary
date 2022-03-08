@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"context"
 	"mime/multipart"
 	"net/http"
 
@@ -88,7 +89,7 @@ func (fc *fileController) Post() gin.HandlerFunc {
 			return
 		}
 
-		bkt, err := fc.getBucket()
+		vc, bkt, err := fc.getStorageSession()
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -97,6 +98,7 @@ func (fc *fileController) Post() gin.HandlerFunc {
 			})
 			return
 		}
+		defer vc.Close()
 		res := filePostResponse{}
 		// audio check
 		if fileForm.AudioUUID != "" {
@@ -130,11 +132,14 @@ func (fc *fileController) Post() gin.HandlerFunc {
 	}
 }
 
-func (fc *fileController) getBucket() (*cloudstorage.VBucket, error) {
-	// refs: https://www.vompressor.com/gin4/
-	bkt, err := cloudstorage.GetClient().VBucket(bucketName)
+func (fc *fileController) getStorageSession() (*cloudstorage.VClient, *cloudstorage.VBucket, error) {
+	vc, err := cloudstorage.GetVClient(context.Background())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return bkt, nil
+	bkt, err := vc.VBucket(bucketName)
+	if err != nil {
+		return nil, nil, err
+	}
+	return vc, bkt, nil
 }
