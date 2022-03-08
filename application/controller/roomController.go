@@ -163,11 +163,11 @@ func (rc *roomController) Get() gin.HandlerFunc {
 }
 
 type postRequestRoom struct {
-	Name   string `json:"name" default:"고영희방"`
-	Code   string `json:"code" default:"제민욱"`
-	Hint   string `json:"hint" default:"레오의 본명은?"`
-	Period uint8  `json:"period" default:"5"`
-	Theme  string `json:"theme" default:"1"`
+	Name   string `json:"name" example:"고영희방"`
+	Code   string `json:"code" example:"제민욱"`
+	Hint   string `json:"hint" example:"레오의 본명은?"`
+	Period uint8  `json:"period" example:"5"`
+	Theme  string `json:"theme" example:"1"`
 }
 
 type postResponseRoom struct {

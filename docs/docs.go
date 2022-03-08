@@ -581,6 +581,11 @@ const docTemplate = `{
         },
         "/rooms/{room_id}/files": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "파일 업로드",
                 "consumes": [
                     "multipart/form-data"
@@ -602,25 +607,25 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "default": "1.5",
+                        "example": "1.5",
                         "name": "audioPitch",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "default": "LastDayOnEarth",
+                        "example": "LastDayOnEarth",
                         "name": "audioTitle",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "default": "ad5bb198-942f-4ddf-a248-3aaa4bba3b9b",
+                        "example": "ad5bb198-942f-4ddf-a248-3aaa4bba3b9b",
                         "name": "audioUUID",
                         "in": "formData"
                     },
                     {
                         "type": "string",
-                        "default": "e4947e0c-490b-4588-a14d-e74dd3b8371f",
+                        "example": "e4947e0c-490b-4588-a14d-e74dd3b8371f",
                         "name": "photoUUID",
                         "in": "formData"
                     },
@@ -921,23 +926,23 @@ const docTemplate = `{
             "properties": {
                 "code": {
                     "type": "string",
-                    "default": "제민욱"
+                    "example": "제민욱"
                 },
                 "hint": {
                     "type": "string",
-                    "default": "레오의 본명은?"
+                    "example": "레오의 본명은?"
                 },
                 "name": {
                     "type": "string",
-                    "default": "고영희방"
+                    "example": "고영희방"
                 },
                 "period": {
                     "type": "integer",
-                    "default": 5
+                    "example": 5
                 },
                 "theme": {
                     "type": "string",
-                    "default": "1"
+                    "example": "1"
                 }
             }
         },
