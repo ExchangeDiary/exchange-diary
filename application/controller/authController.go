@@ -3,17 +3,20 @@ package controller
 import (
 	"context"
 	"fmt"
-	"net/http"
-
 	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/kakao"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
+	googleOAuth "golang.org/x/oauth2/google"
 	kakaoOAuth "golang.org/x/oauth2/kakao"
+	googleApiOauth "google.golang.org/api/oauth2/v2"
+	"google.golang.org/api/option"
+	"net/http"
 )
 
 const defaultRedirectURL = "/v1/authentication/authenticated"
@@ -27,10 +30,11 @@ type AuthController interface {
 }
 
 type authController struct {
-	client         configs.Client
-	kakaoOAuthConf oauth2.Config
-	memberService  service.MemberService
-	tokenService   service.TokenService
+	client          configs.Client
+	kakaoOAuthConf  oauth2.Config
+	googleOAuthConf oauth2.Config
+	memberService   service.MemberService
+	tokenService    service.TokenService
 }
 
 // NewAuthController ...
@@ -43,18 +47,26 @@ func NewAuthController(client configs.Client, memberService service.MemberServic
 			Endpoint:     kakaoOAuth.Endpoint,
 			RedirectURL:  client.Kakao.Oauth.RedirectURL,
 		},
+		googleOAuthConf: oauth2.Config{
+			ClientID:     client.Google.Oauth.ClientID,
+			ClientSecret: client.Google.Oauth.ClientSecret,
+			Endpoint:     googleOAuth.Endpoint,
+			RedirectURL:  client.Google.Oauth.RedirectURL,
+			Scopes: []string{
+				googleApiOauth.UserinfoEmailScope,
+			},
+		},
 		memberService: memberService,
 		tokenService:  tokenService,
 	}
 }
 
-// @Summary      login
-// @Description	 회원가입 하지 않았을 경우, email로 회원가입 자동 진행
-// @Description	 이후 jwt 토큰 발급에 필요한 authCode를 전달한다.
+// @Summary      LoginForm Redirect
+// @Description	 요청한 auth_type의 login form URL로 redirect됩니다.
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        auth_type   path      string  true  "kakao | google | apple"
+// @Param        auth_type  path string  true  "kakao | google | apple"
 // @Success      301
 // @Failure      400
 // @Failure      500
@@ -65,17 +77,32 @@ func (ac *authController) Redirect() gin.HandlerFunc {
 		switch c.Param("auth_type") {
 		case kakao.AuthType:
 			redirectURL = kakaoLoginURL(&ac.kakaoOAuthConf)
+		case google.AuthType:
+			redirectURL = googleLoginURL(&ac.googleOAuthConf)
 		}
 		logger.Info("Redirect login is accepted", zap.String("redirectURL", redirectURL))
 		c.Redirect(http.StatusMovedPermanently, redirectURL)
 	}
 }
 
+// @Summary      Login
+// @Description	 해당 auth_type의 login form을 기입 후, redirect되는 곳으로 기입한 email 그리고 요청한 auth_type에 대한 auth code를 발급한다.
+// @Description  클라이언트 URL에 query string으로 auth code가 담긴 채로 redirect하여 로그인 및 회원가입이 진행되도록 한다.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        auth_type   path      string  true  "kakao | google | apple"
+// @Success      301
+// @Failure      400
+// @Failure      500
+// @Router       /authentication/login/{auth_type} [get]
 func (ac *authController) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		switch c.Param("auth_type") {
 		case kakao.AuthType:
 			ac.kakaoLogin(c)
+		case google.AuthType:
+			ac.googleLogin(c)
 		}
 	}
 }
@@ -106,7 +133,7 @@ type mockMemberResponse struct {
 // @Tags         auth
 // @Accept       json
 // @Produce      json
-// @Param        room  body     mockMemberRequest  true  "모킹할 유저정보"
+// @Param        member  body     mockMemberRequest  true  "모킹할 유저정보"
 // @Success      200  {object}   mockMemberResponse
 // @Failure      400
 // @Failure      500
@@ -183,37 +210,71 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 		return
 	}
 	member, err := ac.memberService.GetByEmail(kakaoUser.Account.Email)
-	if err != nil {
-		member, err = ac.memberService.Create(
-			kakaoUser.Account.Email,
-			kakaoUser.Profile.NickName,
-			kakaoUser.Profile.ProfileImage,
-			kakao.AuthType,
-		)
-		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-	}
 
 	// When the user try to login with registered email and different authType.
-	if member.AuthType != kakao.AuthType {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "The account is already registered"})
+	if member != nil && member.AuthType != kakao.AuthType {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The account is already registered"})
 		return
 	}
 
-	authCode, err := ac.tokenService.IssueAuthCode(member.Email, member.AuthType)
+	authCode, err := ac.tokenService.IssueAuthCode(kakaoUser.Account.Email, kakao.AuthType)
 	if err != nil {
 		logger.Error(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	// TODO: domain 주소 env로 빼기
-	// c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+	//c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("https://exchange-diary-b4mzhzbzcq-du.a.run.app%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+}
+
+func (ac *authController) googleLogin(c *gin.Context) {
+	code := c.Query("code")
+	logger.Info(fmt.Sprintf("google login code is < %s >", code))
+	token, err := ac.googleOAuthConf.Exchange(context.Background(), code)
+
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	client := ac.googleOAuthConf.Client(context.Background(), token)
+	googleService, err := googleApiOauth.NewService(context.Background(), option.WithHTTPClient(client))
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	googleUser, err := googleService.Userinfo.Get().Do()
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	member, err := ac.memberService.GetByEmail(googleUser.Email)
+
+	// When the user try to login with registered email and different authType.
+	if member != nil && member.AuthType != google.AuthType {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The account is already registered"})
+		return
+	}
+
+	authCode, err := ac.tokenService.IssueAuthCode(googleUser.Email, google.AuthType)
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	// TODO: domain 주소 env로 빼기
+	//c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
 	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("https://exchange-diary-b4mzhzbzcq-du.a.run.app%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
 }
 
 func kakaoLoginURL(kakaoOAuth *oauth2.Config) string {
 	return kakaoOAuth.AuthCodeURL("state", oauth2.AccessTypeOnline)
+}
+
+func googleLoginURL(googleOauth *oauth2.Config) string {
+	return googleOauth.AuthCodeURL("state", oauth2.AccessTypeOnline)
 }

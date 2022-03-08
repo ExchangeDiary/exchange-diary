@@ -13,6 +13,7 @@ type Member struct {
 	AuthType   string
 	AlarmFlag  bool
 	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 // Members ...
