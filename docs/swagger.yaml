@@ -39,6 +39,17 @@ definitions:
       updatedAt:
         type: string
     type: object
+  controller.filePostResponse:
+    properties:
+      audioDownloadURL:
+        type: string
+      audioURL:
+        type: string
+      photoDownloadURL:
+        type: string
+      photoURL:
+        type: string
+    type: object
   controller.listResponseRoom:
     properties:
       rooms:
@@ -136,7 +147,7 @@ definitions:
       code:
         type: string
     type: object
-host: exchange-diary-b4mzhzbzcq-du.a.run.app
+host: localhost:8080
 info:
   contact:
     email: minkj1992@gmail.com
@@ -396,6 +407,55 @@ paths:
       summary: leave a room
       tags:
       - rooms
+  /rooms/{room_id}/files:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 파일 업로드
+      parameters:
+      - description: Room ID
+        in: path
+        name: room_id
+        required: true
+        type: integer
+      - example: "1.5"
+        in: formData
+        name: audioPitch
+        type: string
+      - example: LastDayOnEarth
+        in: formData
+        name: audioTitle
+        type: string
+      - example: ad5bb198-942f-4ddf-a248-3aaa4bba3b9b
+        in: formData
+        name: audioUUID
+        type: string
+      - example: e4947e0c-490b-4588-a14d-e74dd3b8371f
+        in: formData
+        name: photoUUID
+        type: string
+      - description: photo
+        in: formData
+        name: photo
+        type: file
+      - description: audio
+        in: formData
+        name: audio
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.filePostResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: upload static files
+      tags:
+      - files
   /token:
     post:
       consumes:

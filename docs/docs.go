@@ -395,6 +395,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/rooms/{room_id}/files": {
+            "post": {
+                "description": "파일 업로드",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "upload static files",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "1.5",
+                        "name": "audioPitch",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "LastDayOnEarth",
+                        "name": "audioTitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "ad5bb198-942f-4ddf-a248-3aaa4bba3b9b",
+                        "name": "audioUUID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "example": "e4947e0c-490b-4588-a14d-e74dd3b8371f",
+                        "name": "photoUUID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "photo",
+                        "name": "photo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "audio",
+                        "name": "audio",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.filePostResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/token": {
             "post": {
                 "description": "AuthCode를 전달하여, access \u0026 refresh 토큰을 발급 받는다.",
@@ -533,6 +607,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.filePostResponse": {
+            "type": "object",
+            "properties": {
+                "audioDownloadURL": {
+                    "type": "string"
+                },
+                "audioURL": {
+                    "type": "string"
+                },
+                "photoDownloadURL": {
+                    "type": "string"
+                },
+                "photoURL": {
                     "type": "string"
                 }
             }
@@ -701,7 +792,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "exchange-diary-b4mzhzbzcq-du.a.run.app",
+	Host:             "localhost:8080",
 	BasePath:         "/v1",
 	Schemes:          []string{},
 	Title:            "Voice Of Diary API (voda)",

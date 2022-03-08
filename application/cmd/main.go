@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,9 +13,11 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
+	"github.com/spf13/viper"
 
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
@@ -48,31 +49,39 @@ import (
 const (
 	//
 	versionPrefix = "/v1"
+	defaultPhase  = "dev"
+	configPath    = "./infrastructure/configs"
+)
+
+var (
+	phase string
+	conf  configs.Config
 )
 
 func main() {
+	var err error
+	flag.StringVar(&phase, "phase", defaultPhase, "name of configuration file with no extension")
+	flag.Parse()
+	viper.SetDefault("PHASE", phase)
+
+	conf, err = configs.Load(configPath)
+	if err != nil {
+		panic("Failed to load config file: " + err.Error())
+	}
+
 	logger.Info("start application")
+
+	storageClient := cloudstorage.GetClient()
+	defer storageClient.Close()
+
 	server := bootstrap()
 	server.Run(":8080") // TODO: viper
 	shutdown()
 }
 
 func bootstrap() *gin.Engine {
-	// Initialize configuration
-	defaultConfig := "dev"
-	configPath := "./infrastructure/configs" // TODO: Dockerfile path
-
-	var configName string
-	flag.StringVar(&configName, "phase", defaultConfig, "name of configuration file with no extension")
-	flag.Parse()
-
-	conf, err := configs.Load(configPath, configName)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to load config file: %s", err.Error()))
-	}
-
 	// init db
-	db := infrastructure.ConnectDatabase(configName)
+	db := infrastructure.ConnectDatabase(phase)
 	infrastructure.Migrate(db)
 
 	// set DI
@@ -86,10 +95,12 @@ func bootstrap() *gin.Engine {
 	authCodeVerifier := service.NewTokenVerifier(service.AuthCodeSecretKey)
 	refreshTokenVerifier := service.NewTokenVerifier(service.AccessTokenSecretKey)
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
+	fileService := service.NewFileService()
 
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
 	roomController := controller.NewRoomController(roomService)
+	fileController := controller.NewFileController(fileService)
 
 	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
@@ -101,7 +112,7 @@ func bootstrap() *gin.Engine {
 
 	// zap middlewares
 	server.Use(ginzap.Ginzap(logger.Log, time.RFC3339, true))
-	server.Use(ginzap.RecoveryWithZap(logger.Log, true)) // log all panic
+	// server.Use(ginzap.RecoveryWithZap(logger.Log, true)) // log all panic
 
 	// init routes
 	v1 := server.Group(versionPrefix)
@@ -110,6 +121,7 @@ func bootstrap() *gin.Engine {
 
 	v1.Use(authenticationFilter.Authenticate())
 	route.RoomRoutes(v1, roomController)
+	route.FileRoutes(v1, fileController)
 
 	return server
 }
