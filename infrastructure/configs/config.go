@@ -51,16 +51,12 @@ type Google struct {
 }
 
 // Load ...
-func Load(path string, name string) (Config, error) {
-	logger.Info("viper config is loading...", zap.String("phase", name))
-
+func Load(path string) (Config, error) {
+	phase := viper.Get("PHASE").(string)
+	logger.Info("viper config is loading...", zap.String("phase", phase))
 	config := Config{}
-
 	viper.AddConfigPath(path)
-	if name == "" {
-		name = defaultPhase
-	}
-	viper.SetConfigName(name)
+	viper.SetConfigName(phase)
 	viper.SetConfigType(typeEXT)
 
 	err := viper.ReadInConfig()

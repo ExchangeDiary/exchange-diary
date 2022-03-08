@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -11,14 +12,20 @@ var Log *zap.Logger
 func init() {
 	var err error
 
-	config := zap.NewProductionConfig()
-	encoderConfig := zap.NewProductionEncoderConfig()
-	encoderConfig.TimeKey = "timestamp"
-	encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	encoderConfig.StacktraceKey = "" // error 발생 시, stack push를 비어있게함
-	config.EncoderConfig = encoderConfig
-
-	Log, err = config.Build(zap.AddCallerSkip(1))
+	switch viper.Get("PHASE") {
+	case "prod":
+		config := zap.NewProductionConfig()
+		encoderConfig := zap.NewProductionEncoderConfig()
+		encoderConfig.TimeKey = "timestamp"
+		encoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoderConfig.StacktraceKey = "" // error 발생 시, stack push를 비어있게함
+		config.EncoderConfig = encoderConfig
+		Log, err = config.Build(zap.AddCallerSkip(1))
+	default:
+		config := zap.NewDevelopmentConfig()
+		config.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		Log, err = config.Build()
+	}
 
 	if err != nil {
 		panic(err)
