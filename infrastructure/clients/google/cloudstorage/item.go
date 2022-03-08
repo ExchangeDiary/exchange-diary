@@ -44,6 +44,12 @@ func (vi *VItem) URL() *url.URL {
 	return vi.url
 }
 
+// DownloadURL ...
+func (vi *VItem) DownloadURL() *url.URL {
+	u, _ := prepURL(vi.object.MediaLink)
+	return u
+}
+
 // Open returns an io.ReadCloser to the object. Useful for downloading/streaming the object.
 func (vi *VItem) Open() (io.ReadCloser, error) {
 	obj := vi.container.Bucket().Object(vi.name)
@@ -82,9 +88,7 @@ func prepURL(str string) (*url.URL, error) {
 	if err != nil {
 		return nil, err
 	}
-	u.Scheme = Kind
-
-	// Discard the query string
-	u.RawQuery = ""
+	// u.Scheme = Kind
+	u.RawQuery = "" // Discard the query string
 	return u, nil
 }

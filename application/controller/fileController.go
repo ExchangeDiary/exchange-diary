@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 	"net/http"
 
+	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
@@ -37,20 +38,47 @@ func NewFileController(fs service.FileService) FileController {
 // 	}
 // }
 
-// FilePostRequestForm ...
-type FilePostRequestForm struct {
-	PhotoUUID string                `form:"photoUUID"`
-	Photo     *multipart.FileHeader `form:"photo"`
-	AudioUUID string                `form:"audioUUID"`
-	Audio     *multipart.FileHeader `form:"audio"`
+type photoFileRequest struct {
+	Photo *multipart.FileHeader `form:"photo" swaggerignore:"true"`
+}
+type audioFileRequest struct {
+	Audio *multipart.FileHeader `form:"audio" swaggerignore:"true"`
 }
 
-// @Summary      upload a file
+type filePostRequestForm struct {
+	PhotoUUID string `form:"photoUUID" description:"유니크한 uuid" default:"e4947e0c-490b-4588-a14d-e74dd3b8371f"`
+	photoFileRequest
+	AudioUUID string `form:"audioUUID" description:"유니크한 uuid" default:"ad5bb198-942f-4ddf-a248-3aaa4bba3b9b"`
+	audioFileRequest
+	AudioTitle string `form:"audioTitle" description:"오디오 파일명" default:"LastDayOnEarth"`
+	AudioPitch string `form:"audioPitch" description:"오디오 피치값" default:"1.5"`
+}
+
+type filePostResponse struct {
+	PhotoURL         string `json:"photoURL,omitempty"`
+	AudioURL         string `form:"audioURL,omitempty"`
+	PhotoDownloadURL string `form:"photoDownloadURL,omitempty"`
+	AudioDownloadURL string `form:"audioDownloadURL,omitempty"`
+}
+
+// @Summary      upload static files
 // @Description  파일 업로드
-// @Tags         filess
+// @Tags         files
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        room_id    path      int   true  "Room ID"
+// @Param        form  formData  filePostRequestForm  true  "form"
+// @Param        photo  formData  file  false  "photo"
+// @Param        audio  formData  file  false  "audio"
+// @Success      200  {object}   filePostResponse
+// @Failure      400
+// @Failure      500
+// @Router       /rooms/{room_id}/files [post]
+// Security ApiKeyAuth
 func (fc *fileController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var fileForm FilePostRequestForm
+		var fileForm filePostRequestForm
+		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err := c.MustBindWith(&fileForm, binding.FormMultipart); err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -69,9 +97,10 @@ func (fc *fileController) Post() gin.HandlerFunc {
 			})
 			return
 		}
+		res := filePostResponse{}
 		// audio check
 		if fileForm.AudioUUID != "" {
-			vItem, err := fc.fileService.UploadFile(bkt, fileForm.AudioUUID, fileForm.Audio, service.AudioType)
+			vItem, err := fc.fileService.UploadFile(bkt, roomID, fileForm.AudioUUID, fileForm.Audio, service.AudioType)
 			if err != nil {
 				logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -80,11 +109,12 @@ func (fc *fileController) Post() gin.HandlerFunc {
 				})
 				return
 			}
-			logger.Info("Audio: " + vItem.URL().String())
+			res.AudioURL = vItem.URL().String()
+			res.AudioDownloadURL = vItem.DownloadURL().String()
 		}
 		// photo check
 		if fileForm.PhotoUUID != "" {
-			vItem, err := fc.fileService.UploadFile(bkt, fileForm.PhotoUUID, fileForm.Photo, service.PhotoType)
+			vItem, err := fc.fileService.UploadFile(bkt, roomID, fileForm.PhotoUUID, fileForm.Photo, service.PhotoType)
 			if err != nil {
 				logger.Error(err.Error())
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -93,12 +123,10 @@ func (fc *fileController) Post() gin.HandlerFunc {
 				})
 				return
 			}
-			logger.Info("Photo: " + vItem.URL().String())
+			res.PhotoURL = vItem.URL().String()
+			res.PhotoDownloadURL = vItem.DownloadURL().String()
 		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"message": "file uploaded successfully",
-		})
+		c.JSON(http.StatusOK, res)
 	}
 }
 
