@@ -165,7 +165,7 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 
 func (ac *authController) kakaoLogin(c *gin.Context) {
 	code := c.Query("code")
-	logger.Info(fmt.Sprintf("kakao login code is < %s >", code))
+	logger.Info("kakao login code: " + code)
 	token, err := ac.kakaoOAuthConf.Exchange(context.Background(), code)
 
 	if err != nil {
