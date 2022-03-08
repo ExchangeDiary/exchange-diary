@@ -52,7 +52,7 @@ type Google struct {
 
 // Load ...
 func Load(path string) (Config, error) {
-	phase := viper.Get("PHASE").(string)
+	phase := viper.GetString("PHASE")
 	logger.Info("viper config is loading...", zap.String("phase", phase))
 	config := Config{}
 	viper.AddConfigPath(path)

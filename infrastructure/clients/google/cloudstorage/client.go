@@ -3,11 +3,11 @@ package cloudstorage
 import (
 	"context"
 	"errors"
-	"log"
 	"net/url"
 	"strings"
 
 	"cloud.google.com/go/storage"
+	"github.com/spf13/viper"
 	"google.golang.org/api/option"
 )
 
@@ -20,8 +20,7 @@ var (
 )
 
 var (
-	credentials       = "credentials.json"
-	vodaStorageClient *VClient
+	credentials = "credentials.json"
 )
 
 // VClient ...
@@ -30,17 +29,24 @@ type VClient struct {
 	ctx    context.Context
 }
 
-func init() {
-	ctx, client, err := newGoogleStorageClient()
-	if err != nil {
-		log.Fatalf("Failed to create client: %v\n", err)
+// GetVClient returns cloud storage connection
+// Google Cloud Run must be stateless, so whenever use this client it gets background context
+func GetVClient(ctx context.Context) (*VClient, error) {
+	var err error
+	var client *storage.Client
+	switch viper.GetString("PHASE") {
+	case "prod":
+		client, err = storage.NewClient(ctx)
+	default:
+		client, err = storage.NewClient(ctx, option.WithCredentialsFile(credentials))
 	}
-	vodaStorageClient = &VClient{client: client, ctx: ctx}
-}
-
-// GetClient returns vodaStorageClient refs
-func GetClient() *VClient {
-	return vodaStorageClient
+	if err != nil {
+		return nil, err
+	}
+	return &VClient{
+		client: client,
+		ctx:    ctx,
+	}, nil
 }
 
 // Close ...
@@ -87,14 +93,4 @@ func (vc *VClient) ItemByURL(url *url.URL) (*VItem, error) {
 		return nil, ErrNotFound
 	}
 	return vi, nil
-}
-
-// Attempts to create a session based on the information given.
-func newGoogleStorageClient() (context.Context, *storage.Client, error) {
-	ctx := context.Background()
-	client, err := storage.NewClient(ctx, option.WithCredentialsFile(credentials))
-	if err != nil {
-		return nil, nil, err
-	}
-	return ctx, client, nil
 }
