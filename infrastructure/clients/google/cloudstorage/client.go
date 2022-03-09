@@ -5,8 +5,10 @@ import (
 	"errors"
 	"net/url"
 	"strings"
+	"sync"
 
 	"cloud.google.com/go/storage"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/spf13/viper"
 	"google.golang.org/api/option"
 )
@@ -20,7 +22,9 @@ var (
 )
 
 var (
-	credentials = "credentials.json"
+	credentials       = "credentials.json"
+	vodaStorageClient *VClient
+	clientOnce        sync.Once
 )
 
 // VClient ...
@@ -29,24 +33,35 @@ type VClient struct {
 	ctx    context.Context
 }
 
-// GetVClient returns cloud storage connection
-// Google Cloud Run must be stateless, so whenever use this client it gets background context
-func GetVClient(ctx context.Context) (*VClient, error) {
-	var err error
-	var client *storage.Client
-	switch viper.GetString("PHASE") {
-	case "prod":
-		client, err = storage.NewClient(ctx)
-	default:
-		client, err = storage.NewClient(ctx, option.WithCredentialsFile(credentials))
-	}
-	if err != nil {
-		return nil, err
-	}
-	return &VClient{
-		client: client,
-		ctx:    ctx,
-	}, nil
+func init() {
+	logger.Info("lazy init cloud storage")
+	// LazyGlobal loading ...
+	clientOnce.Do(func() {
+		var client *storage.Client
+		var err error
+		ctx := context.Background()
+		switch viper.GetString("PHASE") {
+		case "prod":
+			client, err = storage.NewClient(ctx)
+		default:
+			client, err = storage.NewClient(ctx, option.WithCredentialsFile(credentials))
+		}
+
+		if err != nil {
+			panic("Failed to load google storage  " + err.Error())
+		}
+
+		vodaStorageClient = &VClient{
+			client: client,
+			ctx:    ctx,
+		}
+	})
+
+}
+
+// GetVClient ...
+func GetVClient() *VClient {
+	return vodaStorageClient
 }
 
 // Close ...
