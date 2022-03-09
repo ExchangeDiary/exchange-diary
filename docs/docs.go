@@ -579,6 +579,80 @@ const docTemplate = `{
                 }
             }
         },
+        "/rooms/{room_id}/files": {
+            "post": {
+                "description": "파일 업로드",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "upload static files",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Room ID",
+                        "name": "room_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1.5",
+                        "name": "audioPitch",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "LastDayOnEarth",
+                        "name": "audioTitle",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "ad5bb198-942f-4ddf-a248-3aaa4bba3b9b",
+                        "name": "audioUUID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "e4947e0c-490b-4588-a14d-e74dd3b8371f",
+                        "name": "photoUUID",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "photo",
+                        "name": "photo",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "audio",
+                        "name": "audio",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.filePostResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/token": {
             "post": {
                 "description": "AuthCode를 전달하여, access \u0026 refresh 토큰을 발급 받는다.",
@@ -721,6 +795,23 @@ const docTemplate = `{
                 }
             }
         },
+        "controller.filePostResponse": {
+            "type": "object",
+            "properties": {
+                "audioDownloadURL": {
+                    "type": "string"
+                },
+                "audioURL": {
+                    "type": "string"
+                },
+                "photoDownloadURL": {
+                    "type": "string"
+                },
+                "photoURL": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.listResponseRoom": {
             "type": "object",
             "properties": {
@@ -829,19 +920,24 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "제민욱"
                 },
                 "hint": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "레오의 본명은?"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "고영희방"
                 },
                 "period": {
-                    "type": "integer"
+                    "type": "integer",
+                    "default": 5
                 },
                 "theme": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "1"
                 }
             }
         },

@@ -119,11 +119,11 @@ func bootstrap() *gin.Engine {
 	v1 := server.Group(versionPrefix)
 	route.AuthRoutes(v1, authController)
 	route.TokenRoutes(v1, tokenController)
-	route.FileRoutes(v1, fileController) // TODO: auth
 
 	v1.Use(authenticationFilter.Authenticate())
 	route.RoomRoutes(v1, roomController)
 	route.MemberRoutes(v1, memberController)
+	route.FileRoutes(v1, fileController)
 
 	return server
 }

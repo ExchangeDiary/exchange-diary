@@ -2,6 +2,7 @@ package cloudstorage
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"cloud.google.com/go/storage"
@@ -79,7 +80,8 @@ func (vb *VBucket) Put(name string, r io.Reader, size int64, metadata map[string
 }
 
 func (vb *VBucket) convertToVItem(attr *storage.ObjectAttrs) (*VItem, error) {
-	u, err := prepURL(attr.MediaLink)
+	uri := fmt.Sprintf("https://storage.googleapis.com/%s/%s", attr.Bucket, attr.Name)
+	u, err := prepURL(uri)
 	if err != nil {
 		return nil, err
 	}
