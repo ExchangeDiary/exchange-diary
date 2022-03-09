@@ -3,7 +3,7 @@ db-config:
   port: 3306
   user: "root"
   name: "voda"
-  password: "wpalsdnr1!"
+  password: "root"
 
 client:
   kakao:
@@ -12,3 +12,8 @@ client:
       client-id: "c663ce96b79395b5dcc6d7f774e1af67"
       client-secret: "LLlLMwzJ9VjLXhjsJYx4pE3zsE1x9m4P"
       redirect-url: "http://localhost:8080/v1/authentication/login/kakao"
+  google:
+    oauth:
+      client-id: "178025470998-4n07sql4vqnpsak3ggs5jg0lnk70uh0l.apps.googleusercontent.com"
+      client-secret: "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"
+      redirect-url: "http://localhost:8080/v1/authentication/login/google"

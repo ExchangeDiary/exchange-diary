@@ -17,6 +17,41 @@
     "host": "exchange-diary-b4mzhzbzcq-du.a.run.app",
     "basePath": "/v1",
     "paths": {
+        "/authentication/login/{auth_type}": {
+            "get": {
+                "description": "해당 auth_type의 login form을 기입 후, redirect되는 곳으로 기입한 email 그리고 요청한 auth_type에 대한 auth code를 발급한다.\n클라이언트 URL에 query string으로 auth code가 담긴 채로 redirect하여 로그인 및 회원가입이 진행되도록 한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "kakao | google | apple",
+                        "name": "auth_type",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "301": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/authentication/mock": {
             "post": {
                 "description": "클라 테스트용. 주어진 email이 db에 없으면 회원가입 프로세스 동시에 진행\nAccessToken을 사용해서 헤더에 {\"Authorization\": AccessToken} 넣어주면 된다.",
@@ -33,7 +68,7 @@
                 "parameters": [
                     {
                         "description": "모킹할 유저정보",
-                        "name": "room",
+                        "name": "member",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -59,7 +94,7 @@
         },
         "/login/{auth_type}": {
             "get": {
-                "description": "회원가입 하지 않았을 경우, email로 회원가입 자동 진행\n이후 jwt 토큰 발급에 필요한 authCode를 전달한다.",
+                "description": "요청한 auth_type의 login form URL로 redirect됩니다.",
                 "consumes": [
                     "application/json"
                 ],
@@ -69,7 +104,7 @@
                 "tags": [
                     "auth"
                 ],
-                "summary": "login",
+                "summary": "LoginForm Redirect",
                 "parameters": [
                     {
                         "type": "string",
@@ -81,6 +116,155 @@
                 ],
                 "responses": {
                     "301": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/member": {
+            "post": {
+                "description": "member를 새로 생성한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Member 생성",
+                "parameters": [
+                    {
+                        "description": "member 생성 요청 body",
+                        "name": "member",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.memberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/controller.memberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            },
+            "patch": {
+                "description": "해당 member를 수정한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Member 수정",
+                "parameters": [
+                    {
+                        "description": "member 수정 요청 body",
+                        "name": "member",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.memberRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.memberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/member/{email}": {
+            "get": {
+                "description": "email 주소를 통해 가입된 member를 조회한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Member 조회",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "사용자 이메일",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.memberResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "description": "해당 member를 삭제한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Member 삭제",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "사용자 이메일",
+                        "name": "email",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
                         "description": ""
                     },
                     "400": {
@@ -634,6 +818,46 @@
                     "items": {
                         "$ref": "#/definitions/controller.responseRoom"
                     }
+                }
+            }
+        },
+        "controller.memberRequest": {
+            "type": "object",
+            "properties": {
+                "alarm_flag": {
+                    "type": "boolean"
+                },
+                "auth_type": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_url": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.memberResponse": {
+            "type": "object",
+            "properties": {
+                "alarm_flag": {
+                    "type": "boolean"
+                },
+                "auth_type": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_url": {
+                    "type": "string"
                 }
             }
         },

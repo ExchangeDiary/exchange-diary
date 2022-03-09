@@ -57,6 +57,32 @@ definitions:
           $ref: '#/definitions/controller.responseRoom'
         type: array
     type: object
+  controller.memberRequest:
+    properties:
+      alarm_flag:
+        type: boolean
+      auth_type:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      profile_url:
+        type: string
+    type: object
+  controller.memberResponse:
+    properties:
+      alarm_flag:
+        type: boolean
+      auth_type:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      profile_url:
+        type: string
+    type: object
   controller.mockMemberRequest:
     properties:
       email:
@@ -165,6 +191,31 @@ info:
   title: Voice Of Diary API (voda)
   version: "1.0"
 paths:
+  /authentication/login/{auth_type}:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        해당 auth_type의 login form을 기입 후, redirect되는 곳으로 기입한 email 그리고 요청한 auth_type에 대한 auth code를 발급한다.
+        클라이언트 URL에 query string으로 auth code가 담긴 채로 redirect하여 로그인 및 회원가입이 진행되도록 한다.
+      parameters:
+      - description: kakao | google | apple
+        in: path
+        name: auth_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "301":
+          description: ""
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Login
+      tags:
+      - auth
   /authentication/mock:
     post:
       consumes:
@@ -175,7 +226,7 @@ paths:
       parameters:
       - description: 모킹할 유저정보
         in: body
-        name: room
+        name: member
         required: true
         schema:
           $ref: '#/definitions/controller.mockMemberRequest'
@@ -197,9 +248,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: |-
-        회원가입 하지 않았을 경우, email로 회원가입 자동 진행
-        이후 jwt 토큰 발급에 필요한 authCode를 전달한다.
+      description: 요청한 auth_type의 login form URL로 redirect됩니다.
       parameters:
       - description: kakao | google | apple
         in: path
@@ -215,7 +264,105 @@ paths:
           description: ""
         "500":
           description: ""
-      summary: login
+      summary: LoginForm Redirect
+      tags:
+      - auth
+  /member:
+    patch:
+      consumes:
+      - application/json
+      description: 해당 member를 수정한다.
+      parameters:
+      - description: member 수정 요청 body
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/controller.memberRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.memberResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Member 수정
+      tags:
+      - auth
+    post:
+      consumes:
+      - application/json
+      description: member를 새로 생성한다.
+      parameters:
+      - description: member 생성 요청 body
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/controller.memberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/controller.memberResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Member 생성
+      tags:
+      - auth
+  /member/{email}:
+    delete:
+      consumes:
+      - application/json
+      description: 해당 member를 삭제한다.
+      parameters:
+      - description: 사용자 이메일
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Member 삭제
+      tags:
+      - auth
+    get:
+      consumes:
+      - application/json
+      description: email 주소를 통해 가입된 member를 조회한다.
+      parameters:
+      - description: 사용자 이메일
+        in: path
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.memberResponse'
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Member 조회
       tags:
       - auth
   /rooms:

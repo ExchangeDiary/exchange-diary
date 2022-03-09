@@ -28,7 +28,8 @@ type DBConfig struct {
 
 // Client ...
 type Client struct {
-	Kakao Kakao `mapstructure:"kakao"`
+	Kakao  Kakao  `mapstructure:"kakao"`
+	Google Google `mapstructure:"google"`
 }
 
 // OAuthConfig ...
@@ -42,6 +43,11 @@ type OAuthConfig struct {
 type Kakao struct {
 	Oauth   OAuthConfig `mapstructure:"oauth"`
 	BaseURL string      `mapstructure:"base-url"`
+}
+
+// Google ...
+type Google struct {
+	Oauth OAuthConfig `mapstructure:"oauth"`
 }
 
 // Load ...

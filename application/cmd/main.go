@@ -95,6 +95,7 @@ func bootstrap() *gin.Engine {
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
 	fileService := service.NewFileService()
 
+	memberController := controller.NewMemberController(memberService)
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
 	roomController := controller.NewRoomController(roomService)
@@ -119,6 +120,7 @@ func bootstrap() *gin.Engine {
 
 	v1.Use(authenticationFilter.Authenticate())
 	route.RoomRoutes(v1, roomController)
+	route.MemberRoutes(v1, memberController)
 	route.FileRoutes(v1, fileController)
 
 	return server
