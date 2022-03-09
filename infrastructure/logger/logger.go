@@ -1,7 +1,8 @@
 package logger
 
 import (
-	"github.com/spf13/viper"
+	"os"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -12,7 +13,7 @@ var Log *zap.Logger
 func init() {
 	var err error
 
-	switch viper.Get("PHASE") {
+	switch os.Getenv("PHASE") {
 	case "prod":
 		config := zap.NewProductionConfig()
 		encoderConfig := zap.NewProductionEncoderConfig()
