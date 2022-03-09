@@ -144,7 +144,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "members"
                 ],
                 "summary": "Member 생성",
                 "parameters": [
@@ -182,7 +182,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "members"
                 ],
                 "summary": "Member 수정",
                 "parameters": [
@@ -222,7 +222,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "members"
                 ],
                 "summary": "Member 조회",
                 "parameters": [
@@ -258,7 +258,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "auth"
+                    "members"
                 ],
                 "summary": "Member 삭제",
                 "parameters": [

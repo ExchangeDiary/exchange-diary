@@ -292,7 +292,7 @@ paths:
           description: ""
       summary: Member 수정
       tags:
-      - auth
+      - members
     post:
       consumes:
       - application/json
@@ -317,7 +317,7 @@ paths:
           description: ""
       summary: Member 생성
       tags:
-      - auth
+      - members
   /member/{email}:
     delete:
       consumes:
@@ -340,7 +340,7 @@ paths:
           description: ""
       summary: Member 삭제
       tags:
-      - auth
+      - members
     get:
       consumes:
       - application/json
@@ -364,7 +364,7 @@ paths:
           description: ""
       summary: Member 조회
       tags:
-      - auth
+      - members
   /rooms:
     get:
       consumes:

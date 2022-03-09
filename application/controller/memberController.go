@@ -45,7 +45,7 @@ func NewMemberController(memberService service.MemberService) MemberController {
 
 // @Summary Member 조회
 // @Description	 email 주소를 통해 가입된 member를 조회한다.
-// @Tags         auth
+// @Tags         members
 // @Accept       json
 // @Produce      json
 // @Param        email   path   string  true "사용자 이메일"
@@ -75,7 +75,7 @@ func (mc *memberController) Get() gin.HandlerFunc {
 
 // @Summary Member 생성
 // @Description	 member를 새로 생성한다.
-// @Tags         auth
+// @Tags         members
 // @Accept       json
 // @Produce      json
 // @Param        member   body  memberRequest  true "member 생성 요청 body"
@@ -110,7 +110,7 @@ func (mc *memberController) Post() gin.HandlerFunc {
 
 // @Summary Member 수정
 // @Description	 해당 member를 수정한다.
-// @Tags         auth
+// @Tags         members
 // @Accept       json
 // @Produce      json
 // @Param        member   body  memberRequest  true "member 수정 요청 body"
@@ -170,7 +170,7 @@ func patchMember(original *entity.Member, patch memberRequest) *entity.Member {
 
 // @Summary Member 삭제
 // @Description	 해당 member를 삭제한다.
-// @Tags         auth
+// @Tags         members
 // @Accept       json
 // @Produce      json
 // @Param        email   path  string  true "사용자 이메일"
