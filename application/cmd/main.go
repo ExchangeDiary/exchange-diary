@@ -13,6 +13,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
@@ -66,9 +67,11 @@ func main() {
 	if err != nil {
 		panic("Failed to load config file: " + err.Error())
 	}
+	logger.Info("cold start google cloud storage")
+	storageClient := cloudstorage.GetVClient()
+	defer storageClient.Close()
 
-	logger.Info("start application")
-
+	logger.Info("cold start application")
 	server := bootstrap()
 	server.Run(":8080") // TODO: viper
 	shutdown()
