@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/url"
+	"os"
 	"strings"
 	"sync"
 
 	"cloud.google.com/go/storage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
-	"github.com/spf13/viper"
 	"google.golang.org/api/option"
 )
 
@@ -40,7 +40,7 @@ func init() {
 		var client *storage.Client
 		var err error
 		ctx := context.Background()
-		switch viper.GetString("PHASE") {
+		switch os.Getenv("PHASE") {
 		case "prod":
 			client, err = storage.NewClient(ctx)
 		default:
