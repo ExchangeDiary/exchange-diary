@@ -67,8 +67,8 @@ func main() {
 	if err != nil {
 		panic("Failed to load config file: " + err.Error())
 	}
-	logger.Info("cold start google cloud storage")
-	storageClient := cloudstorage.GetVClient()
+	logger.Info("cold start google cloud storage client")
+	storageClient := cloudstorage.Client()
 	defer storageClient.Close()
 
 	logger.Info("cold start application")

@@ -59,8 +59,8 @@ func init() {
 
 }
 
-// GetVClient ...
-func GetVClient() *VClient {
+// Client ...
+func Client() *VClient {
 	return vodaStorageClient
 }
 
