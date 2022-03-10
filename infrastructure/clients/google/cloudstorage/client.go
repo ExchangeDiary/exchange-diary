@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 
 	"cloud.google.com/go/storage"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"google.golang.org/api/option"
 )
@@ -40,7 +40,7 @@ func init() {
 		var client *storage.Client
 		var err error
 		ctx := context.Background()
-		switch os.Getenv("PHASE") {
+		switch infrastructure.Getenv("PHASE", "dev") {
 		case "prod":
 			client, err = storage.NewClient(ctx)
 		default:
@@ -59,8 +59,8 @@ func init() {
 
 }
 
-// Client ...
-func Client() *VClient {
+// GetClient ...
+func GetClient() *VClient {
 	return vodaStorageClient
 }
 

@@ -132,7 +132,7 @@ func (fc *fileController) Post() gin.HandlerFunc {
 }
 
 func (fc *fileController) getBucket() (*cloudstorage.VBucket, error) {
-	bkt, err := cloudstorage.Client().VBucket(bucketName)
+	bkt, err := cloudstorage.GetClient().VBucket(bucketName)
 	if err != nil {
 		return nil, err
 	}

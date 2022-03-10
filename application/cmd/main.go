@@ -14,6 +14,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/task"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
@@ -68,8 +69,12 @@ func main() {
 		panic("Failed to load config file: " + err.Error())
 	}
 	logger.Info("cold start google cloud storage client")
-	storageClient := cloudstorage.Client()
+	storageClient := cloudstorage.GetClient()
 	defer storageClient.Close()
+
+	logger.Info("cold start google cloud tasks client")
+	taskClient := task.GetClient()
+	defer taskClient.Close()
 
 	logger.Info("cold start application")
 	server := bootstrap()
