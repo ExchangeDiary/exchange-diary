@@ -10,15 +10,16 @@ import (
 
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"google.golang.org/api/option"
+	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 )
 
 // Kind represents the name of the location/storage type.
 const Kind = "google"
 
 var (
-	credentials = "credentials.json"
-	vodaClient  *Client
-	clientOnce  sync.Once
+	credentials       = "credentials.json"
+	vodaStorageClient *Client
+	clientOnce        sync.Once
 )
 
 // Client for google cloud tasks
@@ -47,7 +48,7 @@ func init() {
 			panic("Failed to load google cloud tasks  " + err.Error())
 		}
 
-		vodaClient = &Client{
+		vodaStorageClient = &Client{
 			client: client,
 			ctx:    ctx,
 			queuePath: fmt.Sprintf("projects/%s/locations/%s/queues/%s",
@@ -55,13 +56,15 @@ func init() {
 				infrastructure.Getenv("LOCATION_ID", "asia-northeast3"),
 				infrastructure.Getenv("QUEUE_ID", "voda-alarm-queue")),
 		}
-	})
 
+		// resp := mockTask()
+		// logger.Info(resp.String())
+	})
 }
 
 // GetClient ...
 func GetClient() *Client {
-	return vodaClient
+	return vodaStorageClient
 }
 
 // Close ...
@@ -69,15 +72,43 @@ func (tc *Client) Close() {
 	tc.client.Close()
 }
 
-// VTask ...
-func (tc *Client) VTask(id string) (*VTask, error) {
-	// task, err := tc.client.GetTask()
-	return &VTask{}, nil
+// CreateTask ...
+// https://pkg.go.dev/cloud.google.com/go/cloudtasks/apiv2#CallOptions
+// https://github.com/GoogleCloudPlatform/golang-samples/blob/c5b5b4be9bb51fc05a8939b163374bc23084eb56/tasks/create_http_task.go
+// https://ichi.pro/ko/gcp-cloud-tasksleul-sayonghaneun-ibenteu-giban-yeyag-jag-eob-254067840428949
+// https://tkdguq05.github.io/2020/05/19/google-task/
+// https://github.com/ArticsIS/Google-Cloud-Helpers/blob/master/services/taskqueue.py
+// https://cloud.google.com/tasks/docs/tutorial-gcf
+func (tc *Client) CreateTask(url, message string, httpMethod taskspb.HttpMethod) (*taskspb.Task, error) {
+	req := &taskspb.CreateTaskRequest{
+		Parent: tc.queuePath,
+		Task:   buildTask(url, httpMethod),
+	}
+	req.Task.GetHttpRequest().Body = []byte(message)
+	createdTask, err := tc.client.CreateTask(tc.ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
+	}
+	return createdTask, nil
 }
 
-// CreateVTask ...
-func (tc *Client) CreateVTask(id string) (*VTask, error) {
-	return &VTask{}, nil
+func mockTask() *taskspb.Task {
+	response, err := vodaStorageClient.CreateTask("http://api.duckduckgo.com/?q=minkj1992&format=json", "", taskspb.HttpMethod_GET)
+	if err != nil {
+		logger.Error(err.Error())
+	}
+	return response
+}
+
+func buildTask(url string, httpMethod taskspb.HttpMethod) *taskspb.Task {
+	return &taskspb.Task{
+		MessageType: &taskspb.Task_HttpRequest{
+			HttpRequest: &taskspb.HttpRequest{
+				HttpMethod: httpMethod,
+				Url:        url,
+			},
+		},
+	}
 }
 
 // UpdateVTask ...
