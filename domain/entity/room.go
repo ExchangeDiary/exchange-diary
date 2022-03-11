@@ -125,7 +125,7 @@ func (r *Room) NextTurn() (nextTurnAccountID uint) {
 	copier.Copy(&orders, &r.Orders)
 	for i, accountID := range orders {
 		if accountID == curTurnAccountID {
-			if i == len(r.Orders) {
+			if i == len(r.Orders)-1 {
 				nextTurnAccountID = orders[0]
 			} else {
 				nextTurnAccountID = orders[i+1]

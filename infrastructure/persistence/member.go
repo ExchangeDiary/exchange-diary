@@ -60,6 +60,15 @@ func (r *MemberRepository) Create(member *entity.Member) (*entity.Member, error)
 	return ToMemberEntity(dto), nil
 }
 
+// Get ...
+func (r *MemberRepository) Get(id uint) (*entity.Member, error) {
+	dto := MemberGorm{ID: id}
+	if err := r.db.First(&dto).Error; err != nil {
+		return nil, err
+	}
+	return ToMemberEntity(&dto), nil
+}
+
 // GetByEmail ...
 func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
 	dto := MemberGorm{}

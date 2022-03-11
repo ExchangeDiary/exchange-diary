@@ -18,35 +18,43 @@ var rightNow = time.Time{}
 
 // TaskService ...
 type TaskService interface {
-	DoRoomPeriodFINTask(roomID uint, email, deviceToken, baseURL string) error
+	DoRoomPeriodFINTask(roomID uint, baseURL string) error
 	DoMemberOnDutyTask(email, deviceToken, baseURL string) error
 	DoMemberBeforeTask(email, deviceToken, baseURL string, delta uint) error
 	DoMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) error
 }
 
 type taskService struct {
-	alarmService AlarmService
-	roomService  RoomService
+	alarmService  AlarmService
+	roomService   RoomService
+	memberService MemberService
 }
 
 // NewTaskService ...
-func NewTaskService(as AlarmService, rs RoomService) TaskService {
+func NewTaskService(as AlarmService, rs RoomService, ms MemberService) TaskService {
 	return &taskService{
-		alarmService: as,
-		roomService:  rs,
+		alarmService:  as,
+		roomService:   rs,
+		memberService: ms,
 	}
 }
 
-func (ts *taskService) DoRoomPeriodFINTask(roomID uint, email, deviceToken, baseURL string) error {
+func (ts *taskService) DoRoomPeriodFINTask(roomID uint, baseURL string) error {
 	// 1. room update
 	// 만약 방이 사라졌다면 error fin
 	room, err := ts.roomService.Get(roomID)
 	if err != nil {
 		return err
 	}
-	_ = room.NextTurn() // TODO: nxtTurnAccountID to OIDC && registerTask to member_id
+
 	turnAt := room.NextTurnAt()
+	nxtTurnAccountID := room.NextTurn()
 	if _, err := ts.roomService.Update(room); err != nil {
+		return err
+	}
+
+	nxtMember, err := ts.memberService.Get(nxtTurnAccountID)
+	if err != nil {
 		return err
 	}
 
@@ -54,7 +62,7 @@ func (ts *taskService) DoRoomPeriodFINTask(roomID uint, email, deviceToken, base
 	// 2. MEMBER_ON_DUTY task register
 	if _, err := taskClient.RegisterTask(
 		taskClient.BuildTask(baseURL,
-			entity.NewTaskVO(roomID, email, entity.MemberOnDutyCode).Encode(),
+			entity.NewTaskVO(roomID, nxtMember.Email, entity.MemberOnDutyCode).Encode(),
 			taskspb.HttpMethod_POST,
 			rightNow,
 		)); err != nil {
@@ -64,24 +72,23 @@ func (ts *taskService) DoRoomPeriodFINTask(roomID uint, email, deviceToken, base
 	// 3. MEMBER_BEFORE_1HR task register
 	if _, err := taskClient.RegisterTask(
 		taskClient.BuildTask(baseURL,
-			entity.NewTaskVO(roomID, email, entity.MemberBefore1HRCode).Encode(),
+			entity.NewTaskVO(roomID, nxtMember.Email, entity.MemberBefore1HRCode).Encode(),
 			taskspb.HttpMethod_POST,
 			turnAt.Add(-oneHour))); err != nil {
 		return err
 	}
-	// 3. MEMBER_BEFORE_4HR task register
+	// 4. MEMBER_BEFORE_4HR task register
 	if _, err := taskClient.RegisterTask(
 		taskClient.BuildTask(baseURL,
-			entity.NewTaskVO(roomID, email, entity.MemberBefore4HRCode).Encode(),
+			entity.NewTaskVO(roomID, nxtMember.Email, entity.MemberBefore4HRCode).Encode(),
 			taskspb.HttpMethod_POST,
 			turnAt.Add(-fourHour))); err != nil {
 		return err
 	}
-	// 4. Next ROOM_PERIOD_FIN task register
-
+	// 5. Next ROOM_PERIOD_FIN task register
 	if _, err := taskClient.RegisterTask(
 		taskClient.BuildTask(baseURL,
-			entity.NewTaskVO(roomID, email, entity.RoomPeriodFinCode).Encode(),
+			entity.NewTaskVO(roomID, nxtMember.Email, entity.RoomPeriodFinCode).Encode(),
 			taskspb.HttpMethod_POST,
 			*turnAt)); err != nil {
 		return err

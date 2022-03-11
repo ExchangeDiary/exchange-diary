@@ -60,7 +60,11 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 			return
 		}
 
-		currentURL := c.Request.Host + c.Request.URL.String()
+		scheme := "http://"
+		if c.Request.TLS != nil {
+			scheme = "https://"
+		}
+		currentURL := scheme + c.Request.Host + c.Request.URL.String()
 		err = tc.doTask(req, currentURL)
 		if err != nil {
 			logger.Error(err.Error())
@@ -74,7 +78,7 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 func (tc *taskController) doTask(dto taskRequest, baseURL string) (err error) {
 	switch dto.Code {
 	case entity.RoomPeriodFinCode:
-		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, dto.Email, dto.DeviceToken, baseURL)
+		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, baseURL)
 	case entity.MemberOnDutyCode:
 		err = tc.taskService.DoMemberOnDutyTask(dto.Email, dto.DeviceToken, baseURL)
 	case entity.MemberBefore1HRCode:

@@ -100,7 +100,7 @@ func bootstrap() *gin.Engine {
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
 	fileService := service.NewFileService()
 	alarmService := service.NewAlarmService()
-	taskService := service.NewTaskService(alarmService, roomService)
+	taskService := service.NewTaskService(alarmService, roomService, memberService)
 
 	memberController := controller.NewMemberController(memberService)
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
