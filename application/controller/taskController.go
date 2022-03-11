@@ -48,7 +48,7 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 		var req taskRequest
 		if err := c.BindJSON(&req); err != nil {
 			logger.Error("POST /task/callback endpoint gets invalid taskRequest json body.")
-			// google cloud task에서 쏘기때문에 204 처리해주어야 한다.
+			// google cloud task에서 쏘기 때문에 204 처리해주어야 한다.
 			c.JSON(http.StatusAccepted, err.Error())
 			return
 		}
@@ -59,7 +59,8 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 			return
 		}
 
-		err = tc.doTask(req)
+		currentURL := c.Request.Host + c.Request.URL.String()
+		err = tc.doTask(req, currentURL)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusAccepted, err.Error())
@@ -69,20 +70,20 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 	}
 }
 
-func (tc *taskController) doTask(dto taskRequest) (err error) {
+func (tc *taskController) doTask(dto taskRequest, baseURL string) (err error) {
 	switch dto.Code {
 	case service.RoomPeriodFin:
-		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, dto.Email, dto.DeviceToken)
+		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, dto.Email, dto.DeviceToken, baseURL)
 	case service.MemberOnDuty:
-		err = tc.taskService.DoMemberOnDutyTask(dto.Email, dto.DeviceToken)
+		err = tc.taskService.DoMemberOnDutyTask(dto.Email, dto.DeviceToken, baseURL)
 	case service.MemberBefore1HR:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, dto.DeviceToken, 1)
+		err = tc.taskService.DoMemberBeforeTask(dto.Email, dto.DeviceToken, baseURL, 1)
 	case service.MemberBefore4HR:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, dto.DeviceToken, 4)
+		err = tc.taskService.DoMemberBeforeTask(dto.Email, dto.DeviceToken, baseURL, 4)
 	case service.MemberPostedDiary:
-		err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, dto.DeviceToken)
+		err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, dto.DeviceToken, baseURL)
 	default:
 		err = fmt.Errorf("Not registered task code. [ " + string(dto.Code) + " ]")
 	}
-	return err
+	return
 }

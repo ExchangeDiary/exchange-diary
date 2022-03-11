@@ -29,7 +29,8 @@ require (
 	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7 // indirect
 	golang.org/x/tools v0.1.9 // indirect
 	google.golang.org/api v0.70.0
-	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
+	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8
+	google.golang.org/protobuf v1.27.1
 	gorm.io/datatypes v1.0.5
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/driver/postgres v1.3.1 // indirect

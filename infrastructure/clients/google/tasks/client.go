@@ -1,9 +1,10 @@
-package task
+package tasks
 
 import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
@@ -11,6 +12,7 @@ import (
 	cloudtasks "cloud.google.com/go/cloudtasks/apiv2"
 	"google.golang.org/api/option"
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // Kind represents the name of the location/storage type.
@@ -27,6 +29,12 @@ type Client struct {
 	client    *cloudtasks.Client
 	ctx       context.Context
 	queuePath string
+}
+
+// TaskID returns google cloud task unique id
+// projects/PROJECT_ID/locations/LOCATION_ID/queues/QUEUE_ID/tasks/TASK_ID
+func (c *Client) TaskID(id string) string {
+	return fmt.Sprintf("%s/tasks/%s", c.queuePath, id)
 }
 
 // https://github.com/GoogleCloudPlatform/golang-samples/blob/c5b5b4be9bb51fc05a8939b163374bc23084eb56/tasks/create_http_task.go
@@ -57,7 +65,7 @@ func init() {
 				infrastructure.Getenv("QUEUE_ID", "voda-alarm-queue")),
 		}
 
-		// resp := mockTask()
+		// resp := vodaStorageClient.mockTask()
 		// logger.Info(resp.String())
 	})
 }
@@ -68,39 +76,52 @@ func GetClient() *Client {
 }
 
 // Close ...
-func (tc *Client) Close() {
-	tc.client.Close()
+func (c *Client) Close() {
+	c.client.Close()
 }
 
-// CreateTask ...
+// RegisterTask register a task and adds it to a queue.
 // https://pkg.go.dev/cloud.google.com/go/cloudtasks/apiv2#CallOptions
 // https://github.com/GoogleCloudPlatform/golang-samples/blob/c5b5b4be9bb51fc05a8939b163374bc23084eb56/tasks/create_http_task.go
 // https://ichi.pro/ko/gcp-cloud-tasksleul-sayonghaneun-ibenteu-giban-yeyag-jag-eob-254067840428949
 // https://tkdguq05.github.io/2020/05/19/google-task/
 // https://github.com/ArticsIS/Google-Cloud-Helpers/blob/master/services/taskqueue.py
 // https://cloud.google.com/tasks/docs/tutorial-gcf
-func (tc *Client) CreateTask(url, message string, httpMethod taskspb.HttpMethod) (*taskspb.Task, error) {
+func (c *Client) RegisterTask(url, message string, httpMethod taskspb.HttpMethod, scheduledAt time.Time) (*taskspb.Task, error) {
 	req := &taskspb.CreateTaskRequest{
-		Parent: tc.queuePath,
-		Task:   buildTask(url, httpMethod),
+		Parent: c.queuePath,
+		Task:   buildTask(url, httpMethod, scheduledAt),
 	}
 	req.Task.GetHttpRequest().Body = []byte(message)
-	createdTask, err := tc.client.CreateTask(tc.ctx, req)
+	registeredTask, err := c.client.CreateTask(c.ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
+	}
+	return registeredTask, nil
+}
+
+// RunTask forces a task to run now.
+func (c *Client) RunTask(id, url string, httpMethod taskspb.HttpMethod) (*taskspb.Task, error) {
+	req := &taskspb.RunTaskRequest{
+		Name: id,
+	}
+	createdTask, err := c.client.RunTask(c.ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
 	}
 	return createdTask, nil
 }
 
-func mockTask() *taskspb.Task {
-	response, err := vodaStorageClient.CreateTask("http://api.duckduckgo.com/?q=minkj1992&format=json", "", taskspb.HttpMethod_GET)
+func (c *Client) mockTask() *taskspb.Task {
+	t := time.Now()
+	response, err := c.RegisterTask("http://api.duckduckgo.com/?q=minkj1992&format=json", "", taskspb.HttpMethod_GET, t)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	return response
 }
 
-func buildTask(url string, httpMethod taskspb.HttpMethod) *taskspb.Task {
+func buildTask(url string, httpMethod taskspb.HttpMethod, scheduledAt time.Time) *taskspb.Task {
 	return &taskspb.Task{
 		MessageType: &taskspb.Task_HttpRequest{
 			HttpRequest: &taskspb.HttpRequest{
@@ -108,15 +129,16 @@ func buildTask(url string, httpMethod taskspb.HttpMethod) *taskspb.Task {
 				Url:        url,
 			},
 		},
+		ScheduleTime: timestamppb.New(scheduledAt),
 	}
 }
 
 // UpdateVTask ...
-func (tc *Client) UpdateVTask(id string) (*VTask, error) {
+func (c *Client) UpdateVTask(id string) (*VTask, error) {
 	return &VTask{}, nil
 }
 
 // DeleteVTask ...
-func (tc *Client) DeleteVTask(id string) error {
+func (c *Client) DeleteVTask(id string) error {
 	return nil
 }

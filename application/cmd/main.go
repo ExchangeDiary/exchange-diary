@@ -14,7 +14,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
-	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/task"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
@@ -73,7 +73,7 @@ func main() {
 	defer storageClient.Close()
 
 	logger.Info("cold start google cloud tasks client")
-	taskClient := task.GetClient()
+	taskClient := tasks.GetClient()
 	defer taskClient.Close()
 
 	logger.Info("cold start application")
@@ -100,7 +100,7 @@ func bootstrap() *gin.Engine {
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
 	fileService := service.NewFileService()
 	alarmService := service.NewAlarmService()
-	taskService := service.NewTaskService(alarmService, roomRepository)
+	taskService := service.NewTaskService(alarmService, roomService)
 
 	memberController := controller.NewMemberController(memberService)
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)

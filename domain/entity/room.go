@@ -111,3 +111,35 @@ func (r *Room) MemberOnlyOrders() ([]uint, error) {
 	}
 	return nil, fmt.Errorf("There is no masterID in orders: %+v", r)
 }
+
+// NextTurn set room.TurnAccountID to next-turnAccountID and return it.
+func (r *Room) NextTurn() (nextTurnAccountID uint) {
+	curTurnAccountID := r.TurnAccountID
+
+	if len(r.Orders) == 1 {
+		nextTurnAccountID = curTurnAccountID
+		return
+	}
+
+	var orders []uint
+	copier.Copy(&orders, &r.Orders)
+	for i, accountID := range orders {
+		if accountID == curTurnAccountID {
+			if i == len(r.Orders) {
+				nextTurnAccountID = orders[0]
+			} else {
+				nextTurnAccountID = orders[i+1]
+			}
+			break
+		}
+	}
+	// set entity new turnAccountID
+	r.TurnAccountID = nextTurnAccountID
+	return
+}
+
+// NextTurnAt returns room.CreatedAt + period timestamp
+func (r *Room) NextTurnAt() *time.Time {
+	nt := r.CreatedAt.Add(time.Hour * 24 * time.Duration(r.Period))
+	return &nt
+}
