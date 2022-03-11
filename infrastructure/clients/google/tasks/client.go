@@ -18,6 +18,8 @@ import (
 // Kind represents the name of the location/storage type.
 const Kind = "google"
 
+var nilTime = time.Time{}
+
 var (
 	credentials       = "credentials.json"
 	vodaStorageClient *Client
@@ -64,9 +66,6 @@ func init() {
 				infrastructure.Getenv("LOCATION_ID", "asia-northeast3"),
 				infrastructure.Getenv("QUEUE_ID", "voda-alarm-queue")),
 		}
-
-		// resp := vodaStorageClient.mockTask()
-		// logger.Info(resp.String())
 	})
 }
 
@@ -80,6 +79,26 @@ func (c *Client) Close() {
 	c.client.Close()
 }
 
+// BuildTask ...
+func (c *Client) BuildTask(url string, body []byte, httpMethod taskspb.HttpMethod, scheduledAt time.Time) *taskspb.Task {
+	task := &taskspb.Task{
+		MessageType: &taskspb.Task_HttpRequest{
+			HttpRequest: &taskspb.HttpRequest{
+				HttpMethod: httpMethod,
+				Url:        url,
+				Body:       body,
+			},
+		},
+	}
+
+	// if ScheduleTime set nil, google cloud task run this task right away
+	if scheduledAt != nilTime {
+		task.ScheduleTime = timestamppb.New(scheduledAt)
+	}
+
+	return task
+}
+
 // RegisterTask register a task and adds it to a queue.
 // https://pkg.go.dev/cloud.google.com/go/cloudtasks/apiv2#CallOptions
 // https://github.com/GoogleCloudPlatform/golang-samples/blob/c5b5b4be9bb51fc05a8939b163374bc23084eb56/tasks/create_http_task.go
@@ -87,50 +106,17 @@ func (c *Client) Close() {
 // https://tkdguq05.github.io/2020/05/19/google-task/
 // https://github.com/ArticsIS/Google-Cloud-Helpers/blob/master/services/taskqueue.py
 // https://cloud.google.com/tasks/docs/tutorial-gcf
-func (c *Client) RegisterTask(url, message string, httpMethod taskspb.HttpMethod, scheduledAt time.Time) (*taskspb.Task, error) {
+func (c *Client) RegisterTask(task *taskspb.Task) (*taskspb.Task, error) {
 	req := &taskspb.CreateTaskRequest{
 		Parent: c.queuePath,
-		Task:   buildTask(url, httpMethod, scheduledAt),
+		Task:   task,
 	}
-	req.Task.GetHttpRequest().Body = []byte(message)
+
 	registeredTask, err := c.client.CreateTask(c.ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
 	}
 	return registeredTask, nil
-}
-
-// RunTask forces a task to run now.
-func (c *Client) RunTask(id, url string, httpMethod taskspb.HttpMethod) (*taskspb.Task, error) {
-	req := &taskspb.RunTaskRequest{
-		Name: id,
-	}
-	createdTask, err := c.client.RunTask(c.ctx, req)
-	if err != nil {
-		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
-	}
-	return createdTask, nil
-}
-
-func (c *Client) mockTask() *taskspb.Task {
-	t := time.Now()
-	response, err := c.RegisterTask("http://api.duckduckgo.com/?q=minkj1992&format=json", "", taskspb.HttpMethod_GET, t)
-	if err != nil {
-		logger.Error(err.Error())
-	}
-	return response
-}
-
-func buildTask(url string, httpMethod taskspb.HttpMethod, scheduledAt time.Time) *taskspb.Task {
-	return &taskspb.Task{
-		MessageType: &taskspb.Task_HttpRequest{
-			HttpRequest: &taskspb.HttpRequest{
-				HttpMethod: httpMethod,
-				Url:        url,
-			},
-		},
-		ScheduleTime: timestamppb.New(scheduledAt),
-	}
 }
 
 // UpdateVTask ...

@@ -1,34 +1,20 @@
 package service
 
 import (
-	"strconv"
 	"time"
 
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 
 	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
-)
-
-// TaskCode ...
-type TaskCode string
-
-const (
-	// RoomPeriodFin task code type
-	RoomPeriodFin TaskCode = "ROOM_PERIOD_FIN"
-	// MemberOnDuty task code type
-	MemberOnDuty = "MEMBER_ON_DUTY"
-	// MemberBefore1HR task code type
-	MemberBefore1HR = "MEMBER_BEFORE_1HR"
-	// MemberBefore4HR task code type
-	MemberBefore4HR = "MEMBER_BEFORE_4HR"
-	// MemberPostedDiary task code type
-	MemberPostedDiary = "MEMBER_POSTED_DIARY"
 )
 
 const (
 	oneHour  = time.Hour * 1
 	fourHour = time.Hour * 4
 )
+
+var rightNow = time.Time{}
 
 // TaskService ...
 type TaskService interface {
@@ -65,24 +51,41 @@ func (ts *taskService) DoRoomPeriodFINTask(roomID uint, email, deviceToken, base
 	}
 
 	taskClient := tasks.GetClient()
-	taskID := MemberOnDuty + "_ROOM_" + strconv.Itoa(int(roomID))
 	// 2. MEMBER_ON_DUTY task register
-	if _, err := taskClient.RunTask(taskClient.TaskID(taskID), baseURL, taskspb.HttpMethod_POST); err != nil {
-		return err
-	}
-	// 3. MEMBER_BEFORE_1HR task register
-	if _, err := taskClient.RegisterTask(baseURL, "", taskspb.HttpMethod_POST, turnAt.Add(-oneHour)); err != nil {
-		return err
-	}
-	// 3. MEMBER_BEFORE_4HR task register
-	if _, err := taskClient.RegisterTask(baseURL, "", taskspb.HttpMethod_POST, turnAt.Add(-fourHour)); err != nil {
-		return err
-	}
-	// 4. Next ROOM_PERIOD_FIN task register
-	if _, err := taskClient.RegisterTask(baseURL, "", taskspb.HttpMethod_POST, *turnAt); err != nil {
+	if _, err := taskClient.RegisterTask(
+		taskClient.BuildTask(baseURL,
+			entity.NewTaskVO(roomID, email, entity.MemberOnDutyCode).Encode(),
+			taskspb.HttpMethod_POST,
+			rightNow,
+		)); err != nil {
 		return err
 	}
 
+	// 3. MEMBER_BEFORE_1HR task register
+	if _, err := taskClient.RegisterTask(
+		taskClient.BuildTask(baseURL,
+			entity.NewTaskVO(roomID, email, entity.MemberBefore1HRCode).Encode(),
+			taskspb.HttpMethod_POST,
+			turnAt.Add(-oneHour))); err != nil {
+		return err
+	}
+	// 3. MEMBER_BEFORE_4HR task register
+	if _, err := taskClient.RegisterTask(
+		taskClient.BuildTask(baseURL,
+			entity.NewTaskVO(roomID, email, entity.MemberBefore4HRCode).Encode(),
+			taskspb.HttpMethod_POST,
+			turnAt.Add(-fourHour))); err != nil {
+		return err
+	}
+	// 4. Next ROOM_PERIOD_FIN task register
+
+	if _, err := taskClient.RegisterTask(
+		taskClient.BuildTask(baseURL,
+			entity.NewTaskVO(roomID, email, entity.RoomPeriodFinCode).Encode(),
+			taskspb.HttpMethod_POST,
+			*turnAt)); err != nil {
+		return err
+	}
 	return nil
 }
 
