@@ -166,6 +166,24 @@ definitions:
       updatedAt:
         type: string
     type: object
+  controller.taskRequest:
+    properties:
+      code:
+        enum:
+        - ROOM_PERIOD_FIN
+        - MEMBER_ON_DUTY
+        - MEMBER_BEFORE_1HR
+        - MEMBER_BEFORE_4HR
+        - MEMBER_POSTED_DIARY
+        type: string
+      deviceToken:
+        type: string
+      email:
+        description: 'TODO: oidc에서 member_email 까보자.'
+        type: string
+      room_id:
+        type: integer
+    type: object
   controller.tokenResponse:
     properties:
       accesstoken:
@@ -610,6 +628,30 @@ paths:
       summary: upload static files
       tags:
       - files
+  /tasks/callback:
+    post:
+      consumes:
+      - application/json
+      description: google cloud task에 예약 해두었던, task들을 스케쥴된 일정시간이 지난뒤, 처리해주는 callback
+        handler api endpoint.
+      parameters:
+      - description: Task Http Body
+        in: body
+        name: task
+        required: true
+        schema:
+          $ref: '#/definitions/controller.taskRequest'
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted. It ignore request, because error occured. 정상 처리(204)와
+            차이점을 두기 위해서 202로 처리함
+        "204":
+          description: successfully finished callback task.
+      summary: Handle Event Task
+      tags:
+      - tasks
   /token:
     post:
       consumes:

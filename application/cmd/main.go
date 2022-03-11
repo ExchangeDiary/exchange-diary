@@ -99,12 +99,15 @@ func bootstrap() *gin.Engine {
 	refreshTokenVerifier := service.NewTokenVerifier(service.AccessTokenSecretKey)
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
 	fileService := service.NewFileService()
+	alarmService := service.NewAlarmService()
+	taskService := service.NewTaskService(alarmService, roomRepository)
 
 	memberController := controller.NewMemberController(memberService)
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
 	roomController := controller.NewRoomController(roomService)
 	fileController := controller.NewFileController(fileService)
+	taskController := controller.NewTaskController(taskService, memberService)
 
 	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
@@ -124,9 +127,11 @@ func bootstrap() *gin.Engine {
 	route.TokenRoutes(v1, tokenController)
 
 	v1.Use(authenticationFilter.Authenticate())
+
 	route.RoomRoutes(v1, roomController)
 	route.MemberRoutes(v1, memberController)
 	route.FileRoutes(v1, fileController)
+	route.TaskRoutes(v1, taskController)
 
 	return server
 }
