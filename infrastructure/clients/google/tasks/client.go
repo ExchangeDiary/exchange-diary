@@ -33,10 +33,10 @@ type Client struct {
 	queuePath string
 }
 
-// TaskID returns google cloud task unique id
+// TaskName returns google cloud task unique id
 // projects/PROJECT_ID/locations/LOCATION_ID/queues/QUEUE_ID/tasks/TASK_ID
-func (c *Client) TaskID(id string) string {
-	return fmt.Sprintf("%s/tasks/%s", c.queuePath, id)
+func (c *Client) taskName(taskID string) string {
+	return fmt.Sprintf("%s/tasks/%s", c.queuePath, taskID)
 }
 
 // https://github.com/GoogleCloudPlatform/golang-samples/blob/c5b5b4be9bb51fc05a8939b163374bc23084eb56/tasks/create_http_task.go
@@ -80,8 +80,9 @@ func (c *Client) Close() {
 }
 
 // BuildTask ...
-func (c *Client) BuildTask(url string, body []byte, httpMethod taskspb.HttpMethod, scheduledAt time.Time) *taskspb.Task {
+func (c *Client) BuildTask(url, taskID string, body []byte, httpMethod taskspb.HttpMethod, scheduledAt time.Time) *taskspb.Task {
 	task := &taskspb.Task{
+		Name: c.taskName(taskID),
 		MessageType: &taskspb.Task_HttpRequest{
 			HttpRequest: &taskspb.HttpRequest{
 				HttpMethod: httpMethod,
@@ -93,9 +94,8 @@ func (c *Client) BuildTask(url string, body []byte, httpMethod taskspb.HttpMetho
 
 	// if ScheduleTime set nil, google cloud task run this task right away
 	if scheduledAt != nilTime {
-		task.ScheduleTime = timestamppb.New(scheduledAt)
+		task.ScheduleTime = c.GetProtoBufTimestamp(scheduledAt)
 	}
-
 	return task
 }
 
@@ -119,12 +119,32 @@ func (c *Client) RegisterTask(task *taskspb.Task) (*taskspb.Task, error) {
 	return registeredTask, nil
 }
 
-// UpdateVTask ...
-func (c *Client) UpdateVTask(id string) (*VTask, error) {
-	return &VTask{}, nil
+// UpdateTask ...
+// Tasks cannot be updated after creation; there is no UpdateTask command.
+// So you have to Delete old task and Create New Task
+func (c *Client) UpdateTask(oldID string, task *taskspb.Task) (*taskspb.Task, error) {
+	if err := c.DeleteTask(oldID); err != nil {
+		// if no task, ignore it
+		logger.Error(err.Error())
+	}
+	return c.RegisterTask(task)
 }
 
-// DeleteVTask ...
-func (c *Client) DeleteVTask(id string) error {
-	return nil
+// GetTask ...
+func (c *Client) GetTask(id string) (*taskspb.Task, error) {
+	return c.client.GetTask(c.ctx, &taskspb.GetTaskRequest{
+		Name: c.taskName(id),
+	})
+}
+
+// DeleteTask ...
+func (c *Client) DeleteTask(id string) error {
+	return c.client.DeleteTask(c.ctx, &taskspb.DeleteTaskRequest{
+		Name: c.taskName(id),
+	})
+}
+
+// GetProtoBufTimestamp ...
+func (c *Client) GetProtoBufTimestamp(t time.Time) *timestamppb.Timestamp {
+	return timestamppb.New(t)
 }
