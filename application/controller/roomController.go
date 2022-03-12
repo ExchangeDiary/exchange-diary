@@ -10,8 +10,6 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
-
-	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 )
 
 // RoomController handles /v1/rooms api
@@ -27,11 +25,15 @@ type RoomController interface {
 
 type roomController struct {
 	roomService service.RoomService
+	taskService service.TaskService
 }
 
 // NewRoomController is a roomController's constructor
-func NewRoomController(roomService service.RoomService) RoomController {
-	return &roomController{roomService: roomService}
+func NewRoomController(rs service.RoomService, ts service.TaskService) RoomController {
+	return &roomController{
+		roomService: rs,
+		taskService: ts,
+	}
 }
 
 // TODO: move to account
@@ -205,12 +207,13 @@ func (rc *roomController) Post() gin.HandlerFunc {
 
 		// register RoomPeriodFinCode callback task
 		taskClient := tasks.GetClient()
-		if _, err := taskClient.RegisterTask(
-			taskClient.BuildTask(application.GetCurrentURL(c),
-				entity.NewTaskVO(room.ID, currentMember.Email, entity.RoomPeriodFinCode).Encode(),
-				taskspb.HttpMethod_POST,
-				*room.DueAt,
-			)); err != nil {
+		if _, err := rc.taskService.RegisterRoomPeriodFINTask(
+			taskClient,
+			application.GetCurrentURL(c),
+			room.ID,
+			room.TurnAccountID,
+			room.DueAt,
+		); err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
@@ -236,12 +239,23 @@ func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
 		room.Hint = p.Hint
 	}
 	if p.Period != 0 {
+		beforeDueAt := room.BeforeDueAt()
+		logger.Info(beforeDueAt.String())
+		newDueAt := beforeDueAt.Add(entity.PeriodToDuration(p.Period))
 		room.Period = p.Period
+		room.DueAt = &newDueAt
+
+		logger.Info(room.DueAt.String())
+		logger.Info(newDueAt.String())
 	}
 	if p.Members != nil {
 		room.Orders = p.Members
 	}
 	return room
+}
+
+func (p *patchRequestRoom) isPeriodChanged() bool {
+	return p.Period != 0
 }
 
 type patchResponseRoom struct {
@@ -297,6 +311,22 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
+		// if period is changed
+		// it triggers to update registered DoRoomPeriodFINTask ETA
+		// 즉 period 변경하면 예약해두었던 task의 ETA(estimated time of arrival)의 timestamp를 변경한다.
+		if req.isPeriodChanged() {
+			if err := rc.taskService.UpdateRoomPeriodFINTaskETA(
+				tasks.GetClient(),
+				application.GetCurrentURL(c),
+				room.ID,
+				room.TurnAccountID,
+				room.DueAt,
+			); err != nil {
+				logger.Error(err.Error())
+			}
+		}
+
 		res := patchResponseRoom{RoomID: room.ID}
 		c.JSON(http.StatusOK, res)
 	}

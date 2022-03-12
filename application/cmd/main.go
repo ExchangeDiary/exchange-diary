@@ -105,7 +105,7 @@ func bootstrap() *gin.Engine {
 	memberController := controller.NewMemberController(memberService)
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
-	roomController := controller.NewRoomController(roomService)
+	roomController := controller.NewRoomController(roomService, taskService)
 	fileController := controller.NewFileController(fileService)
 	taskController := controller.NewTaskController(taskService, memberService)
 

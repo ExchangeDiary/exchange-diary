@@ -35,7 +35,7 @@ type Rooms []Room
 func NewRoom(masterID uint, name, code, hint, theme string, period uint8) (*Room, error) {
 	orders := []uint{masterID}
 	// dueAt = now + period
-	dueAt := domain.CurrentDateTime().Add(periodToDuration(period))
+	dueAt := domain.CurrentDateTime().Add(PeriodToDuration(period))
 	return &Room{
 		Name:          name,
 		Code:          code,
@@ -140,12 +140,20 @@ func (r *Room) NextTurn() (nextTurnAccountID uint) {
 	return
 }
 
-// NextDueAt returns room.CreatedAt + period timestamp
-func (r *Room) NextDueAt() *time.Time {
-	nd := r.DueAt.Add(periodToDuration(r.Period))
+// BeforeDueAt returns (current_room_due_at - oldPeriod)
+// It is used for change period
+func (r *Room) BeforeDueAt() *time.Time {
+	nd := r.DueAt.Add(-PeriodToDuration(r.Period))
 	return &nd
 }
 
-func periodToDuration(period uint8) time.Duration {
+// NextDueAt returns room.CreatedAt + period timestamp
+func (r *Room) NextDueAt() *time.Time {
+	nd := r.DueAt.Add(PeriodToDuration(r.Period))
+	return &nd
+}
+
+// PeriodToDuration returns period to time.Duration
+func PeriodToDuration(period uint8) time.Duration {
 	return time.Hour * 24 * time.Duration(period)
 }
