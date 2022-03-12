@@ -23,6 +23,7 @@ type Room struct {
 	Orders        []uint // []Member.ID
 	Members       *Members
 
+	DueAt     *time.Time
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
 }
@@ -32,9 +33,9 @@ type Rooms []Room
 
 // NewRoom ...
 func NewRoom(masterID uint, name, code, hint, theme string, period uint8) (*Room, error) {
-	// TODO: field validation
-
 	orders := []uint{masterID}
+	// dueAt = now + period
+	dueAt := domain.CurrentDateTime().Add(periodToDuration(period))
 	return &Room{
 		Name:          name,
 		Code:          code,
@@ -44,6 +45,7 @@ func NewRoom(masterID uint, name, code, hint, theme string, period uint8) (*Room
 		MasterID:      masterID,
 		TurnAccountID: masterID,
 		Orders:        orders,
+		DueAt:         &dueAt,
 	}, nil
 }
 
@@ -138,8 +140,12 @@ func (r *Room) NextTurn() (nextTurnAccountID uint) {
 	return
 }
 
-// NextTurnAt returns room.CreatedAt + period timestamp
-func (r *Room) NextTurnAt() *time.Time {
-	nt := r.CreatedAt.Add(time.Hour * 24 * time.Duration(r.Period))
-	return &nt
+// NextDueAt returns room.CreatedAt + period timestamp
+func (r *Room) NextDueAt() *time.Time {
+	nd := r.DueAt.Add(periodToDuration(r.Period))
+	return &nd
+}
+
+func periodToDuration(period uint8) time.Duration {
+	return time.Hour * 24 * time.Duration(period)
 }

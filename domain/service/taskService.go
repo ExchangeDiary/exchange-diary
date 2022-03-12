@@ -47,7 +47,7 @@ func (ts *taskService) DoRoomPeriodFINTask(roomID uint, baseURL string) error {
 		return err
 	}
 
-	turnAt := room.NextTurnAt()
+	turnAt := room.NextDueAt()
 	nxtTurnAccountID := room.NextTurn()
 	if _, err := ts.roomService.Update(room); err != nil {
 		return err
