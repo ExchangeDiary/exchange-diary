@@ -36,3 +36,12 @@ func ParseUint(str string) (uint, error) {
 	val, err := strconv.ParseUint(str, 10, 64) // uint64
 	return uint(val), err
 }
+
+// GetCurrentURL returns current request full url
+func GetCurrentURL(c *gin.Context) string {
+	scheme := "http://"
+	if c.Request.TLS != nil {
+		scheme = "https://"
+	}
+	return scheme + c.Request.Host + c.Request.URL.String()
+}

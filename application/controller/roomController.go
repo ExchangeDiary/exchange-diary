@@ -7,8 +7,11 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
+
+	taskspb "google.golang.org/genproto/googleapis/cloud/tasks/v2"
 )
 
 // RoomController handles /v1/rooms api
@@ -199,6 +202,20 @@ func (rc *roomController) Post() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
+		// register RoomPeriodFinCode callback task
+		taskClient := tasks.GetClient()
+		if _, err := taskClient.RegisterTask(
+			taskClient.BuildTask(application.GetCurrentURL(c),
+				entity.NewTaskVO(room.ID, currentMember.Email, entity.RoomPeriodFinCode).Encode(),
+				taskspb.HttpMethod_POST,
+				*room.DueAt,
+			)); err != nil {
+			logger.Error(err.Error())
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+
 		res := postResponseRoom{RoomID: room.ID}
 		c.JSON(http.StatusOK, res)
 	}

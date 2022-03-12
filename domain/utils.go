@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 // Contains check uint slice contains element
 func Contains(s []uint, x uint) bool {
 	for _, v := range s {
@@ -20,4 +22,10 @@ func Remove(s []uint, val uint) ([]uint, uint) {
 		}
 	}
 	return s, 0
+}
+
+// CurrentDateTime returns now
+func CurrentDateTime() time.Time {
+	t, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+	return t
 }

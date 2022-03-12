@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
@@ -60,12 +61,7 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 			return
 		}
 
-		scheme := "http://"
-		if c.Request.TLS != nil {
-			scheme = "https://"
-		}
-		currentURL := scheme + c.Request.Host + c.Request.URL.String()
-		err = tc.doTask(req, currentURL)
+		err = tc.doTask(req, application.GetCurrentURL(c))
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusAccepted, err.Error())
