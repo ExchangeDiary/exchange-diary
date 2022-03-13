@@ -13,6 +13,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/firebase"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
@@ -75,6 +76,9 @@ func main() {
 	logger.Info("cold start google cloud tasks client")
 	taskClient := tasks.GetClient()
 	defer taskClient.Close()
+
+	logger.Info("cold start firebase messaging app")
+	firebase.GetClient()
 
 	logger.Info("cold start application")
 	server := bootstrap()
