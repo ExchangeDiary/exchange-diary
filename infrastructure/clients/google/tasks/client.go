@@ -91,7 +91,6 @@ func (c *Client) BuildTask(url, taskID string, body []byte, httpMethod taskspb.H
 			},
 		},
 	}
-
 	// if ScheduleTime set nil, google cloud task run this task right away
 	if scheduledAt != nilTime {
 		task.ScheduleTime = c.GetProtoBufTimestamp(scheduledAt)

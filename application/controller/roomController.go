@@ -239,14 +239,12 @@ func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
 		room.Hint = p.Hint
 	}
 	if p.Period != 0 {
+		// update DueAt, if period is changed
+		// it will applied next turn!
 		beforeDueAt := room.BeforeDueAt()
-		logger.Info(beforeDueAt.String())
 		newDueAt := beforeDueAt.Add(entity.PeriodToDuration(p.Period))
 		room.Period = p.Period
 		room.DueAt = &newDueAt
-
-		logger.Info(room.DueAt.String())
-		logger.Info(newDueAt.String())
 	}
 	if p.Members != nil {
 		room.Orders = p.Members
@@ -310,21 +308,6 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
-		}
-
-		// if period is changed
-		// it triggers to update registered DoRoomPeriodFINTask ETA
-		// 즉 period 변경하면 예약해두었던 task의 ETA(estimated time of arrival)의 timestamp를 변경한다.
-		if req.isPeriodChanged() {
-			if err := rc.taskService.UpdateRoomPeriodFINTaskETA(
-				tasks.GetClient(),
-				application.GetCurrentURL(c),
-				room.ID,
-				room.TurnAccountID,
-				room.DueAt,
-			); err != nil {
-				logger.Error(err.Error())
-			}
 		}
 
 		res := patchResponseRoom{RoomID: room.ID}

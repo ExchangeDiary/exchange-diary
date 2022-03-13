@@ -27,7 +27,8 @@ type TaskService interface {
 	RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string, roomID, accountID uint, dueAt *time.Time) (taskID string, err error)
 	RegisterMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) (taskID string, err error)
 
-	UpdateRoomPeriodFINTaskETA(c *tasks.Client, baseURL string, roomID, turnAccountID uint, nextDueAt *time.Time) error
+	GetTask(c *tasks.Client, code entity.TaskCode, roomID, turnAccountID uint) (*taskspb.Task, error)
+	DeleteTask(c *tasks.Client, code entity.TaskCode, roomID, turnAccountID uint) error
 }
 
 type taskService struct {
@@ -158,6 +159,22 @@ func (ts *taskService) UpdateRoomPeriodFINTaskETA(c *tasks.Client, baseURL strin
 			taskspb.HttpMethod_POST,
 			*nextDueAt,
 		)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (ts *taskService) GetTask(c *tasks.Client, code entity.TaskCode, roomID, turnAccountID uint) (task *taskspb.Task, err error) {
+	taskID := genUniqueTaskID(roomID, turnAccountID, code)
+	if task, err = c.GetTask(taskID); err != nil {
+		return nil, err
+	}
+	return
+}
+
+func (ts *taskService) DeleteTask(c *tasks.Client, code entity.TaskCode, roomID, turnAccountID uint) error {
+	taskID := genUniqueTaskID(roomID, turnAccountID, code)
+	if err := c.DeleteTask(taskID); err != nil {
 		return err
 	}
 	return nil
