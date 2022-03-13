@@ -136,15 +136,24 @@ func (ts *taskService) DoMemberBeforeTask(email, deviceToken, baseURL string, de
 }
 
 func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) error {
+	room, err := ts.roomService.Get(roomID)
+	if err != nil {
+		return err
+	}
+
 	// 1. BroadCast alarm to RoomMember (except current member)
 
 	// 2. 기존에 존재하는 ROOM_PERIOD_FIN task 업데이트 (바로 실행되도록 트리거)
-
-	return nil
+	taskClient := tasks.GetClient()
+	taskID := genUniqueTaskID(room.ID, room.TurnAccountID, entity.RoomPeriodFinCode)
+	if err := taskClient.DeleteTask(taskID); err != nil {
+		return err
+	}
+	return ts.DoRoomPeriodFINTask(room.ID, baseURL)
 }
 
 func (ts *taskService) RegisterMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) (taskID string, err error) {
-	// TODO:
+	// TODO: diary crud 만들어지면 구현
 	return "", nil
 }
 

@@ -36,7 +36,6 @@ func NewRoomController(rs service.RoomService, ts service.TaskService) RoomContr
 	}
 }
 
-// TODO: move to account
 type responseMember struct {
 	ID         uint   `json:"id"`
 	ProfileURL string `json:"profileUrl"`
@@ -150,6 +149,7 @@ func (rc *roomController) Get() gin.HandlerFunc {
 				ProfileURL: member.ProfileURL,
 			})
 		}
+		// TODO: turn Account name populate
 		turnAccountName := "MOCK 어카운트 이름"
 		res := detailResponseRoom{
 			ID:              room.ID,

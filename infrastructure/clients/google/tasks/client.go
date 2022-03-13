@@ -137,6 +137,8 @@ func (c *Client) GetTask(id string) (*taskspb.Task, error) {
 }
 
 // DeleteTask ...
+// 1. 멤버가 탈퇴 / 룸 나가기 하였을 경우!!
+// 2. DoMemberPostedDiaryTask 되었을 때 기존의 post fin event 제거 후 새로운 turn을 만들어야 한다.
 func (c *Client) DeleteTask(id string) error {
 	return c.client.DeleteTask(c.ctx, &taskspb.DeleteTaskRequest{
 		Name: c.taskName(id),
