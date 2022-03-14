@@ -30,10 +30,9 @@ func NewTaskController(ts service.TaskService, ms service.MemberService) TaskCon
 }
 
 type taskRequest struct {
-	RoomID      uint            `json:"room_id"`
-	Email       string          `json:"email"` // TODO: oidc에서 member_email 까보자.
-	Code        entity.TaskCode `json:"code" enums:"ROOM_PERIOD_FIN,MEMBER_ON_DUTY,MEMBER_BEFORE_1HR,MEMBER_BEFORE_4HR,MEMBER_POSTED_DIARY"`
-	DeviceToken string          `json:"deviceToken"`
+	RoomID uint            `json:"room_id"`
+	Email  string          `json:"email"` // TODO: oidc에서 member_email 까보자.
+	Code   entity.TaskCode `json:"code" enums:"ROOM_PERIOD_FIN,MEMBER_ON_DUTY,MEMBER_BEFORE_1HR,MEMBER_BEFORE_4HR,MEMBER_POSTED_DIARY"`
 }
 
 // @Summary      Handle Event Task
@@ -76,13 +75,13 @@ func (tc *taskController) doTask(dto taskRequest, baseURL string) (err error) {
 	case entity.RoomPeriodFinCode:
 		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, baseURL)
 	case entity.MemberOnDutyCode:
-		err = tc.taskService.DoMemberOnDutyTask(dto.Email, dto.DeviceToken, baseURL)
+		err = tc.taskService.DoMemberOnDutyTask(dto.Email, baseURL)
 	case entity.MemberBefore1HRCode:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, dto.DeviceToken, baseURL, 1)
+		err = tc.taskService.DoMemberBeforeTask(dto.Email, baseURL, 1)
 	case entity.MemberBefore4HRCode:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, dto.DeviceToken, baseURL, 4)
+		err = tc.taskService.DoMemberBeforeTask(dto.Email, baseURL, 4)
 	case entity.MemberPostedDiaryCode:
-		err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, dto.DeviceToken, baseURL)
+		err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, baseURL)
 	default:
 		err = fmt.Errorf("Not registered task code. [ " + string(dto.Code) + " ]")
 	}

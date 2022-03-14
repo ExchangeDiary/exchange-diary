@@ -20,12 +20,12 @@ var rightNow = time.Time{}
 // TaskService ...
 type TaskService interface {
 	DoRoomPeriodFINTask(roomID uint, baseURL string) error
-	DoMemberOnDutyTask(email, deviceToken, baseURL string) error
-	DoMemberBeforeTask(email, deviceToken, baseURL string, delta uint) error
-	DoMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) error
+	DoMemberOnDutyTask(email, baseURL string) error
+	DoMemberBeforeTask(email, baseURL string, delta uint) error
+	DoMemberPostedDiaryTask(roomID uint, baseURL string) error
 
 	RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string, roomID, accountID uint, dueAt *time.Time) (taskID string, err error)
-	RegisterMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) (taskID string, err error)
+	RegisterMemberPostedDiaryTask(roomID uint, baseURL string) (taskID string, err error)
 
 	GetTask(c *tasks.Client, code entity.TaskCode, roomID, turnAccountID uint) (*taskspb.Task, error)
 	DeleteTask(c *tasks.Client, code entity.TaskCode, roomID, turnAccountID uint) error
@@ -125,17 +125,17 @@ func (ts *taskService) RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string
 	return task.Name, nil
 }
 
-func (ts *taskService) DoMemberOnDutyTask(email, deviceToken, baseURL string) error {
+func (ts *taskService) DoMemberOnDutyTask(email, baseURL string) error {
 	// 1. alarm to email, deviceToken user
 	return nil
 }
 
-func (ts *taskService) DoMemberBeforeTask(email, deviceToken, baseURL string, delta uint) error {
+func (ts *taskService) DoMemberBeforeTask(email, baseURL string, delta uint) error {
 	// 1. alarm to email, deviceToken user (by taskCode type)
 	return nil
 }
 
-func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) error {
+func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, baseURL string) error {
 	room, err := ts.roomService.Get(roomID)
 	if err != nil {
 		return err
@@ -152,7 +152,7 @@ func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, deviceToken, baseURL
 	return ts.DoRoomPeriodFINTask(room.ID, baseURL)
 }
 
-func (ts *taskService) RegisterMemberPostedDiaryTask(roomID uint, deviceToken, baseURL string) (taskID string, err error) {
+func (ts *taskService) RegisterMemberPostedDiaryTask(roomID uint, baseURL string) (taskID string, err error) {
 	// TODO: diary crud 만들어지면 구현
 	return "", nil
 }

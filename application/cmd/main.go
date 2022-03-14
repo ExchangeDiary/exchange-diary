@@ -18,6 +18,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
+
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
 	"github.com/spf13/viper"
 

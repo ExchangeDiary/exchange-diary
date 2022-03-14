@@ -1041,9 +1041,6 @@ const docTemplate = `{
                         "MEMBER_POSTED_DIARY"
                     ]
                 },
-                "deviceToken": {
-                    "type": "string"
-                },
                 "email": {
                     "description": "TODO: oidc에서 member_email 까보자.",
                     "type": "string"
