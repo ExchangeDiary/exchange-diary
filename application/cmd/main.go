@@ -96,6 +96,7 @@ func bootstrap() *gin.Engine {
 	roomRepository := persistence.NewRoomRepository(db)
 	roomMemberRepository := persistence.NewRoomMemberRepository(db)
 	memberRepository := persistence.NewMemberRepository(db)
+	persistence.NewMemberDeviceRepository(db)
 
 	roomMemberService := service.NewRoomMemberService(roomMemberRepository, memberRepository)
 	memberService := service.NewMemberService(memberRepository)

@@ -1,0 +1,87 @@
+package persistence
+
+import (
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
+	"github.com/ExchangeDiary/exchange-diary/domain/repository"
+	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
+)
+
+// MemberDeviceGorm ...
+type MemberDeviceGorm struct {
+	ID          uint       `gorm:"primaryKey"`
+	MemberID    uint       `gorm:"column:member_id"`
+	Member      MemberGorm `gorm:"index;column:member_id;constraint:OnDelete:CASCADE;"`
+	DeviceToken string     `gorm:"column:device_token;uniqueIndex,not null"`
+	BaseGormModel
+}
+
+// TableName define gorm table name
+func (MemberDeviceGorm) TableName() string {
+	return "member_devices"
+}
+
+// MemberDeviceGorms define list of MemberDeviceGorm
+type MemberDeviceGorms []MemberDeviceGorm
+
+// MemberDeviceRepository ...
+type MemberDeviceRepository struct {
+	db *gorm.DB
+}
+
+// NewMemberDeviceRepository ...
+func NewMemberDeviceRepository(db *gorm.DB) repository.MemberDeviceRepository {
+	return &MemberDeviceRepository{db: db}
+}
+
+// ToEntity ...
+func (dto *MemberDeviceGorm) ToEntity() *entity.MemberDevice {
+	memberDevice := new(entity.MemberDevice)
+	copier.Copy(&memberDevice, &dto)
+	return memberDevice
+}
+
+// CreateIfNotExist ...
+func (mdr *MemberDeviceRepository) CreateIfNotExist(memberID uint, token string) (memberDevice *entity.MemberDevice, err error) {
+	if memberDevice, err = mdr.Get(token); err != nil {
+		return mdr.create(memberID, token)
+	}
+	return memberDevice, nil
+}
+
+func (mdr *MemberDeviceRepository) create(memberID uint, token string) (memberDevice *entity.MemberDevice, err error) {
+	dto := MemberDeviceGorm{MemberID: memberID, DeviceToken: token}
+	if err := mdr.db.Create(&dto).Error; err != nil {
+		return nil, err
+	}
+	return dto.ToEntity(), nil
+}
+
+// Get ...
+func (mdr *MemberDeviceRepository) Get(token string) (memberDevice *entity.MemberDevice, err error) {
+	dto := MemberDeviceGorm{DeviceToken: token}
+	if err := mdr.db.First(&dto).Error; err != nil {
+		return nil, err
+	}
+	return dto.ToEntity(), nil
+}
+
+// GetAllTokens ...
+func (mdr *MemberDeviceRepository) GetAllTokens(memberID uint) (tokens []string) {
+	dto := MemberDeviceGorms{}
+	mdr.db.Select("DeviceToken").Where("memberID = ?", memberID).Find(&dto)
+	for _, memberDeviceGorm := range dto {
+		tokens = append(tokens, memberDeviceGorm.DeviceToken)
+	}
+	return
+}
+
+// Delete ...
+func (mdr *MemberDeviceRepository) Delete(memberDevice *entity.MemberDevice) error {
+	dto := MemberDeviceGorm{}
+	copier.Copy(&dto, &memberDevice)
+	if err := mdr.db.Delete(&dto).Error; err != nil {
+		return err
+	}
+	return nil
+}
