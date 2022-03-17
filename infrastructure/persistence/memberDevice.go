@@ -82,6 +82,20 @@ func (mdr *MemberDeviceRepository) GetAllTokens(memberID uint) (tokens []string,
 	return tokens, nil
 }
 
+// GetAllMemberTokens ...
+func (mdr *MemberDeviceRepository) GetAllMemberTokens(memberIDs []uint) (tokens []string, err error) {
+	dto := MemberDeviceGorms{}
+	mdr.db.Select("DeviceToken").Where("member_id IN (?)", memberIDs).Find(&dto)
+	if len(dto) < 1 {
+		return nil, fmt.Errorf(fmt.Sprintf("There is no device tokens. memberIDs: %d", memberIDs))
+	}
+
+	for _, memberDeviceGorm := range dto {
+		tokens = append(tokens, memberDeviceGorm.DeviceToken)
+	}
+	return tokens, nil
+}
+
 // Delete ...
 func (mdr *MemberDeviceRepository) Delete(memberDevice *entity.MemberDevice) error {
 	dto := MemberDeviceGorm{}

@@ -51,6 +51,20 @@ func (as *alarmService) PushByEmail(email string, alarmBody *vo.AlarmBody) (err 
 	return as.PushByID(member.ID, alarmBody)
 }
 
-func (as *alarmService) BroadCast(memberIDs []uint, alarmBody *vo.AlarmBody) error {
-	return nil
+func (as *alarmService) BroadCast(memberIDs []uint, alarmBody *vo.AlarmBody) (err error) {
+	var deviceTokens []string
+	if deviceTokens, err = as.memberDeviceRepository.GetAllMemberTokens(memberIDs); err != nil {
+		return
+	}
+
+	var failedTokens []string
+	if failedTokens, err = firebase.GetClient().Push(deviceTokens, alarmBody); err != nil {
+		return
+	}
+
+	if err = as.memberDeviceRepository.DeleteBatch(failedTokens); err != nil {
+		return
+	}
+
+	return
 }
