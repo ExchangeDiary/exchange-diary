@@ -75,11 +75,11 @@ func (tc *taskController) doTask(dto taskRequest, baseURL string) (err error) {
 	case vo.RoomPeriodFinCode:
 		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, baseURL)
 	case vo.MemberOnDutyCode:
-		err = tc.taskService.DoMemberOnDutyTask(dto.Email)
+		err = tc.taskService.DoMemberOnDutyTask(dto.RoomID, dto.Email)
 	case vo.MemberBefore1HRCode:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, vo.MemberBefore1HRCode)
+		err = tc.taskService.DoMemberBeforeTask(dto.RoomID, dto.Email, vo.MemberBefore1HRCode)
 	case vo.MemberBefore4HRCode:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, vo.MemberBefore4HRCode)
+		err = tc.taskService.DoMemberBeforeTask(dto.RoomID, dto.Email, vo.MemberBefore4HRCode)
 	case vo.MemberPostedDiaryCode:
 		err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, baseURL)
 	default:

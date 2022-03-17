@@ -18,9 +18,9 @@ type Room struct {
 	Theme  string
 	Period uint8
 
-	MasterID      uint   // TODO: Member
-	TurnAccountID uint   // TODO: Member
-	Orders        []uint // []Member.ID
+	MasterID      uint
+	TurnAccountID uint
+	Orders        []uint // master + roomMembers
 	Members       *Members
 
 	DueAt     *time.Time
@@ -117,6 +117,19 @@ func (r *Room) MemberOnlyOrders() ([]uint, error) {
 		}
 	}
 	return nil, fmt.Errorf("There is no masterID in orders: %+v", r)
+}
+
+// MemberAllExceptTurnAccount returns every members except current turn member.
+func (r *Room) MemberAllExceptTurnAccount() []uint {
+	var orders []uint
+	copier.Copy(&orders, &r.Orders)
+
+	for i, id := range orders {
+		if id == r.TurnAccountID {
+			return append(orders[:i], orders[i+1:]...)
+		}
+	}
+	return nil
 }
 
 // NextTurn set room.TurnAccountID to next-turnAccountID and return it.

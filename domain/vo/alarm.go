@@ -4,21 +4,21 @@ import "fmt"
 
 // AlarmBody represents alarm body
 type AlarmBody struct {
-	RoomID     uint
-	Code       string
-	RoomName   string
-	DiaryTitle string
-	NickName   string
+	RoomID         uint
+	Code           string
+	RoomName       string
+	DiaryTitle     string
+	AuthorNickName string
 }
 
 // NewAlarmBody ...
-func NewAlarmBody(roomID uint, code TaskCode, roomName, diaryTitle, nickname string) *AlarmBody {
+func NewAlarmBody(roomID uint, code TaskCode, roomName, diaryTitle, authorNickname string) *AlarmBody {
 	return &AlarmBody{
-		RoomID:     roomID,
-		Code:       string(code),
-		RoomName:   roomName,
-		DiaryTitle: diaryTitle,
-		NickName:   nickname,
+		RoomID:         roomID,
+		Code:           string(code),
+		RoomName:       roomName,
+		DiaryTitle:     diaryTitle,
+		AuthorNickName: authorNickname,
 	}
 }
 
@@ -29,6 +29,6 @@ func (ab *AlarmBody) ConvertToMap() map[string]string {
 		"roomID":     fmt.Sprint(ab.RoomID),
 		"roomName":   ab.RoomName,
 		"diaryTitle": ab.DiaryTitle,
-		"nickname":   ab.NickName,
+		"nickname":   ab.AuthorNickName,
 	}
 }

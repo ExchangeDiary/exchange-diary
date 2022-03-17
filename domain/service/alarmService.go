@@ -9,9 +9,9 @@ import (
 
 // AlarmService ...
 type AlarmService interface {
-	PushByID(memberID uint, code vo.TaskCode) error
-	PushByEmail(email string, code vo.TaskCode) error
-	BroadCast(memberIDs []uint, code vo.TaskCode) error
+	PushByID(memberID uint, alarmBody *vo.AlarmBody) error
+	PushByEmail(email string, alarmBody *vo.AlarmBody) error
+	BroadCast(memberIDs []uint, alarmBody *vo.AlarmBody) error
 }
 
 type alarmService struct {
@@ -26,14 +26,14 @@ func NewAlarmService(ms MemberService, mdr repository.MemberDeviceRepository) Al
 		memberDeviceRepository: mdr,
 	}
 }
-func (as *alarmService) PushByID(memberID uint, code vo.TaskCode) (err error) {
+func (as *alarmService) PushByID(memberID uint, alarmBody *vo.AlarmBody) (err error) {
 	var deviceTokens []string
 	if deviceTokens, err = as.memberDeviceRepository.GetAllTokens(memberID); err != nil {
 		return
 	}
 
 	var failedTokens []string
-	if failedTokens, err = firebase.GetClient().Push(deviceTokens, vo.NewAlarmBody(1, code, "", "", "")); err != nil {
+	if failedTokens, err = firebase.GetClient().Push(deviceTokens, alarmBody); err != nil {
 		return
 	}
 
@@ -43,14 +43,14 @@ func (as *alarmService) PushByID(memberID uint, code vo.TaskCode) (err error) {
 	return
 }
 
-func (as *alarmService) PushByEmail(email string, code vo.TaskCode) (err error) {
+func (as *alarmService) PushByEmail(email string, alarmBody *vo.AlarmBody) (err error) {
 	var member *entity.Member
 	if member, err = as.memberService.GetByEmail(email); err != nil {
 		return
 	}
-	return as.PushByID(member.ID, code)
+	return as.PushByID(member.ID, alarmBody)
 }
 
-func (as *alarmService) BroadCast(memberIDs []uint, code vo.TaskCode) error {
+func (as *alarmService) BroadCast(memberIDs []uint, alarmBody *vo.AlarmBody) error {
 	return nil
 }

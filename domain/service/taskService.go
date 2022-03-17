@@ -20,8 +20,8 @@ var rightNow = time.Time{}
 // TaskService ...
 type TaskService interface {
 	DoRoomPeriodFINTask(roomID uint, baseURL string) error
-	DoMemberOnDutyTask(email string) (err error)
-	DoMemberBeforeTask(email string, code vo.TaskCode) (err error)
+	DoMemberOnDutyTask(roomID uint, email string) (err error)
+	DoMemberBeforeTask(roomID uint, email string, code vo.TaskCode) (err error)
 	DoMemberPostedDiaryTask(roomID uint, baseURL string) error
 
 	RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string, roomID, accountID uint, dueAt *time.Time) (taskID string, err error)
@@ -125,28 +125,48 @@ func (ts *taskService) RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string
 	return task.Name, nil
 }
 
-func (ts *taskService) DoMemberOnDutyTask(email string) (err error) {
-	if err = ts.alarmService.PushByEmail(email, vo.MemberOnDutyCode); err != nil {
+func (ts *taskService) DoMemberOnDutyTask(roomID uint, email string) (err error) {
+	room, err := ts.roomService.Get(roomID)
+	if err != nil {
+		return err
+	}
+
+	alarmBody := vo.NewAlarmBody(roomID, vo.MemberOnDutyCode, room.Name, "", "")
+	if err = ts.alarmService.PushByEmail(email, alarmBody); err != nil {
 		return
 	}
 	return
 }
 
-func (ts *taskService) DoMemberBeforeTask(email string, code vo.TaskCode) (err error) {
-	if err = ts.alarmService.PushByEmail(email, code); err != nil {
+func (ts *taskService) DoMemberBeforeTask(roomID uint, email string, code vo.TaskCode) (err error) {
+	room, err := ts.roomService.Get(roomID)
+	if err != nil {
+		return err
+	}
+	alarmBody := vo.NewAlarmBody(roomID, vo.MemberPostedDiaryCode, room.Name, "", "")
+	if err = ts.alarmService.PushByEmail(email, alarmBody); err != nil {
 		return
 	}
 	return
 }
 
 func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, baseURL string) error {
+	// TODO: delete
+	mockDiaryTitle := "MOCK 일기장 이름"
+
 	room, err := ts.roomService.Get(roomID)
 	if err != nil {
 		return err
 	}
 
 	// 1. BroadCast alarm to RoomMember (except current member)
-	if err = ts.alarmService.BroadCast(room.MemberAllExceptTurnAccount(), vo.MemberPostedDiaryCode); err != nil {
+	member, err := ts.memberService.Get(room.TurnAccountID)
+	if err != nil {
+		return err
+	}
+
+	alarmBody := vo.NewAlarmBody(roomID, vo.MemberPostedDiaryCode, room.Name, mockDiaryTitle, member.Name)
+	if err = ts.alarmService.BroadCast(room.MemberAllExceptTurnAccount(), alarmBody); err != nil {
 		return err
 	}
 
