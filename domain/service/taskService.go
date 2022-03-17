@@ -20,8 +20,8 @@ var rightNow = time.Time{}
 // TaskService ...
 type TaskService interface {
 	DoRoomPeriodFINTask(roomID uint, baseURL string) error
-	DoMemberOnDutyTask(email, baseURL string) error
-	DoMemberBeforeTask(email, baseURL string, delta uint) error
+	DoMemberOnDutyTask(email string) (err error)
+	DoMemberBeforeTask(email string, code entity.TaskCode) (err error)
 	DoMemberPostedDiaryTask(roomID uint, baseURL string) error
 
 	RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string, roomID, accountID uint, dueAt *time.Time) (taskID string, err error)
@@ -125,14 +125,18 @@ func (ts *taskService) RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string
 	return task.Name, nil
 }
 
-func (ts *taskService) DoMemberOnDutyTask(email, baseURL string) error {
-	// 1. alarm to email, deviceToken user
-	return nil
+func (ts *taskService) DoMemberOnDutyTask(email string) (err error) {
+	if err = ts.alarmService.PushByEmail(email, entity.MemberOnDutyCode); err != nil {
+		return
+	}
+	return
 }
 
-func (ts *taskService) DoMemberBeforeTask(email, baseURL string, delta uint) error {
-	// 1. alarm to email, deviceToken user (by taskCode type)
-	return nil
+func (ts *taskService) DoMemberBeforeTask(email string, code entity.TaskCode) (err error) {
+	if err = ts.alarmService.PushByEmail(email, code); err != nil {
+		return
+	}
+	return
 }
 
 func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, baseURL string) error {
