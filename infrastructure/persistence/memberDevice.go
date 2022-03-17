@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"fmt"
+
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
 	"github.com/jinzhu/copier"
@@ -68,13 +70,16 @@ func (mdr *MemberDeviceRepository) Get(token string) (memberDevice *entity.Membe
 }
 
 // GetAllTokens ...
-func (mdr *MemberDeviceRepository) GetAllTokens(memberID uint) (tokens []string) {
+func (mdr *MemberDeviceRepository) GetAllTokens(memberID uint) (tokens []string, err error) {
 	dto := MemberDeviceGorms{}
 	mdr.db.Select("DeviceToken").Where("member_id = ?", memberID).Find(&dto)
+	if len(dto) < 1 {
+		return nil, fmt.Errorf(fmt.Sprintf("There is no device tokens. memberID: %d", memberID))
+	}
 	for _, memberDeviceGorm := range dto {
 		tokens = append(tokens, memberDeviceGorm.DeviceToken)
 	}
-	return
+	return tokens, nil
 }
 
 // Delete ...
@@ -82,6 +87,15 @@ func (mdr *MemberDeviceRepository) Delete(memberDevice *entity.MemberDevice) err
 	dto := MemberDeviceGorm{}
 	copier.Copy(&dto, &memberDevice)
 	if err := mdr.db.Delete(&dto).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+// DeleteBatch ...
+func (mdr *MemberDeviceRepository) DeleteBatch(tokens []string) error {
+	dto := MemberDeviceGorm{}
+	if err := mdr.db.Where("device_token IN (?)", tokens).Delete(&dto).Error; err != nil {
 		return err
 	}
 	return nil
