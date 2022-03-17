@@ -136,6 +136,11 @@ const docTemplate = `{
         },
         "/member": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "member를 새로 생성한다.",
                 "consumes": [
                     "application/json"
@@ -174,6 +179,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "해당 member를 수정한다.",
                 "consumes": [
                     "application/json"
@@ -214,6 +224,11 @@ const docTemplate = `{
         },
         "/member/{email}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "email 주소를 통해 가입된 member를 조회한다.",
                 "consumes": [
                     "application/json"
@@ -250,6 +265,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "해당 member를 삭제한다.",
                 "consumes": [
                     "application/json"

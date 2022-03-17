@@ -310,6 +310,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: Member 수정
       tags:
       - members
@@ -335,6 +337,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: Member 생성
       tags:
       - members
@@ -358,6 +362,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: Member 삭제
       tags:
       - members
@@ -382,6 +388,8 @@ paths:
           description: ""
         "500":
           description: ""
+      security:
+      - ApiKeyAuth: []
       summary: Member 조회
       tags:
       - members
