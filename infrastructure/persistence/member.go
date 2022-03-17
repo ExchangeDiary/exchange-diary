@@ -11,7 +11,7 @@ import (
 // MemberGorm is a db representation of entity.Member
 type MemberGorm struct {
 	ID         uint   `gorm:"primaryKey"`
-	Email      string `gorm:"column:email;uniqueIndex,not null"`
+	Email      string `gorm:"column:email;not null"`
 	Name       string `gorm:"column:name;not null"`
 	ProfileURL string `gorm:"column:profile_url"`
 	AuthType   string `gorm:"column:auth_type"`

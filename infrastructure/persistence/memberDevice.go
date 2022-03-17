@@ -9,10 +9,11 @@ import (
 
 // MemberDeviceGorm ...
 type MemberDeviceGorm struct {
-	ID          uint       `gorm:"primaryKey"`
-	MemberID    uint       `gorm:"column:member_id"`
-	Member      MemberGorm `gorm:"index;column:member_id;constraint:OnDelete:CASCADE;"`
-	DeviceToken string     `gorm:"column:device_token;uniqueIndex,not null"`
+	ID       uint       `gorm:"primaryKey"`
+	MemberID uint       `gorm:"column:member_id"`
+	Member   MemberGorm `gorm:"index;column:member_id;constraint:OnDelete:CASCADE;"`
+	// https://stackoverflow.com/questions/11668761/gcm-max-length-for-registration-id
+	DeviceToken string `gorm:"column:device_token;type:varchar(512);uniqueIndex:idx_device_token;not null"`
 	BaseGormModel
 }
 
