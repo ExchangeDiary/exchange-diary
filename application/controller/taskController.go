@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/ExchangeDiary/exchange-diary/application"
-	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/domain/vo"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -30,9 +30,9 @@ func NewTaskController(ts service.TaskService, ms service.MemberService) TaskCon
 }
 
 type taskRequest struct {
-	RoomID uint            `json:"room_id"`
-	Email  string          `json:"email"` // TODO: oidc에서 member_email 까보자.
-	Code   entity.TaskCode `json:"code" enums:"ROOM_PERIOD_FIN,MEMBER_ON_DUTY,MEMBER_BEFORE_1HR,MEMBER_BEFORE_4HR,MEMBER_POSTED_DIARY"`
+	RoomID uint        `json:"room_id"`
+	Email  string      `json:"email"` // TODO: oidc에서 member_email 까보자.
+	Code   vo.TaskCode `json:"code" enums:"ROOM_PERIOD_FIN,MEMBER_ON_DUTY,MEMBER_BEFORE_1HR,MEMBER_BEFORE_4HR,MEMBER_POSTED_DIARY"`
 }
 
 // @Summary      Handle Event Task
@@ -72,15 +72,15 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 
 func (tc *taskController) doTask(dto taskRequest, baseURL string) (err error) {
 	switch dto.Code {
-	case entity.RoomPeriodFinCode:
+	case vo.RoomPeriodFinCode:
 		err = tc.taskService.DoRoomPeriodFINTask(dto.RoomID, baseURL)
-	case entity.MemberOnDutyCode:
+	case vo.MemberOnDutyCode:
 		err = tc.taskService.DoMemberOnDutyTask(dto.Email)
-	case entity.MemberBefore1HRCode:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, entity.MemberBefore1HRCode)
-	case entity.MemberBefore4HRCode:
-		err = tc.taskService.DoMemberBeforeTask(dto.Email, entity.MemberBefore4HRCode)
-	case entity.MemberPostedDiaryCode:
+	case vo.MemberBefore1HRCode:
+		err = tc.taskService.DoMemberBeforeTask(dto.Email, vo.MemberBefore1HRCode)
+	case vo.MemberBefore4HRCode:
+		err = tc.taskService.DoMemberBeforeTask(dto.Email, vo.MemberBefore4HRCode)
+	case vo.MemberPostedDiaryCode:
 		err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, baseURL)
 	default:
 		err = fmt.Errorf("Not registered task code. [ " + string(dto.Code) + " ]")
