@@ -780,6 +780,9 @@
             "properties": {
                 "authCode": {
                     "type": "string"
+                },
+                "deviceToken": {
+                    "type": "string"
                 }
             }
         },
@@ -898,6 +901,9 @@
         "controller.mockMemberRequest": {
             "type": "object",
             "properties": {
+                "deviceToken": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },

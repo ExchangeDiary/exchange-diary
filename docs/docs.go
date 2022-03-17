@@ -787,6 +787,9 @@ const docTemplate = `{
             "properties": {
                 "authCode": {
                     "type": "string"
+                },
+                "deviceToken": {
+                    "type": "string"
                 }
             }
         },
@@ -905,6 +908,9 @@ const docTemplate = `{
         "controller.mockMemberRequest": {
             "type": "object",
             "properties": {
+                "deviceToken": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },

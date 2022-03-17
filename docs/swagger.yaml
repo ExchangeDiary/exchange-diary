@@ -9,6 +9,8 @@ definitions:
     properties:
       authCode:
         type: string
+      deviceToken:
+        type: string
     type: object
   controller.detailResponseRoom:
     properties:
@@ -85,6 +87,8 @@ definitions:
     type: object
   controller.mockMemberRequest:
     properties:
+      deviceToken:
+        type: string
       email:
         type: string
       name:

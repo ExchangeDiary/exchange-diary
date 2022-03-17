@@ -12,7 +12,7 @@ type MemberDeviceGorm struct {
 	ID       uint       `gorm:"primaryKey"`
 	MemberID uint       `gorm:"column:member_id"`
 	Member   MemberGorm `gorm:"index;column:member_id;constraint:OnDelete:CASCADE;"`
-	// https://stackoverflow.com/questions/11668761/gcm-max-length-for-registration-id
+	// varchar(512)사용 이유: https://stackoverflow.com/questions/11668761/gcm-max-length-for-registration-id
 	DeviceToken string `gorm:"column:device_token;type:varchar(512);uniqueIndex:idx_device_token;not null"`
 	BaseGormModel
 }
@@ -60,8 +60,8 @@ func (mdr *MemberDeviceRepository) create(memberID uint, token string) (memberDe
 
 // Get ...
 func (mdr *MemberDeviceRepository) Get(token string) (memberDevice *entity.MemberDevice, err error) {
-	dto := MemberDeviceGorm{DeviceToken: token}
-	if err := mdr.db.First(&dto).Error; err != nil {
+	dto := MemberDeviceGorm{}
+	if err := mdr.db.Where("device_token = ?", token).First(&dto).Error; err != nil {
 		return nil, err
 	}
 	return dto.ToEntity(), nil
@@ -70,7 +70,7 @@ func (mdr *MemberDeviceRepository) Get(token string) (memberDevice *entity.Membe
 // GetAllTokens ...
 func (mdr *MemberDeviceRepository) GetAllTokens(memberID uint) (tokens []string) {
 	dto := MemberDeviceGorms{}
-	mdr.db.Select("DeviceToken").Where("memberID = ?", memberID).Find(&dto)
+	mdr.db.Select("DeviceToken").Where("member_id = ?", memberID).Find(&dto)
 	for _, memberDeviceGorm := range dto {
 		tokens = append(tokens, memberDeviceGorm.DeviceToken)
 	}
