@@ -33,7 +33,7 @@ func (as *alarmService) PushByID(memberID uint, code vo.TaskCode) (err error) {
 	}
 
 	var failedTokens []string
-	if failedTokens, err = firebase.GetClient().Push(deviceTokens, buildMessageBody(code)); err != nil {
+	if failedTokens, err = firebase.GetClient().Push(deviceTokens, vo.NewAlarmBody(1, code, "", "", "")); err != nil {
 		return
 	}
 
@@ -53,9 +53,4 @@ func (as *alarmService) PushByEmail(email string, code vo.TaskCode) (err error) 
 
 func (as *alarmService) BroadCast(memberIDs []uint, code vo.TaskCode) error {
 	return nil
-}
-
-func buildMessageBody(code entity.TaskCode) *firebase.AlarmDTO {
-	// TODO: firebase alarm message body
-	return &firebase.AlarmDTO{}
 }

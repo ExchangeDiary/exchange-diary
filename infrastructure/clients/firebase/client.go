@@ -10,6 +10,7 @@ import (
 
 	fb "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
+	"github.com/ExchangeDiary/exchange-diary/domain/vo"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"google.golang.org/api/option"
@@ -27,13 +28,6 @@ type Client struct {
 	client *messaging.Client
 	ctx    context.Context
 }
-
-// AlarmDTO ...
-// map[string]string{
-//	"score": "850",
-//	"time":  "2:45", },
-// move to entity
-type AlarmDTO map[string]string
 
 func init() {
 	logger.Info("init firebase alarm client")
@@ -71,11 +65,11 @@ func GetClient() *Client {
 }
 
 // Push ...
-func (c *Client) Push(deviceTokens []string, messageBody *AlarmDTO) (failedTokens []string, err error) {
+func (c *Client) Push(deviceTokens []string, messageBody *vo.AlarmBody) (failedTokens []string, err error) {
 	var batchResponse *messaging.BatchResponse
 
 	message := &messaging.MulticastMessage{
-		Data:   *messageBody,
+		Data:   messageBody.ConvertToMap(),
 		Tokens: deviceTokens,
 	}
 
