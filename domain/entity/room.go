@@ -9,6 +9,8 @@ import (
 	"github.com/jinzhu/copier"
 )
 
+const maxRoomMemberCount = 10
+
 // Room ...
 type Room struct {
 	ID     uint
@@ -67,6 +69,11 @@ func (r *Room) IsTurn(accountID uint) bool {
 // IsAlreadyJoined determines whether account is master or member of room
 func (r *Room) IsAlreadyJoined(accountID uint) bool {
 	return r.IsMaster(accountID) || domain.Contains(r.Orders, accountID)
+}
+
+// IsMemberFull ...
+func (r *Room) IsMemberFull() bool {
+	return len(r.Orders) >= maxRoomMemberCount
 }
 
 // AppendMember ...

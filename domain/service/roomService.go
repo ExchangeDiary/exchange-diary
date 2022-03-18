@@ -115,6 +115,11 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 		return false, fmt.Errorf("Invalid code is given")
 	}
 
+	// check room is full
+	if room.IsMemberFull() {
+		return false, fmt.Errorf("The total number of member in a room cannot exceed 10, this count includes master(1)")
+	}
+
 	// ===TODO: tx start===
 	// 	1. add roomMember
 	if _, err := rs.roomMemberService.Add(id, accountID); err != nil {
