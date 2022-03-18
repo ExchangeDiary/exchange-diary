@@ -36,8 +36,6 @@ definitions:
         type: string
       turnAccountId:
         type: integer
-      turnAccountName:
-        type: string
       updatedAt:
         type: string
     type: object
@@ -109,7 +107,7 @@ definitions:
         type: string
       hint:
         type: string
-      members:
+      orders:
         items:
           type: integer
         type: array
@@ -148,6 +146,8 @@ definitions:
     properties:
       id:
         type: integer
+      nickName:
+        type: string
       profileUrl:
         type: string
     type: object
@@ -169,6 +169,15 @@ definitions:
         type: array
       updatedAt:
         type: string
+    type: object
+  controller.roomOrderResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/controller.responseMember'
+        type: array
+      turnAccountId:
+        type: integer
     type: object
   controller.taskRequest:
     properties:
@@ -474,7 +483,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: 교환일기방 상세
+      description: |-
+        교환일기방 상세
+        members는 교환일기방에 참여한 순서로 정렬된다.
       parameters:
       - description: 교환일기방 ID
         format: uint
@@ -503,7 +514,7 @@ paths:
         교환일기방 업데이트 (master only)
         1. 작성주기 변경 (period)
         2. 코드/힌트 변경 (code, hint)
-        3. 작성순서 변경(orders)
+        3. 작성순서 변경(orders) : member id를 array로 넣어주면 된다.
       parameters:
       - description: 교환일기방 ID
         in: path
@@ -585,6 +596,34 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: leave a room
+      tags:
+      - rooms
+  /rooms/{id}/orders:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        교환일기방 작성 순서
+        orders는 교환일기방의 다이어리 작성 순서로 정렬된다.
+      parameters:
+      - description: 교환일기방 ID
+        format: uint
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.roomOrderResponse'
+        "400":
+          description: ""
+      security:
+      - ApiKeyAuth: []
+      summary: Get room orders
       tags:
       - rooms
   /rooms/{room_id}/files:

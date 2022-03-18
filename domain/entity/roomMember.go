@@ -15,6 +15,18 @@ type RoomMember struct {
 // RoomMembers ...
 type RoomMembers []RoomMember
 
+// RoomMemberOrderBy represents how to order Room's member populate ordering.
+type RoomMemberOrderBy string
+
+const (
+	// JoinedOrder ...
+	JoinedOrder RoomMemberOrderBy = "JOINED_ORDER"
+	// DiaryOrder ...
+	DiaryOrder = "DIARY_ORDER"
+	// Ignore does not populate room member
+	Ignore = "IGNORE"
+)
+
 // NewRoomMember ...
 func NewRoomMember(roomID, accountID uint) (*RoomMember, error) {
 	return &RoomMember{

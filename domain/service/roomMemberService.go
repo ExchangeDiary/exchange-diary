@@ -14,6 +14,7 @@ type RoomMemberService interface {
 	Delete(roomID, accountID uint) error
 	PopulateRoomsMembers(rooms *entity.Rooms) (*entity.Rooms, error)
 	PopulateRoomMembers(room *entity.Room) (*entity.Room, error)
+	PopulateMembersByOrders(room *entity.Room) (*entity.Room, error)
 }
 
 type roomMemberService struct {
@@ -104,11 +105,9 @@ func (rms *roomMemberService) PopulateRoomMembers(room *entity.Room) (*entity.Ro
 	return &populatedRoom, nil
 }
 
-// TODO remove memberRepository dependency
-// TODO: /v1/rooms/<:room_id>/orders 분리용
-func (rms *roomMemberService) populateMembersByOrders(room *entity.Room) (*entity.Room, error) {
+// PopulateMembersByOrders ...
+func (rms *roomMemberService) PopulateMembersByOrders(room *entity.Room) (*entity.Room, error) {
 	if len(room.Orders) != 0 {
-		// PopulateMembers
 		members, err := rms.memberRepository.GetAllByIDs(room.Orders)
 		if err != nil {
 			return nil, err

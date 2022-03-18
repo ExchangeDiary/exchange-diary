@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/vo"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 
@@ -52,7 +53,7 @@ func NewTaskService(as AlarmService, rs RoomService, ms MemberService) TaskServi
 func (ts *taskService) DoRoomPeriodFINTask(roomID uint, baseURL string) error {
 	// 1. room update
 	// 만약 방이 사라졌다면 error fin
-	room, err := ts.roomService.Get(roomID)
+	room, err := ts.roomService.Get(roomID, entity.Ignore)
 	if err != nil {
 		return err
 	}
@@ -129,7 +130,7 @@ func (ts *taskService) RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string
 }
 
 func (ts *taskService) DoMemberOnDutyTask(roomID uint, email string) (err error) {
-	room, err := ts.roomService.Get(roomID)
+	room, err := ts.roomService.Get(roomID, entity.Ignore)
 	if err != nil {
 		return err
 	}
@@ -142,7 +143,7 @@ func (ts *taskService) DoMemberOnDutyTask(roomID uint, email string) (err error)
 }
 
 func (ts *taskService) DoMemberBeforeTask(roomID uint, email string, code vo.TaskCode) (err error) {
-	room, err := ts.roomService.Get(roomID)
+	room, err := ts.roomService.Get(roomID, entity.Ignore)
 	if err != nil {
 		return err
 	}
@@ -154,7 +155,7 @@ func (ts *taskService) DoMemberBeforeTask(roomID uint, email string, code vo.Tas
 }
 
 func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, baseURL string) error {
-	room, err := ts.roomService.Get(roomID)
+	room, err := ts.roomService.Get(roomID, entity.Ignore)
 	if err != nil {
 		return err
 	}

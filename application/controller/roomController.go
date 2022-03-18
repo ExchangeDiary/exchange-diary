@@ -21,6 +21,7 @@ type RoomController interface {
 	Delete() gin.HandlerFunc
 	Join() gin.HandlerFunc
 	Leave() gin.HandlerFunc
+	GetOrders() gin.HandlerFunc
 }
 
 type roomController struct {
@@ -38,6 +39,7 @@ func NewRoomController(rs service.RoomService, ts service.TaskService) RoomContr
 
 type responseMember struct {
 	ID         uint   `json:"id"`
+	NickName   string `json:"nickName"`
 	ProfileURL string `json:"profileUrl"`
 }
 
@@ -81,6 +83,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 			for _, member := range *room.Members {
 				members = append(members, responseMember{
 					ID:         member.ID,
+					NickName:   member.Name,
 					ProfileURL: member.ProfileURL,
 				})
 			}
@@ -98,22 +101,22 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 }
 
 type detailResponseRoom struct {
-	ID              uint              `json:"id"`
-	Name            *string           `json:"name"`
-	Members         *[]responseMember `json:"members"`
-	CreatedAt       *time.Time        `json:"createdAt"`
-	UpdatedAt       *time.Time        `json:"updatedAt"`
-	Theme           *string           `json:"theme,omitempty"`
-	Period          uint8             `json:"period,omitempty"`
-	TurnAccountID   uint              `json:"turnAccountId,omitempty"`
-	TurnAccountName *string           `json:"turnAccountName,omitempty"`
-	Code            *string           `json:"code,omitempty"`
-	Hint            *string           `json:"hint,omitempty"`
-	IsMaster        bool              `json:"isMaster,omitempty"`
+	ID            uint              `json:"id"`
+	Name          *string           `json:"name"`
+	Members       *[]responseMember `json:"members"`
+	CreatedAt     *time.Time        `json:"createdAt"`
+	UpdatedAt     *time.Time        `json:"updatedAt"`
+	Theme         *string           `json:"theme,omitempty"`
+	Period        uint8             `json:"period,omitempty"`
+	TurnAccountID uint              `json:"turnAccountId,omitempty"`
+	Code          *string           `json:"code,omitempty"`
+	Hint          *string           `json:"hint,omitempty"`
+	IsMaster      bool              `json:"isMaster,omitempty"`
 }
 
 // @Summary      get a room
 // @Description  교환일기방 상세
+// @Description  members는 교환일기방에 참여한 순서로 정렬된다.
 // @Tags         rooms
 // @Accept       json
 // @Produce      json
@@ -131,7 +134,7 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		room, err := rc.roomService.Get(roomID)
+		room, err := rc.roomService.Get(roomID, entity.JoinedOrder)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, err.Error())
@@ -146,22 +149,73 @@ func (rc *roomController) Get() gin.HandlerFunc {
 		for _, member := range *room.Members {
 			members = append(members, responseMember{
 				ID:         member.ID,
+				NickName:   member.Name,
 				ProfileURL: member.ProfileURL,
 			})
 		}
-		// TODO: turn Account name populate
-		turnAccountName := "MOCK 어카운트 이름"
 		res := detailResponseRoom{
-			ID:              room.ID,
-			Name:            &room.Name,
-			Theme:           &room.Theme,
-			Period:          room.Period,
-			Members:         &members,
-			TurnAccountID:   room.TurnAccountID,
-			TurnAccountName: &turnAccountName,
-			CreatedAt:       room.CreatedAt,
-			UpdatedAt:       room.UpdatedAt,
-			IsMaster:        room.IsMaster(currentMember.ID),
+			ID:            room.ID,
+			Name:          &room.Name,
+			Theme:         &room.Theme,
+			Period:        room.Period,
+			Members:       &members,
+			TurnAccountID: room.TurnAccountID,
+			CreatedAt:     room.CreatedAt,
+			UpdatedAt:     room.UpdatedAt,
+			IsMaster:      room.IsMaster(currentMember.ID),
+		}
+		c.JSON(http.StatusOK, res)
+	}
+}
+
+type roomOrderResponse struct {
+	Members       *[]responseMember `json:"members"`
+	TurnAccountID uint              `json:"turnAccountId,omitempty"`
+}
+
+// @Summary      Get room orders
+// @Description  교환일기방 작성 순서
+// @Description  orders는 교환일기방의 다이어리 작성 순서로 정렬된다.
+// @Tags         rooms
+// @Accept       json
+// @Produce      json
+// @Param        id    path     int  true  "교환일기방 ID"  Format(uint)
+// @Success      200  {object}   roomOrderResponse
+// @Failure      400
+// @Router       /rooms/{id}/orders [get]
+// @Security ApiKeyAuth
+func (rc *roomController) GetOrders() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
+		roomID, err := application.ParseUint(c.Param("room_id"))
+		if err != nil {
+			logger.Error(err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		room, err := rc.roomService.Get(roomID, entity.DiaryOrder)
+		if err != nil {
+			logger.Error(err.Error())
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+		if !room.IsAlreadyJoined(currentMember.ID) {
+			c.JSON(http.StatusUnauthorized, "Only member or master can access room orders")
+			return
+		}
+
+		members := []responseMember{}
+		for _, member := range *room.Members {
+			members = append(members, responseMember{
+				ID:         member.ID,
+				NickName:   member.Name,
+				ProfileURL: member.ProfileURL,
+			})
+		}
+
+		res := roomOrderResponse{
+			Members:       &members,
+			TurnAccountID: room.TurnAccountID,
 		}
 		c.JSON(http.StatusOK, res)
 	}
@@ -225,10 +279,10 @@ func (rc *roomController) Post() gin.HandlerFunc {
 }
 
 type patchRequestRoom struct {
-	Code    string `json:"code,omitempty"`
-	Hint    string `json:"hint,omitempty"`
-	Period  uint8  `json:"period,omitempty"`
-	Members []uint `json:"members,omitempty"`
+	Code   string `json:"code,omitempty"`
+	Hint   string `json:"hint,omitempty"`
+	Period uint8  `json:"period,omitempty"`
+	Orders []uint `json:"orders,omitempty"`
 }
 
 func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
@@ -246,8 +300,8 @@ func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
 		room.Period = p.Period
 		room.DueAt = &newDueAt
 	}
-	if p.Members != nil {
-		room.Orders = p.Members
+	if p.Orders != nil {
+		room.Orders = p.Orders
 	}
 	return room
 }
@@ -264,7 +318,7 @@ type patchResponseRoom struct {
 // @Description  교환일기방 업데이트 (master only)
 // @Description  1. 작성주기 변경 (period)
 // @Description  2. 코드/힌트 변경 (code, hint)
-// @Description  3. 작성순서 변경(orders)
+// @Description  3. 작성순서 변경(orders) : member id를 array로 넣어주면 된다.
 // @Tags         rooms
 // @Accept       json
 // @Produce      json
@@ -291,7 +345,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 			return
 		}
 
-		room, err := rc.roomService.Get(roomID)
+		room, err := rc.roomService.Get(roomID, entity.Ignore)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, err.Error())
@@ -335,7 +389,7 @@ func (rc *roomController) Delete() gin.HandlerFunc {
 			return
 		}
 
-		room, err := rc.roomService.Get(roomID)
+		room, err := rc.roomService.Get(roomID, entity.Ignore)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, err.Error())
