@@ -6,6 +6,7 @@ package firebase
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	fb "firebase.google.com/go/v4"
@@ -16,7 +17,10 @@ import (
 	"google.golang.org/api/option"
 )
 
-const credentials = "firebase-credential.json"
+const (
+	credentials = "firebase-credential.json"
+	credKey     = "FIREBASE_CREDENTIALS_SECRET"
+)
 
 var (
 	firebaseClient *Client
@@ -38,7 +42,9 @@ func init() {
 
 		switch infrastructure.Getenv("PHASE", "dev") {
 		case "prod":
-			app, err = fb.NewApp(context.Background(), nil)
+			// for local test cmd
+			// export FIREBASE_CREDENTIALS_SECRET=`cat ./firebase-credential.json`
+			app, err = fb.NewApp(context.Background(), nil, option.WithCredentialsJSON(getCredntial()))
 		default:
 			app, err = fb.NewApp(ctx, nil, option.WithCredentialsFile(credentials))
 		}
@@ -92,4 +98,14 @@ func (c *Client) Push(deviceTokens []string, messageBody *vo.AlarmBody) (failedT
 		return
 	}
 	return nil, nil
+}
+
+// refs: https://cloud.google.com/run/docs/configuring/secrets
+// refs: https://cloud.google.com/run/docs/tutorials/identity-platform#secret-manager
+func getCredntial() []byte {
+	secret := os.Getenv(credKey)
+	if len(secret) != 0 {
+		return []byte(secret)
+	}
+	return []byte{}
 }
