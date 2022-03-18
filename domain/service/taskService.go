@@ -17,6 +17,9 @@ const (
 
 var rightNow = time.Time{}
 
+// TODO: delete
+var mockDiaryTitle = "MOCK 일기장 이름"
+
 // TaskService ...
 type TaskService interface {
 	DoRoomPeriodFINTask(roomID uint, baseURL string) error
@@ -143,7 +146,7 @@ func (ts *taskService) DoMemberBeforeTask(roomID uint, email string, code vo.Tas
 	if err != nil {
 		return err
 	}
-	alarmBody := vo.NewAlarmBody(roomID, vo.MemberPostedDiaryCode, room.Name, "", "")
+	alarmBody := vo.NewAlarmBody(roomID, code, room.Name, "", "")
 	if err = ts.alarmService.PushByEmail(email, alarmBody); err != nil {
 		return
 	}
@@ -151,9 +154,6 @@ func (ts *taskService) DoMemberBeforeTask(roomID uint, email string, code vo.Tas
 }
 
 func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, baseURL string) error {
-	// TODO: delete
-	mockDiaryTitle := "MOCK 일기장 이름"
-
 	room, err := ts.roomService.Get(roomID)
 	if err != nil {
 		return err

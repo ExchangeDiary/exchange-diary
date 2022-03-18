@@ -67,10 +67,14 @@ func GetClient() *Client {
 // Push ...
 func (c *Client) Push(deviceTokens []string, messageBody *vo.AlarmBody) (failedTokens []string, err error) {
 	var batchResponse *messaging.BatchResponse
-
+	messagePayload := messageBody.ConvertToMap()
 	message := &messaging.MulticastMessage{
-		Data:   messageBody.ConvertToMap(),
+		Data:   messagePayload,
 		Tokens: deviceTokens,
+		Notification: &messaging.Notification{
+			Title: messagePayload["roomName"] + " 다이어리방",
+			Body:  messagePayload["title"],
+		},
 	}
 
 	batchResponse, err = c.client.SendMulticast(c.ctx, message)
