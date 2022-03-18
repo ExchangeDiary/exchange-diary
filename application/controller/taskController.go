@@ -14,6 +14,7 @@ import (
 // TaskController ...
 type TaskController interface {
 	HandleEvent() gin.HandlerFunc
+	MockEvent() gin.HandlerFunc
 }
 
 type taskController struct {
@@ -44,6 +45,7 @@ type taskRequest struct {
 // @Success      202  "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
 // @Success      204 "successfully finished callback task."
 // @Router       /tasks/callback [post]
+// @Security ApiKeyAuth
 func (tc *taskController) HandleEvent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req taskRequest
@@ -68,6 +70,57 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 		}
 		c.Status(http.StatusNoContent)
 	}
+}
+
+// @Summary      Mock Handle Event Task
+// @Tags         tasks
+// @Accept       json
+// @Produce      json
+// @Param        task  body     taskRequest  true  "Task Http Body"
+// @Success      202  "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
+// @Success      204 "successfully finished callback task."
+// @Router       /tasks/mock [post]
+// @Security ApiKeyAuth
+func (tc *taskController) MockEvent() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var req taskRequest
+		if err := c.BindJSON(&req); err != nil {
+			logger.Error("POST /task/callback endpoint gets invalid taskRequest json body.")
+			// google cloud task에서 쏘기 때문에 204 처리해주어야 한다.
+			c.JSON(http.StatusAccepted, err.Error())
+			return
+		}
+		_, err := tc.memberService.GetByEmail(req.Email)
+		if err != nil {
+			logger.Error("Callback task errors. " + req.Email + " not found. (maybe user is already unsigned)")
+			c.JSON(http.StatusAccepted, err.Error())
+			return
+		}
+
+		err = tc.doMockTask(req, application.GetCurrentURL(c))
+		if err != nil {
+			logger.Error(err.Error())
+			c.JSON(http.StatusAccepted, err.Error())
+			return
+		}
+		c.Status(http.StatusNoContent)
+	}
+}
+
+func (tc *taskController) doMockTask(dto taskRequest, baseURL string) (err error) {
+	if err = tc.taskService.DoMemberOnDutyTask(dto.RoomID, dto.Email); err != nil {
+		return
+	}
+	if err = tc.taskService.DoMemberBeforeTask(dto.RoomID, dto.Email, vo.MemberBefore1HRCode); err != nil {
+		return
+	}
+	if err = tc.taskService.DoMemberBeforeTask(dto.RoomID, dto.Email, vo.MemberBefore4HRCode); err != nil {
+		return
+	}
+	if err = tc.taskService.DoMemberPostedDiaryTask(dto.RoomID, baseURL); err != nil {
+		return
+	}
+	return
 }
 
 func (tc *taskController) doTask(dto taskRequest, baseURL string) (err error) {

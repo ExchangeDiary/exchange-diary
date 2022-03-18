@@ -10,5 +10,7 @@ func TaskRoutes(router *gin.RouterGroup, controller controller.TaskController) {
 	tasks := router.Group("/tasks")
 	{
 		tasks.POST("/callback", controller.HandleEvent())
+		tasks.POST("/mock", controller.MockEvent())
+
 	}
 }

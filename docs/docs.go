@@ -680,6 +680,11 @@ const docTemplate = `{
         },
         "/tasks/callback": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "google cloud task에 예약 해두었던, task들을 스케쥴된 일정시간이 지난뒤, 처리해주는 callback handler api endpoint.",
                 "consumes": [
                     "application/json"
@@ -691,6 +696,44 @@ const docTemplate = `{
                     "tasks"
                 ],
                 "summary": "Handle Event Task",
+                "parameters": [
+                    {
+                        "description": "Task Http Body",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.taskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
+                    },
+                    "204": {
+                        "description": "successfully finished callback task."
+                    }
+                }
+            }
+        },
+        "/tasks/mock": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Mock Handle Event Task",
                 "parameters": [
                     {
                         "description": "Task Http Body",
