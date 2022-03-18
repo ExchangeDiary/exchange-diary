@@ -27,6 +27,7 @@ func NewAuthenticationFilter(verifier service.TokenVerifier) *AuthenticationFilt
 }
 
 // Authenticate ...
+// TODO: oidc validation
 func (f *AuthenticationFilter) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		bearerToken := c.Request.Header.Get(authorizationHeader)

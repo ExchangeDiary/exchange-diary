@@ -129,6 +129,11 @@ func (rs *roomService) LeaveRoom(id, accountID uint) error {
 	if !room.IsAlreadyJoined(accountID) {
 		return fmt.Errorf("cannot leave room because you are not a memeber of this room")
 	}
+	// TurnAccountID 변경
+	if room.IsTurn(accountID) {
+		room.NextTurn()
+	}
+
 	if room.IsMaster(accountID) {
 		return rs.doMasterLeaveProcess(room, accountID)
 	}
@@ -153,15 +158,12 @@ func (rs *roomService) doMasterLeaveProcess(room *entity.Room, accountID uint) e
 		return err
 	}
 
-	// TODO: TurnAccountID 변경
 	// Update room
 	_, err := rs.roomRepository.Update(room)
 	return err
 }
 
 func (rs *roomService) doMemberLeaveProcess(room *entity.Room, accountID uint) error {
-	// TODO: TurnAccountID 변경
-
 	// room.Order에서 빼기
 	if _, err := room.RemoveMember(accountID); err != nil {
 		return err

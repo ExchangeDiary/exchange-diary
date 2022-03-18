@@ -136,6 +136,11 @@ const docTemplate = `{
         },
         "/member": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "member를 새로 생성한다.",
                 "consumes": [
                     "application/json"
@@ -174,6 +179,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "해당 member를 수정한다.",
                 "consumes": [
                     "application/json"
@@ -214,6 +224,11 @@ const docTemplate = `{
         },
         "/member/{email}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "email 주소를 통해 가입된 member를 조회한다.",
                 "consumes": [
                     "application/json"
@@ -250,6 +265,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "해당 member를 삭제한다.",
                 "consumes": [
                     "application/json"
@@ -658,6 +678,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/tasks/callback": {
+            "post": {
+                "description": "google cloud task에 예약 해두었던, task들을 스케쥴된 일정시간이 지난뒤, 처리해주는 callback handler api endpoint.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Handle Event Task",
+                "parameters": [
+                    {
+                        "description": "Task Http Body",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.taskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
+                    },
+                    "204": {
+                        "description": "successfully finished callback task."
+                    }
+                }
+            }
+        },
+        "/tasks/mock": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tasks"
+                ],
+                "summary": "Mock Handle Event Task",
+                "parameters": [
+                    {
+                        "description": "Task Http Body",
+                        "name": "task",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.taskRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "202": {
+                        "description": "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
+                    },
+                    "204": {
+                        "description": "successfully finished callback task."
+                    }
+                }
+            }
+        },
         "/token": {
             "post": {
                 "description": "AuthCode를 전달하여, access \u0026 refresh 토큰을 발급 받는다.",
@@ -752,6 +839,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "authCode": {
+                    "type": "string"
+                },
+                "deviceToken": {
                     "type": "string"
                 }
             }
@@ -871,6 +961,9 @@ const docTemplate = `{
         "controller.mockMemberRequest": {
             "type": "object",
             "properties": {
+                "deviceToken": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
@@ -991,6 +1084,28 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.taskRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "enum": [
+                        "ROOM_PERIOD_FIN",
+                        "MEMBER_ON_DUTY",
+                        "MEMBER_BEFORE_1HR",
+                        "MEMBER_BEFORE_4HR",
+                        "MEMBER_POSTED_DIARY"
+                    ]
+                },
+                "email": {
+                    "description": "TODO: oidc에서 member_email 까보자.",
+                    "type": "string"
+                },
+                "room_id": {
+                    "type": "integer"
                 }
             }
         },

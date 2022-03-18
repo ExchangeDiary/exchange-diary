@@ -13,9 +13,12 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/docs"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/firebase"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/cloudstorage"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
+
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/persistence"
 	"github.com/spf13/viper"
 
@@ -67,9 +70,16 @@ func main() {
 	if err != nil {
 		panic("Failed to load config file: " + err.Error())
 	}
-	logger.Info("cold start google cloud storage")
-	storageClient := cloudstorage.GetVClient()
+	logger.Info("cold start google cloud storage client")
+	storageClient := cloudstorage.GetClient()
 	defer storageClient.Close()
+
+	logger.Info("cold start google cloud tasks client")
+	taskClient := tasks.GetClient()
+	defer taskClient.Close()
+
+	logger.Info("cold start firebase messaging app")
+	firebase.GetClient()
 
 	logger.Info("cold start application")
 	server := bootstrap()
@@ -86,20 +96,24 @@ func bootstrap() *gin.Engine {
 	roomRepository := persistence.NewRoomRepository(db)
 	roomMemberRepository := persistence.NewRoomMemberRepository(db)
 	memberRepository := persistence.NewMemberRepository(db)
+	memberDeviceRepository := persistence.NewMemberDeviceRepository(db)
 
 	roomMemberService := service.NewRoomMemberService(roomMemberRepository, memberRepository)
 	memberService := service.NewMemberService(memberRepository)
 	roomService := service.NewRoomService(roomRepository, roomMemberService)
 	authCodeVerifier := service.NewTokenVerifier(service.AuthCodeSecretKey)
 	refreshTokenVerifier := service.NewTokenVerifier(service.AccessTokenSecretKey)
-	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier)
+	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier, memberDeviceRepository)
 	fileService := service.NewFileService()
+	alarmService := service.NewAlarmService(memberService, memberDeviceRepository)
+	taskService := service.NewTaskService(alarmService, roomService, memberService)
 
 	memberController := controller.NewMemberController(memberService)
 	authController := controller.NewAuthController(conf.Client, memberService, tokenService)
 	tokenController := controller.NewTokenController(tokenService)
-	roomController := controller.NewRoomController(roomService)
+	roomController := controller.NewRoomController(roomService, taskService)
 	fileController := controller.NewFileController(fileService)
+	taskController := controller.NewTaskController(taskService, memberService)
 
 	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
@@ -117,8 +131,10 @@ func bootstrap() *gin.Engine {
 	v1 := server.Group(versionPrefix)
 	route.AuthRoutes(v1, authController)
 	route.TokenRoutes(v1, tokenController)
+	route.TaskRoutes(v1, taskController)
 
 	v1.Use(authenticationFilter.Authenticate())
+
 	route.RoomRoutes(v1, roomController)
 	route.MemberRoutes(v1, memberController)
 	route.FileRoutes(v1, fileController)

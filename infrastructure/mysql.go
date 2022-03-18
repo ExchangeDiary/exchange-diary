@@ -70,4 +70,5 @@ func Migrate(db *gorm.DB) {
 	db.AutoMigrate(&persistence.MemberGorm{})
 	db.AutoMigrate(&persistence.RoomGorm{})
 	db.AutoMigrate(&persistence.RoomMemberGorm{})
+	db.AutoMigrate(&persistence.MemberDeviceGorm{})
 }

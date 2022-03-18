@@ -8,6 +8,7 @@ import (
 // MemberService ...
 type MemberService interface {
 	Create(email string, name string, profileURL string, authType string) (*entity.Member, error)
+	Get(ID uint) (*entity.Member, error)
 	GetByEmail(email string) (*entity.Member, error)
 	Update(member *entity.Member) (*entity.Member, error)
 	Delete(email string) error
@@ -35,6 +36,14 @@ func (s *memberService) Create(email string, name string, profileURL string, aut
 		return nil, err
 	}
 	return newMember, nil
+}
+
+func (s *memberService) Get(id uint) (*entity.Member, error) {
+	member, err := s.memberRepository.Get(id)
+	if err != nil {
+		return nil, err
+	}
+	return member, nil
 }
 
 func (s *memberService) GetByEmail(email string) (*entity.Member, error) {

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
+	"github.com/ExchangeDiary/exchange-diary/domain/repository"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -20,23 +21,25 @@ const (
 // TokenService ...
 type TokenService interface {
 	IssueAuthCode(email string, authType string) (string, error)
-	IssueAccessToken(authCode string) (string, error)
+	IssueAccessToken(authCode, deviceToken string) (string, error)
 	IssueRefreshToken(authCode string) (string, error)
 	RefreshAccessToken(refreshToken string) (string, error)
 }
 
 type tokenService struct {
-	memberService        MemberService
-	authCodeVerifier     TokenVerifier
-	refreshTokenVerifier TokenVerifier
+	memberService          MemberService
+	memberDeviceRepository repository.MemberDeviceRepository
+	authCodeVerifier       TokenVerifier
+	refreshTokenVerifier   TokenVerifier
 }
 
 // NewTokenService ...
-func NewTokenService(service MemberService, authCodeVerifier TokenVerifier, refreshTokenVerifier TokenVerifier) TokenService {
+func NewTokenService(service MemberService, authCodeVerifier TokenVerifier, refreshTokenVerifier TokenVerifier, mdr repository.MemberDeviceRepository) TokenService {
 	return &tokenService{
-		memberService:        service,
-		authCodeVerifier:     authCodeVerifier,
-		refreshTokenVerifier: refreshTokenVerifier,
+		memberService:          service,
+		memberDeviceRepository: mdr,
+		authCodeVerifier:       authCodeVerifier,
+		refreshTokenVerifier:   refreshTokenVerifier,
 	}
 }
 
@@ -53,7 +56,7 @@ func (s *tokenService) IssueAuthCode(email string, authType string) (string, err
 	return token.SignedString([]byte(s.authCodeVerifier.SecretKey))
 }
 
-func (s *tokenService) IssueAccessToken(authCode string) (string, error) {
+func (s *tokenService) IssueAccessToken(authCode, deviceToken string) (string, error) {
 	claims, err := s.authCodeVerifier.Verify(authCode)
 	if err != nil {
 		return "", err
@@ -62,6 +65,11 @@ func (s *tokenService) IssueAccessToken(authCode string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	if err := s.registerDeviceToken(member.ID, deviceToken); err != nil {
+		return "", err
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, entity.AuthCodeClaims{
 		AuthType: member.AuthType,
 		ID:       member.ID,
@@ -115,4 +123,11 @@ func (s tokenService) RefreshAccessToken(refreshToken string) (string, error) {
 		},
 	})
 	return token.SignedString([]byte(s.refreshTokenVerifier.SecretKey))
+}
+
+func (s *tokenService) registerDeviceToken(memberID uint, deviceToken string) error {
+	if _, err := s.memberDeviceRepository.CreateIfNotExist(memberID, deviceToken); err != nil {
+		return err
+	}
+	return nil
 }

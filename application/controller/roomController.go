@@ -7,6 +7,7 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/google/tasks"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -24,14 +25,17 @@ type RoomController interface {
 
 type roomController struct {
 	roomService service.RoomService
+	taskService service.TaskService
 }
 
 // NewRoomController is a roomController's constructor
-func NewRoomController(roomService service.RoomService) RoomController {
-	return &roomController{roomService: roomService}
+func NewRoomController(rs service.RoomService, ts service.TaskService) RoomController {
+	return &roomController{
+		roomService: rs,
+		taskService: ts,
+	}
 }
 
-// TODO: move to account
 type responseMember struct {
 	ID         uint   `json:"id"`
 	ProfileURL string `json:"profileUrl"`
@@ -145,6 +149,7 @@ func (rc *roomController) Get() gin.HandlerFunc {
 				ProfileURL: member.ProfileURL,
 			})
 		}
+		// TODO: turn Account name populate
 		turnAccountName := "MOCK 어카운트 이름"
 		res := detailResponseRoom{
 			ID:              room.ID,
@@ -199,6 +204,21 @@ func (rc *roomController) Post() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
+		// register RoomPeriodFinCode callback task
+		taskClient := tasks.GetClient()
+		if _, err := rc.taskService.RegisterRoomPeriodFINTask(
+			taskClient,
+			application.GetCurrentURL(c),
+			room.ID,
+			room.TurnAccountID,
+			room.DueAt,
+		); err != nil {
+			logger.Error(err.Error())
+			c.JSON(http.StatusBadRequest, err.Error())
+			return
+		}
+
 		res := postResponseRoom{RoomID: room.ID}
 		c.JSON(http.StatusOK, res)
 	}
@@ -219,12 +239,21 @@ func (p *patchRequestRoom) ToEntity(room *entity.Room) *entity.Room {
 		room.Hint = p.Hint
 	}
 	if p.Period != 0 {
+		// update DueAt, if period is changed
+		// it will applied next turn!
+		beforeDueAt := room.BeforeDueAt()
+		newDueAt := beforeDueAt.Add(entity.PeriodToDuration(p.Period))
 		room.Period = p.Period
+		room.DueAt = &newDueAt
 	}
 	if p.Members != nil {
 		room.Orders = p.Members
 	}
 	return room
+}
+
+func (p *patchRequestRoom) isPeriodChanged() bool {
+	return p.Period != 0
 }
 
 type patchResponseRoom struct {
@@ -280,6 +309,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
+
 		res := patchResponseRoom{RoomID: room.ID}
 		c.JSON(http.StatusOK, res)
 	}

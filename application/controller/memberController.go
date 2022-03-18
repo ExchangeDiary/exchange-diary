@@ -53,6 +53,7 @@ func NewMemberController(memberService service.MemberService) MemberController {
 // @Failure      400
 // @Failure      500
 // @Router       /member/{email} [get]
+// @Security ApiKeyAuth
 func (mc *memberController) Get() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.Param("email")
@@ -83,6 +84,7 @@ func (mc *memberController) Get() gin.HandlerFunc {
 // @Failure      400
 // @Failure      500
 // @Router       /member [post]
+// @Security ApiKeyAuth
 func (mc *memberController) Post() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request memberRequest
@@ -118,6 +120,7 @@ func (mc *memberController) Post() gin.HandlerFunc {
 // @Failure      400
 // @Failure      500
 // @Router       /member [patch]
+// @Security ApiKeyAuth
 func (mc *memberController) Patch() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var request memberRequest
@@ -178,6 +181,7 @@ func patchMember(original *entity.Member, patch memberRequest) *entity.Member {
 // @Failure      400
 // @Failure      500
 // @Router       /member/{email} [delete]
+// @Security ApiKeyAuth
 func (mc *memberController) Delete() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.Param("email")

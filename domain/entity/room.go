@@ -18,11 +18,12 @@ type Room struct {
 	Theme  string
 	Period uint8
 
-	MasterID      uint   // TODO: Member
-	TurnAccountID uint   // TODO: Member
-	Orders        []uint // []Member.ID
+	MasterID      uint
+	TurnAccountID uint
+	Orders        []uint // master + roomMembers
 	Members       *Members
 
+	DueAt     *time.Time
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
 }
@@ -32,9 +33,9 @@ type Rooms []Room
 
 // NewRoom ...
 func NewRoom(masterID uint, name, code, hint, theme string, period uint8) (*Room, error) {
-	// TODO: field validation
-
 	orders := []uint{masterID}
+	// dueAt = now + period
+	dueAt := domain.CurrentDateTime().Add(PeriodToDuration(period))
 	return &Room{
 		Name:          name,
 		Code:          code,
@@ -44,6 +45,7 @@ func NewRoom(masterID uint, name, code, hint, theme string, period uint8) (*Room
 		MasterID:      masterID,
 		TurnAccountID: masterID,
 		Orders:        orders,
+		DueAt:         &dueAt,
 	}, nil
 }
 
@@ -55,6 +57,11 @@ func (r *Room) IsEqual(other *Room) bool {
 // IsMaster returns whether account is a room's master or not
 func (r *Room) IsMaster(accountID uint) bool {
 	return r.MasterID == accountID
+}
+
+// IsTurn returns whether account is a room's turn or not
+func (r *Room) IsTurn(accountID uint) bool {
+	return r.TurnAccountID == accountID
 }
 
 // IsAlreadyJoined determines whether account is master or member of room
@@ -110,4 +117,61 @@ func (r *Room) MemberOnlyOrders() ([]uint, error) {
 		}
 	}
 	return nil, fmt.Errorf("There is no masterID in orders: %+v", r)
+}
+
+// MemberAllExceptTurnAccount returns every members except current turn member.
+func (r *Room) MemberAllExceptTurnAccount() []uint {
+	var orders []uint
+	copier.Copy(&orders, &r.Orders)
+
+	for i, id := range orders {
+		if id == r.TurnAccountID {
+			return append(orders[:i], orders[i+1:]...)
+		}
+	}
+	return nil
+}
+
+// NextTurn set room.TurnAccountID to next-turnAccountID and return it.
+func (r *Room) NextTurn() (nextTurnAccountID uint) {
+	curTurnAccountID := r.TurnAccountID
+
+	if len(r.Orders) == 1 {
+		nextTurnAccountID = curTurnAccountID
+		return
+	}
+
+	var orders []uint
+	copier.Copy(&orders, &r.Orders)
+	for i, accountID := range orders {
+		if accountID == curTurnAccountID {
+			if i == len(r.Orders)-1 {
+				nextTurnAccountID = orders[0]
+			} else {
+				nextTurnAccountID = orders[i+1]
+			}
+			break
+		}
+	}
+	// set entity new turnAccountID
+	r.TurnAccountID = nextTurnAccountID
+	return
+}
+
+// BeforeDueAt returns (current_room_due_at - oldPeriod)
+// It is used for change period
+func (r *Room) BeforeDueAt() *time.Time {
+	nd := r.DueAt.Add(-PeriodToDuration(r.Period))
+	return &nd
+}
+
+// NextDueAt returns room.CreatedAt + period timestamp
+func (r *Room) NextDueAt() *time.Time {
+	nd := r.DueAt.Add(PeriodToDuration(r.Period))
+	return &nd
+}
+
+// PeriodToDuration returns period to time.Duration
+func PeriodToDuration(period uint8) time.Duration {
+	return time.Hour * 24 * time.Duration(period)
 }

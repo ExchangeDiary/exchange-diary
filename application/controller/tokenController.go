@@ -20,7 +20,8 @@ type tokenController struct {
 
 // TokenRequest ...
 type TokenRequest struct {
-	AuthCode string `json:"authCode"`
+	AuthCode    string `json:"authCode"`
+	DeviceToken string `json:"deviceToken"`
 }
 
 // TokenRefreshRequest ...
@@ -56,7 +57,7 @@ func (tc *tokenController) GetToken() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		accessToken, err := tc.service.IssueAccessToken(requestBody.AuthCode)
+		accessToken, err := tc.service.IssueAccessToken(requestBody.AuthCode, requestBody.DeviceToken)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

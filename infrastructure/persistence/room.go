@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
@@ -23,6 +24,7 @@ type RoomGorm struct {
 	MasterID      uint       `gorm:"column:master_id"`
 	Master        MemberGorm `gorm:"column:master_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	TurnAccountID uint       `gorm:"column:turn_account_id"`
+	DueAt         time.Time  `gorm:"column:due_at"`
 	TurnAccount   MemberGorm `gorm:"column:turn_account_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 
 	Orders datatypes.JSON `gorm:"column:orders"`

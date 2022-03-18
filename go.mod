@@ -3,9 +3,11 @@ module github.com/ExchangeDiary/exchange-diary
 go 1.15
 
 require (
+	cloud.google.com/go/cloudtasks v1.3.0
 	cloud.google.com/go/compute v1.5.0 // indirect
 	cloud.google.com/go/iam v0.3.0 // indirect
 	cloud.google.com/go/storage v1.21.0
+	firebase.google.com/go/v4 v4.7.1
 	github.com/gin-contrib/zap v0.0.2
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-openapi/swag v0.21.1 // indirect
@@ -28,7 +30,8 @@ require (
 	golang.org/x/sys v0.0.0-20220307203707-22a9840ba4d7 // indirect
 	golang.org/x/tools v0.1.9 // indirect
 	google.golang.org/api v0.70.0
-	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8 // indirect
+	google.golang.org/genproto v0.0.0-20220304144024-325a89244dc8
+	google.golang.org/protobuf v1.27.1
 	gorm.io/datatypes v1.0.5
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/driver/postgres v1.3.1 // indirect

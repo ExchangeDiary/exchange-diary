@@ -118,8 +118,9 @@ func (ac *authController) Authenticate() gin.HandlerFunc {
 }
 
 type mockMemberRequest struct {
-	Email string `json:"email"`
-	Name  string `json:"name"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	DeviceToken string `json:"deviceToken"`
 }
 
 type mockMemberResponse struct {
@@ -170,7 +171,7 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 			return
 		}
 
-		accessToken, err := ac.tokenService.IssueAccessToken(authCode)
+		accessToken, err := ac.tokenService.IssueAccessToken(authCode, req.DeviceToken)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
