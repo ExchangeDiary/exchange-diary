@@ -8,10 +8,11 @@ RUN apk add git
 
 WORKDIR /go/github.com/ExchangeDiary/exchange-diary
 COPY . .
-RUN go get -u github.com/swaggo/swag/cmd/swag
+# RUN export PATH=$(go env GOPATH)/bin:$PATH
+# RUN go get -u github.com/swaggo/swag/cmd/swag
 RUN go mod tidy
 RUN GO111MODULE=on go build -ldflags="-s -w" -o exchange-diary ./application/cmd/main.go
-RUN swag init -g ./application/cmd/main.go --output=./docs
+# RUN swag init -g ./application/cmd/main.go --output=./docs
 
 # Final Step
 FROM alpine as runtime
