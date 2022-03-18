@@ -321,22 +321,6 @@ const docTemplate = `{
                     "rooms"
                 ],
                 "summary": "List rooms",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "format": "uint",
-                        "description": "page size",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "format": "uint",
-                        "description": "page offset",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",

@@ -407,17 +407,6 @@ paths:
       consumes:
       - application/json
       description: 참여중인 교환일기방 리스트
-      parameters:
-      - description: page size
-        format: uint
-        in: query
-        name: limit
-        type: integer
-      - description: page offset
-        format: uint
-        in: query
-        name: offset
-        type: integer
       produces:
       - application/json
       responses:

@@ -61,8 +61,6 @@ type listResponseRoom struct {
 // @Tags         rooms
 // @Accept       json
 // @Produce      json
-// @Param        limit    query     uint  false  "page size"  Format(uint)
-// @Param        offset    query    uint  false  "page offset"  Format(uint)
 // @Success      200  {object}   listResponseRoom
 // @Failure      400
 // @Router       /rooms [get]
@@ -70,8 +68,7 @@ type listResponseRoom struct {
 func (rc *roomController) GetAll() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
-		limit, offset := application.GetLimitAndOffset(c)
-		rooms, err := rc.roomService.GetAllJoinedRooms(currentMember.ID, limit, offset)
+		rooms, err := rc.roomService.GetAllJoinedRooms(currentMember.ID)
 		if err != nil {
 			logger.Error(err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

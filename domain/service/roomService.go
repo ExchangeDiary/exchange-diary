@@ -11,7 +11,7 @@ import (
 type RoomService interface {
 	Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error)
 	Get(id uint, orderBy entity.RoomMemberOrderBy) (*entity.Room, error)
-	GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error)
+	GetAllJoinedRooms(accountID uint) (*entity.Rooms, error)
 	Update(room *entity.Room) (*entity.Room, error)
 	Delete(room *entity.Room) error
 	JoinRoom(id, accountID uint, code string) (bool, error)
@@ -64,15 +64,15 @@ func (rs *roomService) Get(id uint, orderBy entity.RoomMemberOrderBy) (room *ent
 	return populatedRoom, nil
 }
 
-// SELECT * FROM `rooms` WHERE id IN (memberRoomIDs) OR master_id = accountID ORDER BY  created_at desc  LIMIT limit OFFSET offset;
-func (rs *roomService) GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error) {
+// SELECT * FROM `rooms` WHERE id IN (memberRoomIDs) OR master_id = accountID ORDER BY  created_at desc;
+func (rs *roomService) GetAllJoinedRooms(accountID uint) (*entity.Rooms, error) {
 	// O(1)
 	memberRoomIDs, err := rs.roomMemberService.GetAllRoomIDs(accountID)
 	if err != nil {
 		return nil, err
 	}
 	// O(1)
-	rooms, err := rs.roomRepository.GetAll(accountID, memberRoomIDs, limit, offset)
+	rooms, err := rs.roomRepository.GetAll(accountID, memberRoomIDs)
 	if err != nil {
 		return nil, err
 	}
