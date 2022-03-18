@@ -397,7 +397,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "교환일기방 상세",
+                "description": "교환일기방 상세\nmembers는 교환일기방에 참여한 순서로 정렬된다.",
                 "consumes": [
                     "application/json"
                 ],
@@ -471,7 +471,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "교환일기방 업데이트 (master only)\n1. 작성주기 변경 (period)\n2. 코드/힌트 변경 (code, hint)\n3. 작성순서 변경(orders)",
+                "description": "교환일기방 업데이트 (master only)\n1. 작성주기 변경 (period)\n2. 코드/힌트 변경 (code, hint)\n3. 작성순서 변경(orders) : member id를 array로 넣어주면 된다.",
                 "consumes": [
                     "application/json"
                 ],
@@ -592,6 +592,47 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": ""
+                    },
+                    "400": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/rooms/{id}/orders": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "교환일기방 작성 순서\norders는 교환일기방의 다이어리 작성 순서로 정렬된다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "rooms"
+                ],
+                "summary": "Get room orders",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "uint",
+                        "description": "교환일기방 ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.roomOrderResponse"
+                        }
                     },
                     "400": {
                         "description": ""
@@ -882,9 +923,6 @@ const docTemplate = `{
                 "turnAccountId": {
                     "type": "integer"
                 },
-                "turnAccountName": {
-                    "type": "string"
-                },
                 "updatedAt": {
                     "type": "string"
                 }
@@ -995,7 +1033,7 @@ const docTemplate = `{
                 "hint": {
                     "type": "string"
                 },
-                "members": {
+                "orders": {
                     "type": "array",
                     "items": {
                         "type": "integer"
@@ -1053,6 +1091,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "nickName": {
+                    "type": "string"
+                },
                 "profileUrl": {
                     "type": "string"
                 }
@@ -1084,6 +1125,20 @@ const docTemplate = `{
                 },
                 "updatedAt": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.roomOrderResponse": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.responseMember"
+                    }
+                },
+                "turnAccountId": {
+                    "type": "integer"
                 }
             }
         },

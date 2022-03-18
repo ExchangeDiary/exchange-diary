@@ -10,7 +10,7 @@ import (
 // RoomService ...
 type RoomService interface {
 	Create(masterID uint, name, code, hint, theme string, period uint8) (*entity.Room, error)
-	Get(id uint) (*entity.Room, error)
+	Get(id uint, orderBy entity.RoomMemberOrderBy) (*entity.Room, error)
 	GetAllJoinedRooms(accountID, limit, offset uint) (*entity.Rooms, error)
 	Update(room *entity.Room) (*entity.Room, error)
 	Delete(room *entity.Room) error
@@ -43,11 +43,21 @@ func (rs *roomService) Create(masterID uint, name, code, hint, theme string, per
 	return createdRoom, nil
 }
 
-func (rs *roomService) Get(id uint) (room *entity.Room, err error) {
+func (rs *roomService) Get(id uint, orderBy entity.RoomMemberOrderBy) (room *entity.Room, err error) {
 	if room, err = rs.roomRepository.GetByID(id); err != nil {
 		return nil, err
 	}
-	populatedRoom, err := rs.roomMemberService.PopulateRoomMembers(room)
+
+	var populatedRoom *entity.Room
+	switch orderBy {
+	case entity.JoinedOrder:
+		populatedRoom, err = rs.roomMemberService.PopulateRoomMembers(room)
+	case entity.DiaryOrder:
+		populatedRoom, err = rs.roomMemberService.PopulateMembersByOrders(room)
+	case entity.Ignore:
+		populatedRoom = room
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +103,7 @@ func (rs *roomService) Delete(room *entity.Room) error {
 
 func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 	// get a room
-	room, err := rs.Get(id)
+	room, err := rs.Get(id, entity.JoinedOrder)
 	if err != nil {
 		return false, err
 	}
@@ -122,7 +132,7 @@ func (rs *roomService) JoinRoom(id, accountID uint, code string) (bool, error) {
 
 func (rs *roomService) LeaveRoom(id, accountID uint) error {
 	// get a room
-	room, err := rs.Get(id)
+	room, err := rs.Get(id, entity.JoinedOrder)
 	if err != nil {
 		return err
 	}

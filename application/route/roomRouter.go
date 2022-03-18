@@ -11,6 +11,7 @@ func RoomRoutes(router *gin.RouterGroup, controller controller.RoomController) {
 	{
 		rooms.GET("/", controller.GetAll())
 		rooms.GET("/:room_id", controller.Get())
+		rooms.GET("/:room_id/orders", controller.GetOrders())
 		rooms.POST("/", controller.Post())
 		rooms.PATCH("/:room_id", controller.Patch())
 		rooms.DELETE("/:room_id", controller.Delete())
