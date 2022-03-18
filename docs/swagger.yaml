@@ -659,8 +659,6 @@ paths:
             차이점을 두기 위해서 202로 처리함
         "204":
           description: successfully finished callback task.
-      security:
-      - ApiKeyAuth: []
       summary: Handle Event Task
       tags:
       - tasks
@@ -683,8 +681,6 @@ paths:
             차이점을 두기 위해서 202로 처리함
         "204":
           description: successfully finished callback task.
-      security:
-      - ApiKeyAuth: []
       summary: Mock Handle Event Task
       tags:
       - tasks

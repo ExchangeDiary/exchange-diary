@@ -45,7 +45,6 @@ type taskRequest struct {
 // @Success      202  "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
 // @Success      204 "successfully finished callback task."
 // @Router       /tasks/callback [post]
-// @Security ApiKeyAuth
 func (tc *taskController) HandleEvent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req taskRequest
@@ -80,7 +79,6 @@ func (tc *taskController) HandleEvent() gin.HandlerFunc {
 // @Success      202  "Accepted. It ignore request, because error occured. 정상 처리(204)와 차이점을 두기 위해서 202로 처리함"
 // @Success      204 "successfully finished callback task."
 // @Router       /tasks/mock [post]
-// @Security ApiKeyAuth
 func (tc *taskController) MockEvent() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req taskRequest

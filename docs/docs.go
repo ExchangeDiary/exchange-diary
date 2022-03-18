@@ -680,11 +680,6 @@ const docTemplate = `{
         },
         "/tasks/callback": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "description": "google cloud task에 예약 해두었던, task들을 스케쥴된 일정시간이 지난뒤, 처리해주는 callback handler api endpoint.",
                 "consumes": [
                     "application/json"
@@ -719,11 +714,6 @@ const docTemplate = `{
         },
         "/tasks/mock": {
             "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
