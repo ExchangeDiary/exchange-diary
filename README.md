@@ -1,14 +1,30 @@
-# exchange-diary
+# VODA 📙
 
-> `exchange-diary` backend server
+> VODA is an abbreviation for voice of diary
 
 <div align="center">
-  <img width="250" height="350" src="https://user-images.githubusercontent.com/37536298/153554715-f821d0f8-8f51-4f4c-b9e6-a19e02ecb5c2.png" />
+  <img width="150" height="250" src="https://user-images.githubusercontent.com/37536298/153554715-f821d0f8-8f51-4f4c-b9e6-a19e02ecb5c2.png" />
 </div>
 
-- <strike>[V1 API](./docs/api.md)</strike>
-- <strike>[Features](./docs/features.md)</strike>
-- [Fixed Policy](./docs/fixed_policy.md)
+`VODA` is an app to create an exchange diary.
+You can write your diary by attaching audio, text or images, and you can share it with your friends. For voice recording, you can also modulate your voice to record it if you wish.
+
+`VODA`는 교환일기를 작성하는 앱입니다. 음성 또는 텍스트 또는 이미지들을 첨부하여 당신의 일기를 작성할 수 있으며, 이를 친구들과 공유할 수 있습니다. 음성 녹음의 경우 원한다면 목소리를 변조하여 기록할 수도 있습니다.
+
+더 자세한 정책은 다음에서 확인가능합니다. [about voda policies](./docs/fixed_policy.md)
+
+## Terminology (domain)
+
+- `room` = 교환일기방
+  - `roomMaster` = 교환일기방을 최초로 생성했거나, 양도받아 roomMember에서 승격된 존재
+  - `roomMember` = 특정 교환일기방에 참여하고 있는 멤버
+- `diary` = 교환일기방에 생성되는 교환일기
+- `member` = VODA의 회원 체계
+
+- `alarm` = 교환일기방 알림
+- `task`(event) = 알림에 필요한 이벤트
+- `file` = 교환일기에 사용되는 static file (image / audio)
+- `terms` = 회원가입 시 동의가 필요한 약관
 
 ## Structure
 
