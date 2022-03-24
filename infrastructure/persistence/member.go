@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"errors"
+
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
 	"github.com/jinzhu/copier"
@@ -12,7 +14,7 @@ import (
 type MemberGorm struct {
 	ID         uint   `gorm:"primaryKey"`
 	Email      string `gorm:"column:email;not null"`
-	Name       string `gorm:"column:name;not null"`
+	Name       string `gorm:"column:name;not null;type:varchar(256);uniqueIndex"`
 	ProfileURL string `gorm:"column:profile_url"`
 	AuthType   string `gorm:"column:auth_type"`
 	AlarmFlag  bool   `gorm:"column:alarm_flag"`
@@ -73,6 +75,18 @@ func (r *MemberRepository) Get(id uint) (*entity.Member, error) {
 func (r *MemberRepository) GetByEmail(email string) (*entity.Member, error) {
 	dto := MemberGorm{}
 	if err := r.db.Where("email = ?", email).First(&dto).Error; err != nil {
+		return nil, err
+	}
+	return ToMemberEntity(&dto), nil
+}
+
+// GetByNickName ...
+func (r *MemberRepository) GetByNickName(name string) (*entity.Member, error) {
+	dto := MemberGorm{}
+	if err := r.db.Where("name = ?", name).First(&dto).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ToMemberEntity(&dto), nil
+		}
 		return nil, err
 	}
 	return ToMemberEntity(&dto), nil

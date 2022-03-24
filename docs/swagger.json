@@ -215,6 +215,41 @@
                 }
             }
         },
+        "/member/verify": {
+            "get": {
+                "description": "닉네임이 중복인지 아닌지 검사한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "members"
+                ],
+                "summary": "Member 닉네임 중복 검사",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "nick name to verify",
+                        "name": "nickname",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "500": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/member/{email}": {
             "get": {
                 "security": [

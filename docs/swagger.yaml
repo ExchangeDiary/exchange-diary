@@ -402,6 +402,29 @@ paths:
       summary: Member 조회
       tags:
       - members
+  /member/verify:
+    get:
+      consumes:
+      - application/json
+      description: 닉네임이 중복인지 아닌지 검사한다.
+      parameters:
+      - description: nick name to verify
+        in: query
+        name: nickname
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: ""
+        "400":
+          description: ""
+        "500":
+          description: ""
+      summary: Member 닉네임 중복 검사
+      tags:
+      - members
   /rooms:
     get:
       consumes:
