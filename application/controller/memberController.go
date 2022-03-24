@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -16,6 +17,7 @@ type MemberController interface {
 	Post() gin.HandlerFunc
 	Patch() gin.HandlerFunc
 	Delete() gin.HandlerFunc
+	VerifyName() gin.HandlerFunc // TODO: 추후 verify 요소가 늘어난다면 네이밍 수정
 }
 
 type memberController struct {
@@ -191,5 +193,41 @@ func (mc *memberController) Delete() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 		}
 		c.Status(http.StatusOK)
+	}
+}
+
+// @Summary Member 닉네임 중복 검사
+// @Description	 닉네임이 중복인지 아닌지 검사한다.
+// @Tags         members
+// @Accept       json
+// @Produce      json
+// @Param        nickname    query     string  true  "nick name to verify"
+// @Success      200
+// @Failure      400
+// @Failure      500
+// @Router       /member/verify [get]
+func (mc *memberController) VerifyName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		nickname, isExist := c.GetQuery("nickname")
+		if !isExist {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "nickname query must not be nil"})
+			return
+		}
+
+		ok, err := mc.memberService.VerifyNickName(nickname)
+		if err != nil {
+			logger.Error(err.Error())
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": err.Error(),
+				"error":   true,
+			})
+		}
+
+		if !ok {
+			c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Nickname < %s > is already exist", nickname)})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"code": "ok"})
 	}
 }

@@ -34,3 +34,9 @@ func NewMember(email, name, profileURL string, authType string) (*Member, error)
 func (a *Member) IsEqual(other *Member) bool {
 	return (other.ID == a.ID) && (other.Email == a.Email)
 }
+
+// IsNil check member is nil
+func (a *Member) IsNil() bool {
+	isNull := 0
+	return int(a.ID) == isNull
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/domain/repository"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 )
 
 // MemberService ...
@@ -12,6 +13,7 @@ type MemberService interface {
 	GetByEmail(email string) (*entity.Member, error)
 	Update(member *entity.Member) (*entity.Member, error)
 	Delete(email string) error
+	VerifyNickName(name string) (bool, error)
 }
 
 type memberService struct {
@@ -72,4 +74,14 @@ func (s memberService) Delete(email string) error {
 		return err
 	}
 	return nil
+}
+
+func (s memberService) VerifyNickName(name string) (bool, error) {
+
+	member, err := s.memberRepository.GetByNickName(name)
+	if err != nil {
+		logger.Info(err.Error())
+		return false, err
+	}
+	return member.IsNil(), nil
 }

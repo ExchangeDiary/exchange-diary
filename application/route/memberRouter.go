@@ -13,5 +13,14 @@ func MemberRoutes(router *gin.RouterGroup, controller controller.MemberControlle
 		member.POST("/", controller.Post())
 		member.PATCH("/", controller.Patch())
 		member.DELETE("/:email", controller.Delete())
+
+	}
+}
+
+// MemberNoAuthRoutes does not check jwtMiddleware auth process
+func MemberNoAuthRoutes(router *gin.RouterGroup, controller controller.MemberController) {
+	member := router.Group("/member")
+	{
+		member.GET("/verify", controller.VerifyName())
 	}
 }
