@@ -71,7 +71,7 @@ func GetClient() *Client {
 }
 
 // Push ...
-func (c *Client) Push(deviceTokens []string, messageBody *vo.AlarmBody) (failedTokens []string, err error) {
+func (c *Client) Push(deviceTokens []string, messageBody *vo.Alarm) (failedTokens []string, err error) {
 	var batchResponse *messaging.BatchResponse
 	messagePayload := messageBody.ConvertToMap()
 	message := &messaging.MulticastMessage{
