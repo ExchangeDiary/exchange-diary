@@ -97,6 +97,7 @@ func bootstrap() *gin.Engine {
 	roomMemberRepository := persistence.NewRoomMemberRepository(db)
 	memberRepository := persistence.NewMemberRepository(db)
 	memberDeviceRepository := persistence.NewMemberDeviceRepository(db)
+	alarmRepository := persistence.NewAlarmRepository(db)
 
 	roomMemberService := service.NewRoomMemberService(roomMemberRepository, memberRepository)
 	memberService := service.NewMemberService(memberRepository)
@@ -105,7 +106,7 @@ func bootstrap() *gin.Engine {
 	refreshTokenVerifier := service.NewTokenVerifier(service.AccessTokenSecretKey)
 	tokenService := service.NewTokenService(memberService, authCodeVerifier, refreshTokenVerifier, memberDeviceRepository)
 	fileService := service.NewFileService()
-	alarmService := service.NewAlarmService(memberService, memberDeviceRepository)
+	alarmService := service.NewAlarmService(memberService, memberDeviceRepository, alarmRepository)
 	taskService := service.NewTaskService(alarmService, roomService, memberService)
 
 	memberController := controller.NewMemberController(memberService)
@@ -114,6 +115,7 @@ func bootstrap() *gin.Engine {
 	roomController := controller.NewRoomController(roomService, taskService)
 	fileController := controller.NewFileController(fileService)
 	taskController := controller.NewTaskController(taskService, memberService)
+	alarmController := controller.NewAlarmController(alarmService, memberService)
 
 	authenticationFilter := middleware.NewAuthenticationFilter(authCodeVerifier)
 
@@ -138,6 +140,7 @@ func bootstrap() *gin.Engine {
 	route.RoomRoutes(v1, roomController)
 	route.MemberRoutes(v1, memberController)
 	route.FileRoutes(v1, fileController)
+	route.AlarmRoutes(v1, alarmController)
 
 	return server
 }

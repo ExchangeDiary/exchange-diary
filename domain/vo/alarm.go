@@ -6,8 +6,8 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/domain"
 )
 
-// AlarmBody represents alarm body
-type AlarmBody struct {
+// Alarm represents alarm body
+type Alarm struct {
 	RoomID         uint
 	Code           string
 	RoomName       string
@@ -15,9 +15,9 @@ type AlarmBody struct {
 	AuthorNickName string
 }
 
-// NewAlarmBody ...
-func NewAlarmBody(roomID uint, code TaskCode, roomName, diaryTitle, authorNickname string) *AlarmBody {
-	return &AlarmBody{
+// NewAlarm ...
+func NewAlarm(roomID uint, code TaskCode, roomName, diaryTitle, authorNickname string) *Alarm {
+	return &Alarm{
 		RoomID:         roomID,
 		Code:           string(code),
 		RoomName:       roomName,
@@ -26,8 +26,8 @@ func NewAlarmBody(roomID uint, code TaskCode, roomName, diaryTitle, authorNickna
 	}
 }
 
-// ConvertToMap converts AlarmBody to map type
-func (ab *AlarmBody) ConvertToMap() (alarmMap map[string]string) {
+// ConvertToMap converts Alarm to map type
+func (ab *Alarm) ConvertToMap() (alarmMap map[string]string) {
 	now := domain.CurrentDateTime()
 	switch ab.Code {
 	case MemberOnDutyCode:
