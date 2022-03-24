@@ -134,7 +134,7 @@ func bootstrap() *gin.Engine {
 	route.AuthRoutes(v1, authController)
 	route.TokenRoutes(v1, tokenController)
 	route.TaskRoutes(v1, taskController)
-
+	route.MemberNoAuthRoutes(v1, memberController)
 	v1.Use(authenticationFilter.Authenticate())
 
 	route.RoomRoutes(v1, roomController)
