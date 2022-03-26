@@ -36,13 +36,15 @@ type responseAlarm struct {
 	Author   string     `json:"author"`
 }
 
-// TODO: order by datetime
+// AlarmListResponse ...
 type AlarmListResponse struct {
 	Alarms []responseAlarm `json:"alarms"`
 }
 
 // @Summary      List alarms
 // @Description  현재 로그인한 사용자의 알람 리스트
+// @Description  * 교환일기 방의 주기에 따라 알람은 삭제된다. 즉 턴이 변경되면 알림들 제거 된다.
+// @Description  * 실제 구현은 알람 생성 시 (room & member * code)유니크 검사를 통해서 중복 되는 알림코드는 제거 함으로써, 알람 row 숫자를 관리한다.
 // @Tags         alarms
 // @Accept       json
 // @Produce      json
@@ -66,7 +68,7 @@ func (ac *alarmController) List() gin.HandlerFunc {
 				Code:     a.Code,
 				Title:    a.Title,
 				RoomName: a.RoomName,
-				AlarmAt:  a.CreatedAt,
+				AlarmAt:  a.AlarmAt,
 				Author:   a.Author,
 			})
 		}

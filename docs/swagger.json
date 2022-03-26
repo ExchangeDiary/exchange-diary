@@ -17,6 +17,40 @@
     "host": "exchange-diary-b4mzhzbzcq-du.a.run.app",
     "basePath": "/v1",
     "paths": {
+        "/alarms": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "현재 로그인한 사용자의 알람 리스트\n* 교환일기 방의 주기에 따라 알람은 삭제된다. 즉 턴이 변경되면 알림들 제거 된다.\n* 실제 구현은 알람 생성 시 (room \u0026 member * code)유니크 검사를 통해서 중복 되는 알림코드는 제거 함으로써, 알람 row 숫자를 관리한다.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "alarms"
+                ],
+                "summary": "List alarms",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.AlarmListResponse"
+                        }
+                    },
+                    "400": {
+                        "description": ""
+                    },
+                    "401": {
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/authentication/login/{auth_type}": {
             "get": {
                 "description": "해당 auth_type의 login form을 기입 후, redirect되는 곳으로 기입한 email 그리고 요청한 auth_type에 대한 auth code를 발급한다.\n클라이언트 URL에 query string으로 auth code가 담긴 채로 redirect하여 로그인 및 회원가입이 진행되도록 한다.",
@@ -880,6 +914,17 @@
         }
     },
     "definitions": {
+        "controller.AlarmListResponse": {
+            "type": "object",
+            "properties": {
+                "alarms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controller.responseAlarm"
+                    }
+                }
+            }
+        },
         "controller.TokenRefreshRequest": {
             "type": "object",
             "properties": {
@@ -1097,6 +1142,26 @@
                 }
             }
         },
+        "controller.responseAlarm": {
+            "type": "object",
+            "properties": {
+                "alarmAt": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "roomName": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "controller.responseMember": {
             "type": "object",
             "properties": {
@@ -1168,7 +1233,6 @@
                     ]
                 },
                 "email": {
-                    "description": "TODO: oidc에서 member_email 까보자.",
                     "type": "string"
                 },
                 "room_id": {

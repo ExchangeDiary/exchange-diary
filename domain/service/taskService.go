@@ -126,6 +126,7 @@ func (ts *taskService) RegisterRoomPeriodFINTask(c *tasks.Client, baseURL string
 	); err != nil {
 		return "", err
 	}
+
 	return task.Name, nil
 }
 
@@ -135,8 +136,17 @@ func (ts *taskService) DoMemberOnDutyTask(roomID uint, email string) (err error)
 		return err
 	}
 
-	al := vo.NewAlarm(roomID, vo.MemberOnDutyCode, room.Name, "", "")
-	if err = ts.alarmService.PushByEmail(email, al); err != nil {
+	member, err := ts.memberService.GetByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	alarm, err := ts.alarmService.Create(member.ID, roomID, vo.MemberOnDutyCode, room.Name, "", "")
+	if err != nil {
+		return err
+	}
+
+	if err = ts.alarmService.PushByEmail(email, alarm); err != nil {
 		return
 	}
 	return
@@ -147,8 +157,17 @@ func (ts *taskService) DoMemberBeforeTask(roomID uint, email string, code vo.Tas
 	if err != nil {
 		return err
 	}
-	al := vo.NewAlarm(roomID, code, room.Name, "", "")
-	if err = ts.alarmService.PushByEmail(email, al); err != nil {
+
+	member, err := ts.memberService.GetByEmail(email)
+	if err != nil {
+		return err
+	}
+
+	alarm, err := ts.alarmService.Create(member.ID, roomID, code, room.Name, "", "")
+	if err != nil {
+		return err
+	}
+	if err = ts.alarmService.PushByEmail(email, alarm); err != nil {
 		return
 	}
 	return
@@ -166,8 +185,11 @@ func (ts *taskService) DoMemberPostedDiaryTask(roomID uint, baseURL string) erro
 		return err
 	}
 
-	al := vo.NewAlarm(roomID, vo.MemberPostedDiaryCode, room.Name, mockDiaryTitle, member.Name)
-	if err = ts.alarmService.BroadCast(room.MemberAllExceptTurnAccount(), al); err != nil {
+	alarm, err := ts.alarmService.Create(member.ID, roomID, vo.MemberPostedDiaryCode, room.Name, mockDiaryTitle, member.Name)
+	if err != nil {
+		return err
+	}
+	if err = ts.alarmService.BroadCast(room.MemberAllExceptTurnAccount(), alarm); err != nil {
 		return err
 	}
 
