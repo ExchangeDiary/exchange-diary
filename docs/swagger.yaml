@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  controller.AlarmListResponse:
+    properties:
+      alarms:
+        items:
+          $ref: '#/definitions/controller.responseAlarm'
+        type: array
+    type: object
   controller.TokenRefreshRequest:
     properties:
       refreshToken:
@@ -142,6 +149,19 @@ definitions:
       roomId:
         type: integer
     type: object
+  controller.responseAlarm:
+    properties:
+      alarmAt:
+        type: string
+      author:
+        type: string
+      code:
+        type: string
+      roomName:
+        type: string
+      title:
+        type: string
+    type: object
   controller.responseMember:
     properties:
       id:
@@ -190,7 +210,6 @@ definitions:
         - MEMBER_POSTED_DIARY
         type: string
       email:
-        description: 'TODO: oidc에서 member_email 까보자.'
         type: string
       room_id:
         type: integer
@@ -220,6 +239,30 @@ info:
   title: Voice Of Diary API (voda)
   version: "1.0"
 paths:
+  /alarms:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        현재 로그인한 사용자의 알람 리스트
+        * 교환일기 방의 주기에 따라 알람은 삭제된다. 즉 턴이 변경되면 알림들 제거 된다.
+        * 실제 구현은 알람 생성 시 (room & member * code)유니크 검사를 통해서 중복 되는 알림코드는 제거 함으로써, 알람 row 숫자를 관리한다.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.AlarmListResponse'
+        "400":
+          description: ""
+        "401":
+          description: ""
+      security:
+      - ApiKeyAuth: []
+      summary: List alarms
+      tags:
+      - alarms
   /authentication/login/{auth_type}:
     get:
       consumes:

@@ -32,7 +32,7 @@ func NewTaskController(ts service.TaskService, ms service.MemberService) TaskCon
 
 type taskRequest struct {
 	RoomID uint        `json:"room_id"`
-	Email  string      `json:"email"` // TODO: oidc에서 member_email 까보자.
+	Email  string      `json:"email"`
 	Code   vo.TaskCode `json:"code" enums:"ROOM_PERIOD_FIN,MEMBER_ON_DUTY,MEMBER_BEFORE_1HR,MEMBER_BEFORE_4HR,MEMBER_POSTED_DIARY"`
 }
 
