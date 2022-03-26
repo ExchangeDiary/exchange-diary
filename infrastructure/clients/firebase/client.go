@@ -11,7 +11,7 @@ import (
 
 	fb "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
-	"github.com/ExchangeDiary/exchange-diary/domain/vo"
+	"github.com/ExchangeDiary/exchange-diary/domain/entity"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
 	"google.golang.org/api/option"
@@ -71,9 +71,9 @@ func GetClient() *Client {
 }
 
 // Push ...
-func (c *Client) Push(deviceTokens []string, messageBody *vo.Alarm) (failedTokens []string, err error) {
+func (c *Client) Push(deviceTokens []string, messageBody *entity.Alarm) (failedTokens []string, err error) {
 	var batchResponse *messaging.BatchResponse
-	messagePayload := messageBody.ConvertToMap()
+	messagePayload := messageBody.ToMap()
 	message := &messaging.MulticastMessage{
 		Data:   messagePayload,
 		Tokens: deviceTokens,

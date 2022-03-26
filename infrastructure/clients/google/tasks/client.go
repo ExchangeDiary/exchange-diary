@@ -110,7 +110,6 @@ func (c *Client) RegisterTask(task *taskspb.Task) (*taskspb.Task, error) {
 		Parent: c.queuePath,
 		Task:   task,
 	}
-
 	registeredTask, err := c.client.CreateTask(c.ctx, req)
 	if err != nil {
 		return nil, fmt.Errorf("cloudtasks.CreateTask: %v", err)
