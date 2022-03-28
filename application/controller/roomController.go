@@ -71,7 +71,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 		rooms, err := rc.roomService.GetAllJoinedRooms(currentMember.ID)
 		if err != nil {
 			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 		roomsResponse := []responseRoom{}
@@ -93,7 +93,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 				UpdatedAt: room.UpdatedAt,
 			})
 		}
-		c.JSON(http.StatusOK, listResponseRoom{Rooms: roomsResponse})
+		application.SuccessResponse(c, listResponseRoom{Rooms: roomsResponse})
 	}
 }
 
@@ -127,18 +127,16 @@ func (rc *roomController) Get() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 		room, err := rc.roomService.Get(roomID, entity.JoinedOrder)
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 		if !room.IsAlreadyJoined(currentMember.ID) {
-			c.JSON(http.StatusUnauthorized, "Only member or master can access")
+			application.FailResponse(c, application.OnlyMemberOrMasterErr, "Only member or master can access")
 			return
 		}
 
@@ -186,14 +184,12 @@ func (rc *roomController) GetOrders() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 		room, err := rc.roomService.Get(roomID, entity.DiaryOrder)
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 		if !room.IsAlreadyJoined(currentMember.ID) {
@@ -337,8 +333,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 
@@ -381,8 +376,7 @@ func (rc *roomController) Delete() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 
@@ -435,8 +429,7 @@ func (rc *roomController) Join() gin.HandlerFunc {
 		}
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 
@@ -472,8 +465,7 @@ func (rc *roomController) Leave() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 		if err := rc.roomService.LeaveRoom(roomID, currentMember.ID); err != nil {
