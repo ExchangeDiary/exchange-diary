@@ -73,5 +73,6 @@ func (ac *alarmController) List() gin.HandlerFunc {
 			})
 		}
 		c.JSON(http.StatusOK, AlarmListResponse{Alarms: rep})
+
 	}
 }

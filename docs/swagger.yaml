@@ -1,5 +1,24 @@
 basePath: /v1
 definitions:
+  application.JSONBadResponse:
+    properties:
+      code:
+        example: 40001
+        type: integer
+      message:
+        example: 4xx errors
+        type: string
+    type: object
+  application.JSONSuccessResponse:
+    properties:
+      code:
+        example: 200
+        type: integer
+      data: {}
+      message:
+        example: Ok
+        type: string
+    type: object
   controller.AlarmListResponse:
     properties:
       alarms:
@@ -479,9 +498,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/controller.listResponseRoom'
-        "400":
-          description: ""
+            allOf:
+            - $ref: '#/definitions/application.JSONSuccessResponse'
+            - properties:
+                code:
+                  type: integer
+                data:
+                  $ref: '#/definitions/controller.listResponseRoom'
+                message:
+                  type: string
+              type: object
+        "400101":
+          description: 엔티티낫파운드
+          schema:
+            allOf:
+            - $ref: '#/definitions/application.JSONBadResponse'
+            - properties:
+                code:
+                  type: integer
+                message:
+                  type: string
+              type: object
       security:
       - ApiKeyAuth: []
       summary: List rooms

@@ -8,7 +8,19 @@ const (
 )
 
 const (
-	EntityNotFound = 400001
+	EntityNotFoundErr              = 400001
+	EmptyParameterErr              = 400002
+	InvalidRequestBodyErr          = 400003
+	CannotCreateErr                = 400004
+	TaskRoomPeriodFINCreateErr     = 400005
+	TaskMemberOnDutyCreateErr      = 400006
+	TaskMemberBefore1HRCreateErr   = 400007
+	TaskMemberBefore4HRCreateErr   = 400008
+	TaskMemberPostedDiaryCreateErr = 400009
+
+	OnlyMemberErr         = 401001
+	OnlyMasterErr         = 401002
+	OnlyMemberOrMasterErr = 401003
 
 	StatusInternalServerError           = 500 // RFC 7231, 6.6.1
 	StatusNotImplemented                = 501 // RFC 7231, 6.6.2

@@ -387,11 +387,47 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.listResponseRoom"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/application.JSONSuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "integer"
+                                        },
+                                        "data": {
+                                            "$ref": "#/definitions/controller.listResponseRoom"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
-                    "400": {
-                        "description": ""
+                    "400101": {
+                        "description": "엔티티낫파운드",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/application.JSONBadResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "code": {
+                                            "type": "integer"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
                     }
                 }
             },
@@ -914,6 +950,33 @@
         }
     },
     "definitions": {
+        "application.JSONBadResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 40001
+                },
+                "message": {
+                    "type": "string",
+                    "example": "4xx errors"
+                }
+            }
+        },
+        "application.JSONSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "data": {},
+                "message": {
+                    "type": "string",
+                    "example": "Ok"
+                }
+            }
+        },
         "controller.AlarmListResponse": {
             "type": "object",
             "properties": {
