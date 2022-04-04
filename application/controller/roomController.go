@@ -61,8 +61,9 @@ type listResponseRoom struct {
 // @Tags         rooms
 // @Accept       json
 // @Produce      json
-// @Success      200  {object}   listResponseRoom
-// @Failure      400
+// @Success      200  {object}   application.JSONSuccessResponse{data=listResponseRoom,code=int,message=string}
+// @Failure      400001  {object}   application.JSONBadResponse{code=int,message=string} "EntityNotFoundErr"
+// @Failure      500  {object}   application.JSONServerErrResponse{code=int,message=string}
 // @Router       /rooms [get]
 // @Security ApiKeyAuth
 func (rc *roomController) GetAll() gin.HandlerFunc {
@@ -71,7 +72,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 		rooms, err := rc.roomService.GetAllJoinedRooms(currentMember.ID)
 		if err != nil {
 			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 		roomsResponse := []responseRoom{}
@@ -93,7 +94,7 @@ func (rc *roomController) GetAll() gin.HandlerFunc {
 				UpdatedAt: room.UpdatedAt,
 			})
 		}
-		c.JSON(http.StatusOK, listResponseRoom{Rooms: roomsResponse})
+		application.Ok(c, listResponseRoom{Rooms: roomsResponse})
 	}
 }
 
@@ -118,8 +119,11 @@ type detailResponseRoom struct {
 // @Accept       json
 // @Produce      json
 // @Param        id    path     int  true  "교환일기방 ID"  Format(uint)
-// @Success      200  {object}   detailResponseRoom
-// @Failure      400
+// @Success      200  {object}   application.JSONSuccessResponse{data=detailResponseRoom,code=int,message=string}
+// @Failure      400001  {object}   application.JSONBadResponse{code=int,message=string} "EntityNotFoundErr"
+// @Failure      400002  {object}   application.JSONBadResponse{code=int,message=string} "EmptyParameterErr"
+// @Failure      401003  {object}   application.JSONBadResponse{code=int,message=string} "OnlyMemberOrMasterErr"
+// @Failure      500  {object}   application.JSONServerErrResponse{code=int,message=string}
 // @Router       /rooms/{id} [get]
 // @Security ApiKeyAuth
 func (rc *roomController) Get() gin.HandlerFunc {
@@ -127,18 +131,16 @@ func (rc *roomController) Get() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 		room, err := rc.roomService.Get(roomID, entity.JoinedOrder)
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 		if !room.IsAlreadyJoined(currentMember.ID) {
-			c.JSON(http.StatusUnauthorized, "Only member or master can access")
+			application.FailResponse(c, application.OnlyMemberOrMasterErr, "Only member or master can access")
 			return
 		}
 
@@ -161,7 +163,7 @@ func (rc *roomController) Get() gin.HandlerFunc {
 			UpdatedAt:     room.UpdatedAt,
 			IsMaster:      room.IsMaster(currentMember.ID),
 		}
-		c.JSON(http.StatusOK, res)
+		application.Ok(c, res)
 	}
 }
 
@@ -178,7 +180,11 @@ type roomOrderResponse struct {
 // @Produce      json
 // @Param        id    path     int  true  "교환일기방 ID"  Format(uint)
 // @Success      200  {object}   roomOrderResponse
-// @Failure      400
+// @Success      200  {object}   application.JSONSuccessResponse{data=detailResponseRoom,code=int,message=string}
+// @Failure      400001  {object}   application.JSONBadResponse{code=int,message=string} "EntityNotFoundErr"
+// @Failure      400002  {object}   application.JSONBadResponse{code=int,message=string} "EmptyParameterErr"
+// @Failure      401003  {object}   application.JSONBadResponse{code=int,message=string} "OnlyMemberOrMasterErr"
+// @Failure      500  {object}   application.JSONServerErrResponse{code=int,message=string}
 // @Router       /rooms/{id}/orders [get]
 // @Security ApiKeyAuth
 func (rc *roomController) GetOrders() gin.HandlerFunc {
@@ -186,18 +192,16 @@ func (rc *roomController) GetOrders() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 		room, err := rc.roomService.Get(roomID, entity.DiaryOrder)
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 		if !room.IsAlreadyJoined(currentMember.ID) {
-			c.JSON(http.StatusUnauthorized, "Only member or master can access room orders")
+			application.FailResponse(c, application.OnlyMemberOrMasterErr, "Only member or master can access room orders")
 			return
 		}
 
@@ -214,7 +218,7 @@ func (rc *roomController) GetOrders() gin.HandlerFunc {
 			Members:       &members,
 			TurnAccountID: room.TurnAccountID,
 		}
-		c.JSON(http.StatusOK, res)
+		application.Ok(c, res)
 	}
 }
 
@@ -245,14 +249,13 @@ func (rc *roomController) Post() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req postRequestRoom
 		if err := c.BindJSON(&req); err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.InvalidRequestBodyErr, err.Error())
 			return
 		}
 		room, err := rc.roomService.Create(currentMember.ID, req.Name, req.Code, req.Hint, req.Theme, req.Period)
 		if err != nil {
 			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.CannotCreateErr, err.Error())
 			return
 		}
 
@@ -266,12 +269,12 @@ func (rc *roomController) Post() gin.HandlerFunc {
 			room.DueAt,
 		); err != nil {
 			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.TaskRoomPeriodFINCreateErr, err.Error())
 			return
 		}
 
 		res := postResponseRoom{RoomID: room.ID}
-		c.JSON(http.StatusOK, res)
+		application.Ok(c, res)
 	}
 }
 
@@ -330,25 +333,23 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		var req patchRequestRoom
 		if err := c.BindJSON(&req); err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.InvalidRequestBodyErr, err.Error())
 			return
 		}
 
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 
 		room, err := rc.roomService.Get(roomID, entity.Ignore)
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, err.Error())
+			application.FailResponse(c, application.EntityNotFoundErr, err.Error())
 			return
 		}
 
+		// TODO: 여기부터 처리할것
 		if !room.IsMaster(currentMember.ID) {
 			c.JSON(http.StatusUnauthorized, "Only master can patch room")
 			return
@@ -362,7 +363,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 		}
 
 		res := patchResponseRoom{RoomID: room.ID}
-		c.JSON(http.StatusOK, res)
+		application.Ok(c, res)
 	}
 }
 
@@ -372,7 +373,7 @@ func (rc *roomController) Patch() gin.HandlerFunc {
 // @Accept       json
 // @Produce      json
 // @Param        id  path 	int  true "교환일기방 ID"
-// @Success      204
+// @Success      204	"NO CONTENT"
 // @Failure      400
 // @Router       /rooms/{id} [delete]
 // @Security ApiKeyAuth
@@ -381,8 +382,7 @@ func (rc *roomController) Delete() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 
@@ -404,7 +404,7 @@ func (rc *roomController) Delete() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
-		c.Status(http.StatusNoContent)
+		application.NoConent(c)
 	}
 }
 
@@ -435,8 +435,7 @@ func (rc *roomController) Join() gin.HandlerFunc {
 		}
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 
@@ -451,7 +450,7 @@ func (rc *roomController) Join() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, err.Error())
 			return
 		}
-		c.Status(http.StatusCreated)
+		application.Created(c, nil)
 	}
 }
 
@@ -472,8 +471,7 @@ func (rc *roomController) Leave() gin.HandlerFunc {
 		currentMember := c.MustGet(application.CurrentMemberKey).(application.CurrentMemberDTO)
 		roomID, err := application.ParseUint(c.Param("room_id"))
 		if err != nil {
-			logger.Error(err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			application.FailResponse(c, application.EmptyParameterErr, err.Error())
 			return
 		}
 		if err := rc.roomService.LeaveRoom(roomID, currentMember.ID); err != nil {
@@ -481,6 +479,6 @@ func (rc *roomController) Leave() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, err.Error())
 			return
 		}
-		c.Status(http.StatusNoContent)
+		application.NoConent(c)
 	}
 }

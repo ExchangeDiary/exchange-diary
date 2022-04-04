@@ -3,7 +3,7 @@ db-config:
   port: 3306
   user: "root"
   name: "voda"
-  password: "root"
+  password: "wpalsdnr1!"
 
 client:
   kakao:
