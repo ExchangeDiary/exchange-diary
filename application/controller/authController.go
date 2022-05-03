@@ -3,7 +3,10 @@ package controller
 import (
 	"context"
 	"fmt"
+	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/apple"
+	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/ExchangeDiary/exchange-diary/application"
 	"github.com/ExchangeDiary/exchange-diary/domain/service"
@@ -11,8 +14,8 @@ import (
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/clients/kakao"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/configs"
 	"github.com/ExchangeDiary/exchange-diary/infrastructure/logger"
+	appleOAuth "github.com/Timothylock/go-signin-with-apple/apple"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 	googleOAuth "golang.org/x/oauth2/google"
 	kakaoOAuth "golang.org/x/oauth2/kakao"
@@ -24,7 +27,6 @@ const defaultRedirectURL = "/v1/authentication/authenticated"
 
 // AuthController ...
 type AuthController interface {
-	Redirect() gin.HandlerFunc
 	Login() gin.HandlerFunc
 	Authenticate() gin.HandlerFunc
 	MockRegister() gin.HandlerFunc
@@ -34,6 +36,7 @@ type authController struct {
 	client          configs.Client
 	kakaoOAuthConf  oauth2.Config
 	googleOAuthConf oauth2.Config
+	appleOAuthConf  configs.AppleAuthConfig
 	memberService   service.MemberService
 	tokenService    service.TokenService
 }
@@ -57,38 +60,16 @@ func NewAuthController(client configs.Client, memberService service.MemberServic
 				googleApiOauth.UserinfoEmailScope,
 			},
 		},
-		memberService: memberService,
-		tokenService:  tokenService,
-	}
-}
-
-// @Summary      LoginForm Redirect
-// @Description	 요청한 auth_type의 login form URL로 redirect됩니다.
-// @Tags         auth
-// @Accept       json
-// @Produce      json
-// @Param        auth_type  path string  true  "kakao | google | apple"
-// @Success      301
-// @Failure      400
-// @Failure      500
-// @Router       /login/{auth_type} [get]
-func (ac *authController) Redirect() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		redirectURL := ""
-		switch c.Param("auth_type") {
-		case kakao.AuthType:
-			redirectURL = kakaoLoginURL(&ac.kakaoOAuthConf)
-		case google.AuthType:
-			redirectURL = googleLoginURL(&ac.googleOAuthConf)
-		}
-		logger.Info("Redirect login is accepted", zap.String("redirectURL", redirectURL))
-		c.Redirect(http.StatusMovedPermanently, redirectURL)
+		appleOAuthConf: client.Apple.Oauth,
+		memberService:  memberService,
+		tokenService:   tokenService,
 	}
 }
 
 // @Summary      Login
-// @Description	 해당 auth_type의 login form을 기입 후, redirect되는 곳으로 기입한 email 그리고 요청한 auth_type에 대한 auth code를 발급한다.
-// @Description  클라이언트 URL에 query string으로 auth code가 담긴 채로 redirect하여 로그인 및 회원가입이 진행되도록 한다.
+// @Description	 해당 auth_type과 각 vendor의 token이나 auth code 주어지면 email과 요청한 auth_type에 대한 auth code를 발급한다.
+// @Description  kako: "Authorization" header -> Bearer token,
+// @Description  google, apple: querystring "code" -> auth code,
 // @Tags         auth
 // @Accept       json
 // @Produce      json
@@ -104,6 +85,8 @@ func (ac *authController) Login() gin.HandlerFunc {
 			ac.kakaoLogin(c)
 		case google.AuthType:
 			ac.googleLogin(c)
+		case apple.AuthType:
+			ac.appleLogin(c)
 		}
 	}
 }
@@ -193,17 +176,20 @@ func (ac *authController) MockRegister() gin.HandlerFunc {
 }
 
 func (ac *authController) kakaoLogin(c *gin.Context) {
-	code := c.Query("code")
-	logger.Info("kakao login code: " + code)
-	token, err := ac.kakaoOAuthConf.Exchange(context.Background(), code)
-
-	if err != nil {
-		logger.Error(err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	auth := c.Request.Header.Get("Authorization")
+	if auth == "" {
+		c.String(http.StatusForbidden, "No Authorization header provided")
+		c.Abort()
 		return
 	}
-	client := ac.kakaoOAuthConf.Client(context.Background(), token)
-	kakaoClient := kakao.NewClient(ac.client.Kakao.BaseURL, client)
+	token := strings.TrimPrefix(auth, "Bearer ")
+	if token == auth {
+		c.String(http.StatusForbidden, "Could not find bearer token in Authorization header")
+		c.Abort()
+		return
+	}
+
+	kakaoClient := kakao.NewClient(ac.client.Kakao.BaseURL, token)
 
 	kakaoUser, err := kakaoClient.GetKakaoUserInfo()
 	if err != nil {
@@ -225,9 +211,8 @@ func (ac *authController) kakaoLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// TODO: domain 주소 env로 빼기
-	//c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("https://exchange-diary-b4mzhzbzcq-du.a.run.app%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+
+	c.JSON(http.StatusOK, gin.H{"auth_code": authCode})
 }
 
 func (ac *authController) googleLogin(c *gin.Context) {
@@ -268,15 +253,61 @@ func (ac *authController) googleLogin(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	// TODO: domain 주소 env로 빼기
-	//c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("http://localhost:8080%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
-	c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("https://exchange-diary-b4mzhzbzcq-du.a.run.app%s?%s=%s", defaultRedirectURL, application.AuthCodeKey, authCode))
+
+	c.JSON(http.StatusOK, gin.H{"auth_code": authCode})
 }
 
-func kakaoLoginURL(kakaoOAuth *oauth2.Config) string {
-	return kakaoOAuth.AuthCodeURL("state", oauth2.AccessTypeOnline)
-}
+func (ac *authController) appleLogin(c *gin.Context) {
+	code := c.Query("code")
+	logger.Info(fmt.Sprintf("apple login code is < %s >", code))
 
-func googleLoginURL(googleOauth *oauth2.Config) string {
-	return googleOauth.AuthCodeURL("state", oauth2.AccessTypeOnline)
+	authKey, err := ioutil.ReadFile(ac.appleOAuthConf.KeyPath)
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	secret, err := appleOAuth.GenerateClientSecret(string(authKey), ac.appleOAuthConf.TeamId, ac.appleOAuthConf.ClientID, ac.appleOAuthConf.KeyID)
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	client := appleOAuth.New()
+
+	req := appleOAuth.AppValidationTokenRequest{
+		ClientID:     ac.appleOAuthConf.ClientID,
+		ClientSecret: secret,
+		Code:         code,
+	}
+	var resp appleOAuth.ValidationResponse
+
+	err = client.VerifyAppToken(context.Background(), req, &resp)
+	if err != nil {
+		c.String(http.StatusUnauthorized, "Verification failed")
+		c.Abort()
+		return
+	}
+
+	claim, _ := appleOAuth.GetClaims(resp.IDToken)
+
+	email := fmt.Sprintf("%v", (*claim)["email"])
+
+	member, err := ac.memberService.GetByEmail(email)
+
+	// When the user try to login with registered email and different authType.
+	if member != nil && member.AuthType != apple.AuthType {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The account is already registered"})
+		return
+	}
+
+	authCode, err := ac.tokenService.IssueAuthCode(email, apple.AuthType)
+	if err != nil {
+		logger.Error(err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"auth_code": authCode})
 }

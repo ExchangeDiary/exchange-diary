@@ -30,6 +30,7 @@ type DBConfig struct {
 type Client struct {
 	Kakao  Kakao  `mapstructure:"kakao"`
 	Google Google `mapstructure:"google"`
+	Apple  Apple  `mapstructure:"apple"`
 }
 
 // OAuthConfig ...
@@ -37,6 +38,15 @@ type OAuthConfig struct {
 	ClientID     string `mapstructure:"client-id"`
 	ClientSecret string `mapstructure:"client-secret"`
 	RedirectURL  string `mapstructure:"redirect-url"`
+}
+
+type AppleAuthConfig struct {
+	AuthURL     string `mapstructure:"auth-url"`
+	TeamId      string `mapstructure:"team-id"`
+	ClientID    string `mapstructure:"client-id"`
+	KeyID       string `mapstructure:"key-id"`
+	KeyPath     string `mapstructure:"key-path"`
+	RedirectURL string `mapstructure:"redirect-url"`
 }
 
 // Kakao ...
@@ -48,6 +58,11 @@ type Kakao struct {
 // Google ...
 type Google struct {
 	Oauth OAuthConfig `mapstructure:"oauth"`
+}
+
+// Apple ...
+type Apple struct {
+	Oauth AppleAuthConfig `mapstructure:"auth"`
 }
 
 // Load ...
