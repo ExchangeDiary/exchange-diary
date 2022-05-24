@@ -17,3 +17,11 @@ client:
       client-id: "178025470998-4n07sql4vqnpsak3ggs5jg0lnk70uh0l.apps.googleusercontent.com"
       client-secret: "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"
       redirect-url: "https://exchange-diary-b4mzhzbzcq-du.a.run.app/v1/authentication/login/google"
+  apple:
+    auth:
+      auth-url: "https://appleid.apple.com"
+      team-id: "KT2XM3Z9DZ"
+      client-id: "com.catdiary.VODA.login"
+      key-id: "5ND55U8SZU"
+      key-path: "infrastructure/configs/apple_login_auth_key.p8"
+      redirect-url: "https://exchange-diary-b4mzhzbzcq-du.a.run.app/v1/authentication/login/apple"

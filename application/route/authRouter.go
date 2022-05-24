@@ -7,14 +7,12 @@ import (
 
 // AuthRoutes ...
 func AuthRoutes(router *gin.RouterGroup, controller controller.AuthController) {
-	redirectLogin := router.Group("/login")
+	login := router.Group("/login")
 	{
-		redirectLogin.GET("/:auth_type", controller.Redirect())
+		login.POST("/:auth_type", controller.Login())
 	}
 	auth := router.Group("/authentication")
 	{
-		auth.GET("/login/:auth_type", controller.Login())
 		auth.GET("/authenticated", controller.Authenticate())
-		auth.POST("/mock", controller.MockRegister())
 	}
 }

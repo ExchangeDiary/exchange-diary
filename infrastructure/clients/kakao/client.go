@@ -10,20 +10,28 @@ import (
 type Client struct {
 	baseURL string
 	client  *http.Client
+	token   string
 }
 
 // NewClient ...
-func NewClient(baseURL string, client *http.Client) *Client {
+func NewClient(baseURL string, token string) *Client {
 	return &Client{
 		baseURL: baseURL,
-		client:  client,
+		client:  http.DefaultClient,
+		token:   token,
 	}
 }
 
 // GetKakaoUserInfo ...
 func (c *Client) GetKakaoUserInfo() (*User, error) {
 	uri := fmt.Sprintf("%s/v2/user/me", c.baseURL)
-	res, err := c.client.Get(uri)
+	req, err := http.NewRequest(http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.token)
+
+	res, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
